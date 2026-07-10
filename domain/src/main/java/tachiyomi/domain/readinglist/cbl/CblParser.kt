@@ -12,16 +12,32 @@ import tachiyomi.domain.readinglist.cbl.model.CblParseWarningCode
 import tachiyomi.domain.readinglist.cbl.model.CblParserLimits
 import tachiyomi.domain.readinglist.cbl.model.CblReadingList
 
-class CblParser(
-    private val limits: CblParserLimits = CblParserLimits(),
+class CblParser private constructor(
+    private val limits: CblParserLimits,
+    private val readerFactory: (String) -> XmlReader,
 ) {
+
+    constructor(
+        limits: CblParserLimits = CblParserLimits(),
+    ) : this(
+        limits = limits,
+        readerFactory = { xml -> xmlStreaming.newReader(xml) },
+    )
+
+    internal constructor(
+        readerFactory: (String) -> XmlReader,
+        limits: CblParserLimits = CblParserLimits(),
+    ) : this(
+        limits = limits,
+        readerFactory = readerFactory,
+    )
 
     fun parse(xml: String): CblReadingList {
         validateInput(xml)
 
         var reader: XmlReader? = null
         try {
-            reader = xmlStreaming.newReader(xml)
+            reader = readerFactory(xml)
             return parse(reader)
         } catch (error: CblParseException) {
             throw error
