@@ -3,6 +3,8 @@ package tachiyomi.domain.readinglist.cbl
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import nl.adaptivity.xmlutil.ExperimentalXmlUtilApi
+import nl.adaptivity.xmlutil.core.KtXmlReader
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.parallel.Execution
@@ -12,10 +14,11 @@ import tachiyomi.domain.readinglist.cbl.model.CblParseFailure
 import tachiyomi.domain.readinglist.cbl.model.CblParseWarningCode
 import tachiyomi.domain.readinglist.cbl.model.CblParserLimits
 
+@OptIn(ExperimentalXmlUtilApi::class)
 @Execution(ExecutionMode.CONCURRENT)
 class CblParserTest {
 
-    private val parser = CblParser()
+    private val parser = testParser()
 
     @Test
     fun `preserves CBL book order and metadata`() {
@@ -192,8 +195,8 @@ class CblParserTest {
 
     @Test
     fun `enforces configured input and entry limits`() {
-        val characterLimitedParser = CblParser(CblParserLimits(maxCharacters = 20, maxBooks = 10))
-        val bookLimitedParser = CblParser(CblParserLimits(maxCharacters = 10_000, maxBooks = 1))
+        val characterLimitedParser = testParser(CblParserLimits(maxCharacters = 20, maxBooks = 10))
+        val bookLimitedParser = testParser(CblParserLimits(maxCharacters = 10_000, maxBooks = 1))
 
         val tooLarge = assertThrows(CblParseException::class.java) {
             characterLimitedParser.parse("<ReadingList><Books /></ReadingList>")
@@ -214,4 +217,9 @@ class CblParserTest {
         tooLarge.failure shouldBe CblParseFailure.INPUT_TOO_LARGE
         tooManyBooks.failure shouldBe CblParseFailure.TOO_MANY_BOOKS
     }
+
+    private fun testParser(limits: CblParserLimits = CblParserLimits()) = CblParser(
+        readerFactory = { xml -> KtXmlReader(xml) },
+        limits = limits,
+    )
 }
