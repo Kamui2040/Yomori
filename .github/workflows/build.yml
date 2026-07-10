@@ -1,3 +1,4 @@
+# Authoritative CI and development APK artifact workflow for Yomori.
 name: Yomori Build & Test
 
 on:
