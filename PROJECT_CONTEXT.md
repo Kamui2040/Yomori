@@ -4,6 +4,8 @@
 
 Yomori is in initial repository bootstrap. It is based on the current `main` branch of `mihonapp/mihon` and will remain compatible with the existing user-installed Mihon/Tachiyomi extension ecosystem.
 
+GitHub Actions was enabled for the fork on 2026-07-10. Pull requests and `main` builds use GitHub Actions as the authoritative validation and APK artifact environment.
+
 The first product milestone is CBL reading-list import and deterministic, user-correctable matching. No public Yomori release is ready yet.
 
 ## Product goal
