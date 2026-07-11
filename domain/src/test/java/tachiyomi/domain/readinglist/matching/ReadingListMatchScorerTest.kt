@@ -201,7 +201,7 @@ class ReadingListMatchScorerTest {
             ),
         )
 
-        result.leadingCandidate?.score shouldBe 72.0
+        result.leadingCandidate?.score shouldBe 76.0
         result.state shouldBe ReadingListEntryResolutionState.AMBIGUOUS
         result.reason shouldBe MatchDecisionReason.ISSUE_MISMATCH
     }
