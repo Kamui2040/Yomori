@@ -1,12 +1,12 @@
 package tachiyomi.domain.readinglist.matching
 
-import kotlin.math.max
-import kotlin.math.round
 import tachiyomi.domain.readinglist.model.ReadingListEntryResolutionState
 import tachiyomi.domain.readinglist.normalization.IssueNumberNormalizer
 import tachiyomi.domain.readinglist.normalization.NormalizedIssueNumber
 import tachiyomi.domain.readinglist.normalization.NormalizedTitle
 import tachiyomi.domain.readinglist.normalization.TitleNormalizer
+import kotlin.math.max
+import kotlin.math.round
 
 data class ReadingListMatchQuery(
     val seriesTitle: String,
