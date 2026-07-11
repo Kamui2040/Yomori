@@ -152,8 +152,8 @@ private fun String.toVolumeNumber(): Int? {
 
     var result = 0
     var previous = 0
-    roman.asReversed().forEach { character ->
-        val current = ROMAN_VALUES.getValue(character)
+    for (index in roman.indices.reversed()) {
+        val current = ROMAN_VALUES.getValue(roman[index])
         if (current < previous) {
             result -= current
         } else {
