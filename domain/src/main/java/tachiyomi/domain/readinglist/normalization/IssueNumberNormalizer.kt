@@ -40,7 +40,10 @@ enum class IssueNumberKind(val canonicalPrefix: String) {
 object IssueNumberNormalizer {
 
     fun normalize(value: String): NormalizedIssueNumber {
-        var working = Normalizer.normalize(value.trim(), Normalizer.Form.NFKC)
+        var working = Normalizer.normalize(
+            value.trim().expandUnicodeFractions(),
+            Normalizer.Form.NFKC,
+        )
             .lowercase(Locale.ROOT)
             .normalizeDashes()
             .replace(WHITESPACE, " ")
@@ -61,9 +64,6 @@ object IssueNumberNormalizer {
             .removeTrailingIssueCount()
             .trim()
 
-        parseUnicodeFraction(working)?.let { number ->
-            return numericResult(kindResult.kind, number)
-        }
         parseAsciiFraction(working)?.let { number ->
             return numericResult(kindResult.kind, number)
         }
@@ -115,17 +115,6 @@ object IssueNumberNormalizer {
             suffix = suffix,
             kind = kind,
         )
-    }
-
-    private fun parseUnicodeFraction(value: String): BigDecimal? {
-        UNICODE_FRACTION_ONLY.matchEntire(value)?.let { match ->
-            return UNICODE_FRACTIONS[match.groupValues[1].single()]
-        }
-
-        val match = MIXED_UNICODE_FRACTION.matchEntire(value) ?: return null
-        val whole = match.groupValues[1].toBigDecimalOrNull() ?: return null
-        val fraction = UNICODE_FRACTIONS[match.groupValues[2].single()] ?: return null
-        return if (whole.signum() < 0) whole - fraction else whole + fraction
     }
 
     private fun parseAsciiFraction(value: String): BigDecimal? {
@@ -188,6 +177,22 @@ object IssueNumberNormalizer {
     }
 }
 
+private fun String.expandUnicodeFractions(): String {
+    val output = StringBuilder(length)
+    forEach { character ->
+        val fraction = UNICODE_FRACTION_TEXT[character]
+        if (fraction == null) {
+            output.append(character)
+        } else {
+            if (output.isNotEmpty() && output.last().isDigit()) {
+                output.append(' ')
+            }
+            output.append(fraction)
+        }
+    }
+    return output.toString()
+}
+
 private fun String.removeIssueLabel(): String {
     var result = this
     while (true) {
@@ -233,22 +238,20 @@ private val TRAILING_ISSUE_COUNT = Regex(
 private val NUMERIC_WITH_OPTIONAL_SUFFIX = Regex(
     """^([+-]?\d+(?:[\.,]\d+)?)(?:\s*[-._]?\s*([a-z][a-z0-9]*))?$""",
 )
-private val UNICODE_FRACTION_ONLY = Regex("""^([½⅓⅔¼¾⅛⅜⅝⅞])$""")
-private val MIXED_UNICODE_FRACTION = Regex("""^([+-]?\d+)\s*([½⅓⅔¼¾⅛⅜⅝⅞])$""")
 private val ASCII_FRACTION = Regex("""^([+-]?\d+)\s*/\s*(\d+)$""")
 private val MIXED_ASCII_FRACTION = Regex("""^([+-]?\d+)\s+(\d+)\s*/\s*(\d+)$""")
 private val WHITESPACE = Regex("""\s+""")
 private val WHITESPACE_AROUND_DASH = Regex("""\s*-\s*""")
 private val TWO = BigInteger.valueOf(2)
 private val FIVE = BigInteger.valueOf(5)
-private val UNICODE_FRACTIONS = mapOf(
-    '½' to BigDecimal("0.5"),
-    '⅓' to BigDecimal("0.3333333333333333"),
-    '⅔' to BigDecimal("0.6666666666666667"),
-    '¼' to BigDecimal("0.25"),
-    '¾' to BigDecimal("0.75"),
-    '⅛' to BigDecimal("0.125"),
-    '⅜' to BigDecimal("0.375"),
-    '⅝' to BigDecimal("0.625"),
-    '⅞' to BigDecimal("0.875"),
+private val UNICODE_FRACTION_TEXT = mapOf(
+    '½' to "1/2",
+    '⅓' to "1/3",
+    '⅔' to "2/3",
+    '¼' to "1/4",
+    '¾' to "3/4",
+    '⅛' to "1/8",
+    '⅜' to "3/8",
+    '⅝' to "5/8",
+    '⅞' to "7/8",
 )
