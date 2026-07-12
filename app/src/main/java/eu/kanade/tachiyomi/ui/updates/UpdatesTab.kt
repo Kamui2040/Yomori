@@ -32,7 +32,7 @@ import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 
-data object UpdatesTab : Tab {
+ data object UpdatesTab : Tab {
 
     override val options: TabOptions
         @Composable
@@ -40,7 +40,7 @@ data object UpdatesTab : Tab {
             val isSelected = LocalTabNavigator.current.current.key == key
             val image = AnimatedImageVector.animatedVectorResource(R.drawable.anim_updates_enter)
             return TabOptions(
-                index = 1u,
+                index = 2u,
                 title = stringResource(MR.strings.label_recent_updates),
                 icon = rememberAnimatedVectorPainter(image, isSelected),
             )
