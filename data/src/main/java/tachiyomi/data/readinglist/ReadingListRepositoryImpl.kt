@@ -200,7 +200,7 @@ class ReadingListRepositoryImpl(
         database.reading_listsQueries.deleteReadingList(id)
     }
 
-    private fun insertSources(readingListId: Long, sourceIds: List<Long>) {
+    private suspend fun insertSources(readingListId: Long, sourceIds: List<Long>) {
         sourceIds.forEachIndexed { position, sourceId ->
             database.reading_listsQueries.insertReadingListSource(
                 readingListId = readingListId,
