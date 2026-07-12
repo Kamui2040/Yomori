@@ -1,4 +1,4 @@
-name: Reading List Formatting Diagnostic
+name: Reading List Diagnostic
 
 on:
   pull_request:
@@ -10,6 +10,7 @@ on:
       - 'app/src/main/java/eu/kanade/tachiyomi/ui/browse/BrowseTab.kt'
       - 'app/src/main/java/eu/kanade/tachiyomi/ui/more/MoreTab.kt'
       - 'data/src/main/java/tachiyomi/data/readinglist/**'
+      - 'data/src/main/sqldelight/tachiyomi/**'
       - 'domain/src/main/java/tachiyomi/domain/readinglist/**'
       - '.github/workflows/spotless-reading-list.yml'
 
@@ -17,7 +18,7 @@ permissions:
   contents: read
 
 jobs:
-  format:
+  diagnose:
     runs-on: ubuntu-24.04
 
     steps:
@@ -33,31 +34,26 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
 
-      - name: Apply Spotless formatting
-        run: ./gradlew spotlessApply --console=plain
+      - name: Check formatting
+        run: ./gradlew spotlessCheck --console=plain
 
-      - name: Capture formatted files
+      - name: Capture unit-test output
+        id: tests
+        continue-on-error: true
+        shell: bash
         run: |
-          mkdir -p formatted
-          git diff --binary > formatted/spotless.patch
-          cp --parents \
-            app/src/main/java/eu/kanade/tachiyomi/ui/readinglist/*.kt \
-            app/src/main/java/eu/kanade/tachiyomi/ui/home/HomeScreen.kt \
-            app/src/main/java/eu/kanade/tachiyomi/ui/updates/UpdatesTab.kt \
-            app/src/main/java/eu/kanade/tachiyomi/ui/history/HistoryTab.kt \
-            app/src/main/java/eu/kanade/tachiyomi/ui/browse/BrowseTab.kt \
-            app/src/main/java/eu/kanade/tachiyomi/ui/more/MoreTab.kt \
-            data/src/main/java/tachiyomi/data/readinglist/*.kt \
-            data/src/test/java/tachiyomi/data/readinglist/*.kt \
-            domain/src/main/java/tachiyomi/domain/readinglist/model/ReadingList.kt \
-            domain/src/main/java/tachiyomi/domain/readinglist/repository/ReadingListRepository.kt \
-            app/src/test/java/eu/kanade/tachiyomi/ui/readinglist/*.kt \
-            formatted/
+          set -o pipefail
+          mkdir -p diagnostic
+          ./gradlew testDebugUnitTest --stacktrace --console=plain 2>&1 | tee diagnostic/test.log
 
-      - name: Upload formatted files
+      - name: Upload diagnostic log
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: reading-list-spotless-${{ github.sha }}
-          path: formatted
+          name: reading-list-test-log-${{ github.sha }}
+          path: diagnostic/test.log
           if-no-files-found: error
           retention-days: 3
+
+      - name: Fail when tests failed
+        if: steps.tests.outcome == 'failure'
+        run: exit 1
