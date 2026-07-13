@@ -5,8 +5,11 @@ import android.net.Uri
 import androidx.compose.runtime.Immutable
 import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
+import eu.kanade.tachiyomi.extension.ExtensionManager
+import eu.kanade.tachiyomi.source.online.HttpSource
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -17,7 +20,6 @@ import tachiyomi.domain.readinglist.cbl.model.CblParseFailure
 import tachiyomi.domain.readinglist.cbl.model.CblReadingList
 import tachiyomi.domain.readinglist.model.ReadingListSummary
 import tachiyomi.domain.readinglist.repository.ReadingListRepository
-import tachiyomi.domain.source.service.SourceManager
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.io.IOException
@@ -26,7 +28,7 @@ import java.util.Locale
 class ReadingListsScreenModel(
     private val application: Application = Injekt.get(),
     private val repository: ReadingListRepository = Injekt.get(),
-    private val sourceManager: SourceManager = Injekt.get(),
+    private val extensionManager: ExtensionManager = Injekt.get(),
 ) : StateScreenModel<ReadingListsScreenState>(ReadingListsScreenState()) {
 
     private val parser = CblParser()
@@ -69,7 +71,7 @@ class ReadingListsScreenModel(
                             listName = readingList.name,
                             entryCount = readingList.books.size,
                             warningCount = readingList.warnings.size,
-                            sources = installedSourceOptions(),
+                            sourceGroups = installedSourceGroups(),
                             selectedSourceIds = emptyList(),
                         ),
                     )
@@ -98,16 +100,29 @@ class ReadingListsScreenModel(
                 return@launch
             }
 
-            val installedSources = installedSourceOptions()
-            val installedIds = installedSources.mapTo(mutableSetOf(), ReadingListSourceOption::id)
+            val installedGroups = installedSourceGroups()
+            val installedIds = installedGroups
+                .flatMap(ReadingListSourceGroup::sources)
+                .mapTo(mutableSetOf(), ReadingListSourceOption::id)
             val unavailableSources = readingList.selectedSourceIds
                 .filterNot(installedIds::contains)
                 .map { sourceId ->
                     ReadingListSourceOption(
                         id = sourceId,
-                        name = "Unavailable source",
-                        language = sourceId.toString(),
+                        name = sourceId.toString(),
+                        language = "",
                         installed = false,
+                    )
+                }
+            val unavailableGroup = unavailableSources
+                .takeIf(List<ReadingListSourceOption>::isNotEmpty)
+                ?.let { sources ->
+                    ReadingListSourceGroup(
+                        key = UNAVAILABLE_SOURCE_GROUP_KEY,
+                        extensionName = "",
+                        packageName = null,
+                        installed = false,
+                        sources = sources,
                     )
                 }
 
@@ -118,7 +133,7 @@ class ReadingListsScreenModel(
                         listName = readingList.name,
                         entryCount = readingList.entries.size,
                         warningCount = readingList.warnings.size,
-                        sources = installedSources + unavailableSources,
+                        sourceGroups = installedGroups + listOfNotNull(unavailableGroup),
                         selectedSourceIds = readingList.selectedSourceIds,
                     ),
                 )
@@ -140,7 +155,8 @@ class ReadingListsScreenModel(
     fun selectAllInstalledSources() {
         updateSourceDialog { dialog ->
             dialog.copy(
-                selectedSourceIds = dialog.sources
+                selectedSourceIds = dialog.sourceGroups
+                    .flatMap(ReadingListSourceGroup::sources)
                     .filter(ReadingListSourceOption::installed)
                     .map(ReadingListSourceOption::id),
             )
@@ -172,9 +188,11 @@ class ReadingListsScreenModel(
 
     fun confirmSourceSelection() {
         val dialog = state.value.dialog as? ReadingListsDialog.SourceSelection ?: return
-        val selectedInstalledSource = dialog.sources.any { source ->
-            source.installed && source.id in dialog.selectedSourceIds
-        }
+        val selectedInstalledSource = dialog.sourceGroups
+            .flatMap(ReadingListSourceGroup::sources)
+            .any { source ->
+                source.installed && source.id in dialog.selectedSourceIds
+            }
         if (!selectedInstalledSource) {
             screenModelScope.launch {
                 _events.send(ReadingListsEvent.SelectInstalledSource)
@@ -222,24 +240,26 @@ class ReadingListsScreenModel(
         mutableState.update { it.copy(dialog = null) }
     }
 
-    private fun installedSourceOptions(): List<ReadingListSourceOption> {
-        return sourceManager.getOnlineSources()
-            .distinctBy { source -> source.id }
-            .sortedWith(
-                compareBy(
-                    { source -> source.lang.lowercase(Locale.ROOT) },
-                    { source -> source.name.lowercase(Locale.ROOT) },
-                    { source -> source.id },
-                ),
+    private suspend fun installedSourceGroups(): List<ReadingListSourceGroup> {
+        extensionManager.isInitialized.first { initialized -> initialized }
+
+        val extensions = extensionManager.installedExtensionsFlow.value.map { extension ->
+            InstalledReadingListExtension(
+                extensionName = extension.name,
+                packageName = extension.pkgName,
+                sources = extension.sources
+                    .filterIsInstance<HttpSource>()
+                    .map { source ->
+                        ReadingListSourceOption(
+                            id = source.id,
+                            name = source.name,
+                            language = source.lang,
+                            installed = true,
+                        )
+                    },
             )
-            .map { source ->
-                ReadingListSourceOption(
-                    id = source.id,
-                    name = source.name,
-                    language = source.lang,
-                    installed = true,
-                )
-            }
+        }
+        return buildReadingListSourceGroups(extensions)
     }
 
     private fun updateSourceDialog(
@@ -268,16 +288,20 @@ sealed interface ReadingListsDialog {
         val listName: String?,
         val entryCount: Int,
         val warningCount: Int,
-        val sources: List<ReadingListSourceOption>,
+        val sourceGroups: List<ReadingListSourceGroup>,
         val selectedSourceIds: List<Long>,
     ) : ReadingListsDialog {
         val hasInstalledSources: Boolean
-            get() = sources.any(ReadingListSourceOption::installed)
+            get() = sourceGroups
+                .flatMap(ReadingListSourceGroup::sources)
+                .any(ReadingListSourceOption::installed)
 
         val canConfirm: Boolean
-            get() = sources.any { source ->
-                source.installed && source.id in selectedSourceIds
-            }
+            get() = sourceGroups
+                .flatMap(ReadingListSourceGroup::sources)
+                .any { source ->
+                    source.installed && source.id in selectedSourceIds
+                }
     }
 }
 
@@ -287,12 +311,61 @@ sealed interface SourceSelectionMode {
 }
 
 @Immutable
+data class ReadingListSourceGroup(
+    val key: String,
+    val extensionName: String,
+    val packageName: String?,
+    val installed: Boolean,
+    val sources: List<ReadingListSourceOption>,
+)
+
+@Immutable
 data class ReadingListSourceOption(
     val id: Long,
     val name: String,
     val language: String,
     val installed: Boolean,
 )
+
+internal data class InstalledReadingListExtension(
+    val extensionName: String,
+    val packageName: String,
+    val sources: List<ReadingListSourceOption>,
+)
+
+internal fun buildReadingListSourceGroups(
+    extensions: List<InstalledReadingListExtension>,
+): List<ReadingListSourceGroup> {
+    val seenSourceIds = mutableSetOf<Long>()
+
+    return extensions
+        .sortedWith(
+            compareBy(
+                { extension -> extension.extensionName.lowercase(Locale.ROOT) },
+                InstalledReadingListExtension::packageName,
+            ),
+        )
+        .mapNotNull { extension ->
+            val sources = extension.sources
+                .sortedWith(
+                    compareBy(
+                        { source -> source.language.lowercase(Locale.ROOT) },
+                        { source -> source.name.lowercase(Locale.ROOT) },
+                        ReadingListSourceOption::id,
+                    ),
+                )
+                .filter { source -> seenSourceIds.add(source.id) }
+            if (sources.isEmpty()) return@mapNotNull null
+
+            ReadingListSourceGroup(
+                key = extension.packageName,
+                extensionName = extension.extensionName,
+                packageName = extension.packageName,
+                installed = true,
+                sources = sources,
+            )
+        }
+}
 
 sealed interface ReadingListsEvent {
     data class Imported(val listName: String?) : ReadingListsEvent
@@ -330,3 +403,5 @@ private fun CblParseFailure.toImportFailure(): CblImportFailure {
         -> CblImportFailure.INVALID_READING_LIST
     }
 }
+
+private const val UNAVAILABLE_SOURCE_GROUP_KEY = "reading-list-unavailable-sources"
