@@ -141,12 +141,60 @@ class ReadingListsScreenModel(
         }
     }
 
+    fun requestDelete(readingList: ReadingListSummary) {
+        mutableState.update {
+            it.copy(dialog = ReadingListsDialog.DeleteConfirmation(readingList))
+        }
+    }
+
+    fun confirmDelete() {
+        val dialog = state.value.dialog as? ReadingListsDialog.DeleteConfirmation ?: return
+        if (state.value.isDeleting) return
+
+        mutableState.update { it.copy(isDeleting = true) }
+        screenModelScope.launch {
+            try {
+                withIOContext {
+                    repository.delete(dialog.readingList.id)
+                }
+                mutableState.update { it.copy(dialog = null) }
+                _events.send(ReadingListsEvent.Deleted(dialog.readingList.name))
+            } catch (error: Exception) {
+                _events.send(ReadingListsEvent.DeleteFailed)
+            } finally {
+                mutableState.update { it.copy(isDeleting = false) }
+            }
+        }
+    }
+
     fun toggleSource(sourceId: Long) {
         updateSourceDialog { dialog ->
             val selected = if (sourceId in dialog.selectedSourceIds) {
                 dialog.selectedSourceIds - sourceId
             } else {
                 dialog.selectedSourceIds + sourceId
+            }
+            dialog.copy(selectedSourceIds = selected)
+        }
+    }
+
+    fun toggleSourceGroup(groupKey: String) {
+        updateSourceDialog { dialog ->
+            val group = dialog.sourceGroups.firstOrNull { it.key == groupKey }
+                ?: return@updateSourceDialog dialog
+            if (!group.installed) return@updateSourceDialog dialog
+
+            val sourceIds = group.sources
+                .filter(ReadingListSourceOption::installed)
+                .map(ReadingListSourceOption::id)
+            if (sourceIds.isEmpty()) return@updateSourceDialog dialog
+
+            val allSelected = sourceIds.all(dialog.selectedSourceIds::contains)
+            val selected = if (allSelected) {
+                val groupIdSet = sourceIds.toSet()
+                dialog.selectedSourceIds.filterNot(groupIdSet::contains)
+            } else {
+                dialog.selectedSourceIds + sourceIds.filterNot(dialog.selectedSourceIds::contains)
             }
             dialog.copy(selectedSourceIds = selected)
         }
@@ -236,7 +284,7 @@ class ReadingListsScreenModel(
     }
 
     fun dismissDialog() {
-        if (state.value.isSaving) return
+        if (state.value.isSaving || state.value.isDeleting) return
         mutableState.update { it.copy(dialog = null) }
     }
 
@@ -278,6 +326,7 @@ data class ReadingListsScreenState(
     val isLoading: Boolean = true,
     val isImporting: Boolean = false,
     val isSaving: Boolean = false,
+    val isDeleting: Boolean = false,
     val readingLists: List<ReadingListSummary> = emptyList(),
     val dialog: ReadingListsDialog? = null,
 )
@@ -303,6 +352,10 @@ sealed interface ReadingListsDialog {
                     source.installed && source.id in selectedSourceIds
                 }
     }
+
+    data class DeleteConfirmation(
+        val readingList: ReadingListSummary,
+    ) : ReadingListsDialog
 }
 
 sealed interface SourceSelectionMode {
@@ -370,10 +423,12 @@ internal fun buildReadingListSourceGroups(
 sealed interface ReadingListsEvent {
     data class Imported(val listName: String?) : ReadingListsEvent
     data class ImportFailed(val failure: CblImportFailure) : ReadingListsEvent
+    data class Deleted(val listName: String?) : ReadingListsEvent
     data object SourcesUpdated : ReadingListsEvent
     data object SelectInstalledSource : ReadingListsEvent
     data object ReadingListMissing : ReadingListsEvent
     data object SaveFailed : ReadingListsEvent
+    data object DeleteFailed : ReadingListsEvent
 }
 
 enum class CblImportFailure {
