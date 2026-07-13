@@ -1,4 +1,4 @@
-name: Source Selector Formatting Diagnostic
+name: Source Selector Diagnostic
 
 on:
   pull_request:
@@ -12,7 +12,7 @@ permissions:
   contents: read
 
 jobs:
-  format:
+  diagnose:
     runs-on: ubuntu-24.04
 
     steps:
@@ -28,35 +28,27 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
 
-      - name: Apply Spotless formatting
-        id: spotless
+      - name: Check formatting
+        run: ./gradlew spotlessCheck --console=plain
+
+      - name: Capture unit-test output
+        id: tests
         continue-on-error: true
         shell: bash
         run: |
           set -o pipefail
           mkdir -p diagnostic
-          ./gradlew spotlessApply --stacktrace --console=plain 2>&1 | tee diagnostic/spotless.log
+          ./gradlew testDebugUnitTest --stacktrace --console=plain 2>&1 | tee diagnostic/test.log
 
-      - name: Capture formatted files
-        if: always()
-        run: |
-          mkdir -p formatted
-          cp --parents \
-            app/src/main/java/eu/kanade/domain/base/BasePreferences.kt \
-            app/src/main/java/eu/kanade/tachiyomi/ui/readinglist/*.kt \
-            app/src/test/java/eu/kanade/tachiyomi/ui/readinglist/*.kt \
-            formatted/
-          cp diagnostic/spotless.log formatted/
-
-      - name: Upload formatted files
+      - name: Upload diagnostic log
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: source-selector-format-${{ github.sha }}
-          path: formatted
+          name: source-selector-test-log-${{ github.sha }}
+          path: diagnostic/test.log
           if-no-files-found: error
           retention-days: 3
 
-      - name: Fail when Spotless failed
-        if: steps.spotless.outcome == 'failure'
+      - name: Fail when tests failed
+        if: steps.tests.outcome == 'failure'
         run: exit 1
