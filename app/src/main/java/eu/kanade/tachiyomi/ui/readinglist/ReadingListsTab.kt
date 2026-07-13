@@ -557,7 +557,7 @@ private fun SourceSelectionDialog(
                                 )
                             }
 
-                            if (!group.installed || collapsible && expanded) {
+                            if (!group.installed || (collapsible && expanded)) {
                                 items(
                                     items = group.sources,
                                     key = { source -> "${group.key}-${source.id}" },
