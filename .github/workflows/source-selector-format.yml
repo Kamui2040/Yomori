@@ -1,0 +1,49 @@
+name: Source Selector Formatting Diagnostic
+
+on:
+  pull_request:
+    paths:
+      - 'app/src/main/java/eu/kanade/domain/base/BasePreferences.kt'
+      - 'app/src/main/java/eu/kanade/tachiyomi/ui/readinglist/**'
+      - 'app/src/test/java/eu/kanade/tachiyomi/ui/readinglist/**'
+      - '.github/workflows/source-selector-format.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  format:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Set up JDK
+        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5.5.0
+        with:
+          java-version-file: .github/.java-version
+          distribution: temurin
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92 # v6.2.0
+
+      - name: Apply Spotless formatting
+        run: ./gradlew spotlessApply --console=plain
+
+      - name: Capture formatted files
+        run: |
+          mkdir -p formatted
+          cp --parents \
+            app/src/main/java/eu/kanade/domain/base/BasePreferences.kt \
+            app/src/main/java/eu/kanade/tachiyomi/ui/readinglist/*.kt \
+            app/src/test/java/eu/kanade/tachiyomi/ui/readinglist/*.kt \
+            formatted/
+
+      - name: Upload formatted files
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: source-selector-format-${{ github.sha }}
+          path: formatted
+          if-no-files-found: error
+          retention-days: 3
