@@ -7,125 +7,13 @@ on:
     paths:
       - .github/workflows/apply-candidate-search-edge-fixes.yml
 
-permissions:
-  contents: write
-
 concurrency:
   group: candidate-search-edge-fix
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
-  apply-and-validate:
-    if: github.actor != 'github-actions[bot]'
+  disabled:
+    if: false
     runs-on: ubuntu-latest
-    timeout-minutes: 90
-
     steps:
-      - name: Check out candidate-search branch
-        uses: actions/checkout@v4
-        with:
-          ref: agent/candidate-search-orchestration
-          fetch-depth: 0
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
-
-      - name: Verify branch and checkpoint ancestry
-        shell: bash
-        run: |
-          set -euo pipefail
-          test "$(git branch --show-current)" = "agent/candidate-search-orchestration"
-          git merge-base --is-ancestor 85c5c23ac86c06862398b62af266000b2b721c8e HEAD
-          git diff --quiet 85c5c23ac86c06862398b62af266000b2b721c8e -- \
-            app/src/main/java/eu/kanade/tachiyomi/ui/readinglist/ReadingListCandidateSearch.kt \
-            app/src/test/java/eu/kanade/tachiyomi/ui/readinglist/ReadingListCandidateSearchTest.kt \
-            domain/src/main/java/tachiyomi/domain/readinglist/matching/ReadingListChapterIssueExtractor.kt \
-            domain/src/test/java/tachiyomi/domain/readinglist/matching/ReadingListChapterIssueExtractorTest.kt
-          test -z "$(git status --porcelain)"
-
-      - name: Apply reviewed edge-case fixes
-        shell: bash
-        run: |
-          set -euo pipefail
-          cat .github/candidate-search-fix/compact-*.b64 | tr -d '\n' | base64 --decode > /tmp/apply-candidate-fixes.py
-          echo 'aae8cf76fc0f74d37da2b799b1a499db632bcd345665714af3bc56815c31c0e9  /tmp/apply-candidate-fixes.py' | sha256sum --check
-          python3 - <<'PY'
-          from pathlib import Path
-
-          path = Path('/tmp/apply-candidate-fixes.py')
-          text = path.read_text(encoding='utf-8')
-
-          guard = '    if text.count(old) != 1:\n'
-          if text.count(guard) != 1:
-              raise SystemExit('Unable to isolate the intentionally repeated test fixture')
-          text = text.replace(guard, '    if text.count(old) < 1:\n', 1)
-
-          factory = '::mutableSetOf'
-          if text.count(factory) != 2:
-              raise SystemExit('Unexpected generated mutable-set factory count')
-          text = text.replace(factory, '{ mutableSetOf() }')
-
-          path.write_text(text, encoding='utf-8')
-          PY
-          python3 -m py_compile /tmp/apply-candidate-fixes.py
-          python3 /tmp/apply-candidate-fixes.py
-
-      - name: Format and run focused checks
-        shell: bash
-        run: |
-          set -euo pipefail
-          ./gradlew spotlessApply
-          ./gradlew spotlessCheck
-          git diff --check
-          ./gradlew :domain:testDebugUnitTest \
-            --tests 'tachiyomi.domain.readinglist.matching.ReadingListChapterIssueExtractorTest'
-          ./gradlew :app:testDebugUnitTest \
-            --tests 'eu.kanade.tachiyomi.ui.readinglist.ReadingListCandidateSearchTest'
-
-      - name: Run complete validation
-        shell: bash
-        run: |
-          set -euo pipefail
-          ./gradlew testDebugUnitTest
-          ./gradlew verifySqlDelightMigration
-          ./gradlew assemblePreview
-          git diff --check
-
-      - name: Verify scope and publish fix commit
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          import subprocess
-
-          expected = {
-              'app/src/main/java/eu/kanade/tachiyomi/ui/readinglist/ReadingListCandidateSearch.kt',
-              'app/src/test/java/eu/kanade/tachiyomi/ui/readinglist/ReadingListCandidateSearchTest.kt',
-              'domain/src/main/java/tachiyomi/domain/readinglist/matching/ReadingListChapterIssueExtractor.kt',
-              'domain/src/test/java/tachiyomi/domain/readinglist/matching/ReadingListChapterIssueExtractorTest.kt',
-          }
-          changed = set(subprocess.check_output(['git', 'diff', '--name-only'], text=True).splitlines())
-          untracked = set(subprocess.check_output(['git', 'ls-files', '--others', '--exclude-standard'], text=True).splitlines())
-          if changed != expected or untracked:
-              raise SystemExit(f'Unexpected scope: changed={sorted(changed)}, untracked={sorted(untracked)}')
-          PY
-          git diff --stat
-          git diff
-          git rm -r .github/candidate-search-fix .github/workflows/apply-candidate-search-edge-fixes.yml
-          git add \
-            app/src/main/java/eu/kanade/tachiyomi/ui/readinglist/ReadingListCandidateSearch.kt \
-            app/src/test/java/eu/kanade/tachiyomi/ui/readinglist/ReadingListCandidateSearchTest.kt \
-            domain/src/main/java/tachiyomi/domain/readinglist/matching/ReadingListChapterIssueExtractor.kt \
-            domain/src/test/java/tachiyomi/domain/readinglist/matching/ReadingListChapterIssueExtractorTest.kt
-          git diff --cached --check
-          git status --short --branch
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git commit -m 'Fix candidate search edge cases'
-          git push origin HEAD:agent/candidate-search-orchestration
+      - run: echo 'Superseded by the authoritative PR build workflow.'
