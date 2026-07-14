@@ -272,17 +272,28 @@ class ReadingListMatchScorer(
         val candidateTitle = TitleNormalizer.normalize(candidate.seriesTitle)
         val candidateIssue = IssueNumberNormalizer.normalize(candidate.issueNumber)
         val candidateVolume = candidate.volume ?: candidateTitle.volume
+        val candidateSeriesYear = candidateTitle.year
+        val titleYearWasStoredAsIssueYear = candidate.year != null && candidate.year == candidateSeriesYear
+        val legacyTitleYearEvidence = query.year == null &&
+            query.seriesYear != null &&
+            candidateSeriesYear == null &&
+            candidate.year != null
+        val candidateIssueYear = candidate.year.takeUnless { titleYearWasStoredAsIssueYear }
         val titleSimilarity = calculateTitleSimilarity(query.title, candidateTitle).roundForDisplay()
         val titlePoints = (titleSimilarity * config.titleWeight).roundForDisplay()
         val issueEquivalent = query.issue.isEquivalentTo(candidateIssue)
         val issuePoints = if (issueEquivalent) config.issueWeight else 0.0
-        val yearEvidence = evidence(query.year, candidate.year)
+        val yearEvidence = if (legacyTitleYearEvidence) {
+            evidence(query.seriesYear, candidate.year)
+        } else {
+            evidence(query.year, candidateIssueYear)
+        }
         val yearPoints = metadataPoints(yearEvidence)
         val volumeEvidence = editionEvidence(
             expectedVolume = query.volume,
             actualVolume = candidateVolume,
             expectedSeriesYear = query.seriesYear,
-            actualSeriesYear = candidateTitle.year,
+            actualSeriesYear = candidateSeriesYear,
         )
         val volumePoints = metadataPoints(volumeEvidence)
         val externalIdentifierPoints = externalIdentifierPoints(candidate.externalIdentifierEvidence)
