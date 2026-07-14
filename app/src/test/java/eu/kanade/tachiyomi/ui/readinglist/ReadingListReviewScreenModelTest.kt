@@ -33,7 +33,12 @@ class ReadingListReviewScreenModelTest {
     @Test
     fun `presentation preserves cbl order candidate order and orphaned rejections`() {
         val firstCandidate = storedCandidate(entryId = 10, candidateId = "first", score = 79.0)
-        val secondCandidate = storedCandidate(entryId = 10, candidateId = "second", score = 71.0)
+        val secondCandidate = storedCandidate(
+            entryId = 10,
+            candidateId = "second",
+            score = 71.0,
+            rejected = true,
+        )
         val orphanIdentity = ReadingListCandidateIdentity(sourceId = 9, candidateId = "removed")
         val readingList = readingList(
             entries = listOf(
@@ -82,11 +87,54 @@ class ReadingListReviewScreenModelTest {
         review.entries.map { item -> item.entry.id } shouldContainExactly listOf(10L, 11L, 12L)
         review.entries.first().candidates.map { candidate ->
             candidate.snapshot.identity.candidateId
-        } shouldContainExactly
-            listOf("first", "second")
+        } shouldContainExactly listOf("first", "second")
+        review.entries.first().candidates.map(ReadingListStoredMatchCandidate::rejected) shouldContainExactly
+            listOf(false, true)
         review.entries.first().orphanRejections.map { rejection -> rejection.identity } shouldContainExactly
             listOf(orphanIdentity)
         review.entries.first().seriesMapping?.seriesKey shouldBe seriesKey
+    }
+
+    @Test
+    fun `presentation retains every state and excludes confirmed and skipped entries from attention`() {
+        val states = listOf(
+            ReadingListEntryResolutionState.UNSEARCHED,
+            ReadingListEntryResolutionState.SEARCHING,
+            ReadingListEntryResolutionState.AUTO_MATCHED,
+            ReadingListEntryResolutionState.USER_CONFIRMED,
+            ReadingListEntryResolutionState.AMBIGUOUS,
+            ReadingListEntryResolutionState.UNRESOLVED,
+            ReadingListEntryResolutionState.SOURCE_UNAVAILABLE,
+            ReadingListEntryResolutionState.CHAPTER_REMOVED,
+            ReadingListEntryResolutionState.NEEDS_REMATCH,
+        )
+        val entries = states.mapIndexed { index, state ->
+            entry(
+                id = index.toLong() + 10,
+                position = index,
+                number = index.toString(),
+                state = state,
+                userConfirmed = state == ReadingListEntryResolutionState.USER_CONFIRMED,
+            )
+        } + entry(
+            id = 99,
+            position = states.size,
+            number = "skip",
+            state = ReadingListEntryResolutionState.UNRESOLVED,
+            skipped = true,
+        )
+        val review = buildReadingListReviewData(
+            readingList = readingList(entries),
+            resolution = emptyResolution(),
+        )
+
+        review.entries.map { item -> item.entry.resolutionState } shouldContainExactly
+            states + ReadingListEntryResolutionState.UNRESOLVED
+        review.entries.map { item -> item.entry.needsManualAttention } shouldContainExactly
+            listOf(true, true, false, false, true, true, true, true, true, false)
+        review.needsReviewCount shouldBe 6
+        review.completedCount shouldBe 2
+        review.protectedCount shouldBe 2
     }
 
     @Test
@@ -104,6 +152,65 @@ class ReadingListReviewScreenModelTest {
 
         applied shouldBe true
         coVerify(exactly = 1) { repository.confirmResolution(10, candidate.snapshot) }
+    }
+
+    @Test
+    fun `candidate rejection uses the exact persisted snapshot`() = runTest {
+        val repository = mockk<ReadingListResolutionRepository>()
+        val candidate = storedCandidate(entryId = 10, candidateId = "reject", score = 70.0)
+        val review = reviewData(candidate)
+        coEvery { repository.rejectCandidate(10, candidate.snapshot) } returns true
+
+        val applied = ReadingListReviewOperations(repository).rejectCandidate(
+            review = review,
+            entryId = 10,
+            identity = candidate.snapshot.identity,
+        )
+
+        applied shouldBe true
+        coVerify(exactly = 1) { repository.rejectCandidate(10, candidate.snapshot) }
+    }
+
+    @Test
+    fun `stored rejection restoration clears only its exact identity`() = runTest {
+        val repository = mockk<ReadingListResolutionRepository>()
+        val candidate = storedCandidate(
+            entryId = 10,
+            candidateId = "restore",
+            score = 70.0,
+            rejected = true,
+        )
+        val review = reviewData(candidate)
+        coEvery {
+            repository.clearCandidateRejection(10, candidate.snapshot.identity)
+        } returns true
+
+        val applied = ReadingListReviewOperations(repository).restoreCandidate(
+            review = review,
+            entryId = 10,
+            identity = candidate.snapshot.identity,
+        )
+
+        applied shouldBe true
+        coVerify(exactly = 1) {
+            repository.clearCandidateRejection(10, candidate.snapshot.identity)
+        }
+    }
+
+    @Test
+    fun `unknown candidate identity is refused without a repository write`() = runTest {
+        val repository = mockk<ReadingListResolutionRepository>()
+        val candidate = storedCandidate(entryId = 10, candidateId = "known", score = 70.0)
+        val review = reviewData(candidate)
+        val unknown = ReadingListCandidateIdentity(sourceId = 7, candidateId = "unknown")
+
+        ReadingListReviewOperations(repository).confirmCandidate(review, 10, unknown) shouldBe false
+        ReadingListReviewOperations(repository).rejectCandidate(review, 10, unknown) shouldBe false
+        ReadingListReviewOperations(repository).restoreCandidate(review, 10, unknown) shouldBe false
+
+        coVerify(exactly = 0) { repository.confirmResolution(any(), any()) }
+        coVerify(exactly = 0) { repository.rejectCandidate(any(), any()) }
+        coVerify(exactly = 0) { repository.clearCandidateRejection(any(), any()) }
     }
 
     @Test
@@ -128,6 +235,23 @@ class ReadingListReviewScreenModelTest {
         applied shouldBe true
         coVerify(exactly = 1) { repository.confirmSeriesMapping(review.readingList.id, expected) }
         coVerify(exactly = 0) { repository.confirmResolution(any(), any()) }
+    }
+
+    @Test
+    fun `series mapping removal uses the entry normalized series key`() = runTest {
+        val repository = mockk<ReadingListResolutionRepository>()
+        val candidate = storedCandidate(entryId = 10, candidateId = "series", score = 80.0)
+        val review = reviewData(candidate)
+        val expectedKey = ReadingListSeriesKey.from("Example")
+        coEvery { repository.clearSeriesMapping(review.readingList.id, expectedKey) } returns true
+
+        val applied = ReadingListReviewOperations(repository).clearSeriesMapping(
+            review = review,
+            entryId = 10,
+        )
+
+        applied shouldBe true
+        coVerify(exactly = 1) { repository.clearSeriesMapping(review.readingList.id, expectedKey) }
     }
 
     @Test
@@ -172,7 +296,19 @@ class ReadingListReviewScreenModelTest {
             resolution = ReadingListResolutionData(
                 readingListId = readingList.id,
                 candidates = listOf(candidate),
-                rejections = emptyList(),
+                rejections = if (candidate.rejected) {
+                    listOf(
+                        ReadingListCandidateRejection(
+                            entryId = candidate.entryId,
+                            identity = candidate.snapshot.identity,
+                            mangaUrl = candidate.snapshot.mangaUrl,
+                            chapterUrl = candidate.snapshot.chapterUrl,
+                            rejectedAt = 1,
+                        ),
+                    )
+                } else {
+                    emptyList()
+                },
                 entryOverrides = emptyList(),
                 seriesMappings = emptyList(),
             ),
@@ -196,10 +332,23 @@ class ReadingListReviewScreenModelTest {
         )
     }
 
+    private fun emptyResolution(): ReadingListResolutionData {
+        return ReadingListResolutionData(
+            readingListId = 1,
+            candidates = emptyList(),
+            rejections = emptyList(),
+            entryOverrides = emptyList(),
+            seriesMappings = emptyList(),
+        )
+    }
+
     private fun entry(
         id: Long,
         position: Int,
         number: String,
+        state: ReadingListEntryResolutionState = ReadingListEntryResolutionState.AMBIGUOUS,
+        userConfirmed: Boolean = false,
+        skipped: Boolean = false,
     ): ReadingListEntry {
         return ReadingListEntry(
             id = id,
@@ -212,14 +361,14 @@ class ReadingListReviewScreenModelTest {
             databases = emptyList(),
             extraAttributes = emptyMap(),
             extraElements = emptyMap(),
-            resolutionState = ReadingListEntryResolutionState.AMBIGUOUS,
+            resolutionState = state,
             matchedSourceId = null,
             matchedMangaUrl = null,
             matchedChapterUrl = null,
             confidence = null,
             matcherVersion = 1,
-            userConfirmed = false,
-            skipped = false,
+            userConfirmed = userConfirmed,
+            skipped = skipped,
         )
     }
 
@@ -227,6 +376,7 @@ class ReadingListReviewScreenModelTest {
         entryId: Long,
         candidateId: String,
         score: Double,
+        rejected: Boolean = false,
     ): ReadingListStoredMatchCandidate {
         return ReadingListStoredMatchCandidate(
             entryId = entryId,
@@ -264,7 +414,7 @@ class ReadingListReviewScreenModelTest {
                 leadOverRunnerUp = 8.0,
                 matcherVersion = 1,
             ),
-            rejected = false,
+            rejected = rejected,
             createdAt = 1,
             updatedAt = 1,
         )
