@@ -132,7 +132,7 @@ class ReadingListReviewScreenModelTest {
             states + ReadingListEntryResolutionState.UNRESOLVED
         review.entries.map { item -> item.entry.needsManualAttention } shouldContainExactly
             listOf(true, true, false, false, true, true, true, true, true, false)
-        review.needsReviewCount shouldBe 6
+        review.needsReviewCount shouldBe 7
         review.completedCount shouldBe 2
         review.protectedCount shouldBe 2
     }
