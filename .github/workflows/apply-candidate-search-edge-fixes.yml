@@ -55,6 +55,16 @@ jobs:
           set -euo pipefail
           cat .github/candidate-search-fix/compact-*.b64 | tr -d '\n' | base64 --decode > /tmp/apply-candidate-fixes.py
           echo 'aae8cf76fc0f74d37da2b799b1a499db632bcd345665714af3bc56815c31c0e9  /tmp/apply-candidate-fixes.py' | sha256sum --check
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path('/tmp/apply-candidate-fixes.py')
+          text = path.read_text(encoding='utf-8')
+          target = '    if text.count(old) != 1:\n'
+          if text.count(target) != 1:
+              raise SystemExit('Unable to isolate the intentionally repeated test fixture')
+          path.write_text(text.replace(target, '    if text.count(old) < 1:\n', 1), encoding='utf-8')
+          PY
           python3 -m py_compile /tmp/apply-candidate-fixes.py
           python3 /tmp/apply-candidate-fixes.py
 
