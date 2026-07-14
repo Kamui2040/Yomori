@@ -307,7 +307,9 @@ data class ReadingListReviewEntry(
 )
 
 val ReadingListEntry.needsManualAttention: Boolean
-    get() = when (resolutionState) {
+    get() {
+        if (userConfirmed || skipped) return false
+        return when (resolutionState) {
         ReadingListEntryResolutionState.AMBIGUOUS,
         ReadingListEntryResolutionState.UNRESOLVED,
         ReadingListEntryResolutionState.SOURCE_UNAVAILABLE,
@@ -319,6 +321,7 @@ val ReadingListEntry.needsManualAttention: Boolean
         ReadingListEntryResolutionState.AUTO_MATCHED,
         ReadingListEntryResolutionState.USER_CONFIRMED,
         -> false
+        }
     }
 
 sealed interface ReadingListReviewAction {

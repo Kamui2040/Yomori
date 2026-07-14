@@ -12,7 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -42,6 +42,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -72,6 +73,7 @@ class ReadingListReviewScreen(
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
+        val context = LocalContext.current
         val screenModel = rememberScreenModel { ReadingListReviewScreenModel(readingListId) }
         val state by screenModel.state.collectAsState()
         val snackbarHostState = remember { SnackbarHostState() }
@@ -99,7 +101,7 @@ class ReadingListReviewScreen(
                         ReadingListReviewEvent.SeriesMappingCleared -> R.string.reading_list_review_series_cleared
                         ReadingListReviewEvent.ReadingListMissing -> R.string.reading_list_missing_error
                         ReadingListReviewEvent.ActionFailed -> R.string.reading_list_review_action_failed
-                    }.let { resourceId -> navigator.context.getString(resourceId) },
+                    }.let { resourceId -> context.getString(resourceId) },
                 )
             }
         }
@@ -320,18 +322,19 @@ private fun ReviewEntryCard(
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                     )
+                    val statusParts = mutableListOf(stringResource(entry.resolutionState.labelRes))
+                    if (entry.userConfirmed) {
+                        statusParts += stringResource(R.string.reading_list_review_user_confirmed)
+                    }
+                    if (entry.skipped) {
+                        statusParts += stringResource(R.string.reading_list_review_skipped)
+                    }
+                    statusParts += stringResource(
+                        R.string.reading_list_review_candidate_count,
+                        item.candidates.size,
+                    )
                     Text(
-                        text = buildString {
-                            append(stringResource(entry.resolutionState.labelRes))
-                            if (entry.userConfirmed) append(" • ").append(stringResource(R.string.reading_list_review_user_confirmed))
-                            if (entry.skipped) append(" • ").append(stringResource(R.string.reading_list_review_skipped))
-                            append(" • ").append(
-                                stringResource(
-                                    R.string.reading_list_review_candidate_count,
-                                    item.candidates.size,
-                                ),
-                            )
-                        },
+                        text = statusParts.joinToString(" • "),
                         style = MaterialTheme.typography.bodySmall,
                         color = if (entry.needsManualAttention && !entry.skipped) {
                             MaterialTheme.colorScheme.error
@@ -449,7 +452,7 @@ private fun OriginalEntryMetadata(item: ReadingListReviewEntry) {
                 R.string.reading_list_review_preserved_metadata,
                 entry.databases.size,
                 entry.extraAttributes.size,
-                entry.extraElements.values.sumOf(List<String>::size),
+                entry.extraElements.values.sumOf { values -> values.size },
             ),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -595,14 +598,17 @@ private fun CandidateCard(
 @Composable
 private fun CandidateBreakdown(candidate: ReadingListStoredMatchCandidate) {
     val breakdown = candidate.snapshot.breakdown
-    val conflicts = buildList {
-        if (!breakdown.issueEquivalent) add(stringResource(R.string.reading_list_review_conflict_issue))
-        if (breakdown.titleSimilarity < 0.85) add(stringResource(R.string.reading_list_review_conflict_title))
-        if (breakdown.yearEvidence == EvidenceAgreement.MISMATCH) add(stringResource(R.string.reading_list_review_conflict_year))
-        if (breakdown.volumeEvidence == EvidenceAgreement.MISMATCH) add(stringResource(R.string.reading_list_review_conflict_volume))
-        if (breakdown.externalIdentifierEvidence == EvidenceAgreement.MISMATCH) {
-            add(stringResource(R.string.reading_list_review_conflict_identifier))
-        }
+    val conflicts = mutableListOf<String>()
+    if (!breakdown.issueEquivalent) conflicts += stringResource(R.string.reading_list_review_conflict_issue)
+    if (breakdown.titleSimilarity < 0.85) conflicts += stringResource(R.string.reading_list_review_conflict_title)
+    if (breakdown.yearEvidence == EvidenceAgreement.MISMATCH) {
+        conflicts += stringResource(R.string.reading_list_review_conflict_year)
+    }
+    if (breakdown.volumeEvidence == EvidenceAgreement.MISMATCH) {
+        conflicts += stringResource(R.string.reading_list_review_conflict_volume)
+    }
+    if (breakdown.externalIdentifierEvidence == EvidenceAgreement.MISMATCH) {
+        conflicts += stringResource(R.string.reading_list_review_conflict_identifier)
     }
 
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
