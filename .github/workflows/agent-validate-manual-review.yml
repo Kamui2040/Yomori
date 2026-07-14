@@ -19,6 +19,11 @@ jobs:
           ref: agent/manual-review-ui
           fetch-depth: 0
 
+      - name: Remove invalid Compose import
+        run: |
+          sed -i '/^import androidx\.compose\.foundation\.layout\.weight$/d' \
+            app/src/main/java/eu/kanade/tachiyomi/ui/readinglist/ReadingListReviewScreen.kt
+
       - name: Set up JDK
         uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a
         with:
@@ -27,6 +32,9 @@ jobs:
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92
+
+      - name: Format implementation
+        run: ./gradlew spotlessApply
 
       - name: Validate implementation
         shell: bash
@@ -73,6 +81,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .github/agent-manual-review-validation.txt
-          git commit -m "Record manual-review validation result"
+          git add app/src/main/java/eu/kanade/tachiyomi/ui/readinglist/ReadingListReviewScreen.kt \
+                  .github/agent-manual-review-validation.txt
+          git commit -m "Fix and validate reading-list manual review"
           git push origin HEAD:agent/manual-review-ui
