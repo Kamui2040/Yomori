@@ -77,7 +77,7 @@ jobs:
           text = text.replace(guard, '    if text.count(old) < 1:\n', 1)
 
           factory = '::mutableSetOf'
-          if text.count(factory) != 2:
+          if text.count(factory) != 3:
               raise SystemExit('Unexpected generated mutable-set factory count')
           text = text.replace(factory, '{ mutableSetOf() }')
 
