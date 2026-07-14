@@ -310,17 +310,17 @@ val ReadingListEntry.needsManualAttention: Boolean
     get() {
         if (userConfirmed || skipped) return false
         return when (resolutionState) {
-        ReadingListEntryResolutionState.AMBIGUOUS,
-        ReadingListEntryResolutionState.UNRESOLVED,
-        ReadingListEntryResolutionState.SOURCE_UNAVAILABLE,
-        ReadingListEntryResolutionState.CHAPTER_REMOVED,
-        ReadingListEntryResolutionState.NEEDS_REMATCH,
-        ReadingListEntryResolutionState.UNSEARCHED,
-        ReadingListEntryResolutionState.SEARCHING,
-        -> true
-        ReadingListEntryResolutionState.AUTO_MATCHED,
-        ReadingListEntryResolutionState.USER_CONFIRMED,
-        -> false
+            ReadingListEntryResolutionState.AMBIGUOUS,
+            ReadingListEntryResolutionState.UNRESOLVED,
+            ReadingListEntryResolutionState.SOURCE_UNAVAILABLE,
+            ReadingListEntryResolutionState.CHAPTER_REMOVED,
+            ReadingListEntryResolutionState.NEEDS_REMATCH,
+            ReadingListEntryResolutionState.UNSEARCHED,
+            ReadingListEntryResolutionState.SEARCHING,
+            -> true
+            ReadingListEntryResolutionState.AUTO_MATCHED,
+            ReadingListEntryResolutionState.USER_CONFIRMED,
+            -> false
         }
     }
 

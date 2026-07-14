@@ -80,7 +80,9 @@ class ReadingListReviewScreenModelTest {
         val review = buildReadingListReviewData(readingList, resolution)
 
         review.entries.map { item -> item.entry.id } shouldContainExactly listOf(10L, 11L, 12L)
-        review.entries.first().candidates.map { candidate -> candidate.snapshot.identity.candidateId } shouldContainExactly
+        review.entries.first().candidates.map { candidate ->
+            candidate.snapshot.identity.candidateId
+        } shouldContainExactly
             listOf("first", "second")
         review.entries.first().orphanRejections.map { rejection -> rejection.identity } shouldContainExactly
             listOf(orphanIdentity)
