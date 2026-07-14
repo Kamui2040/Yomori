@@ -99,8 +99,8 @@
     <string name="reading_list_review_breakdown_issue">Issue: %1$s • %2$s points</string>
     <string name="reading_list_review_equivalent">equivalent</string>
     <string name="reading_list_review_not_equivalent">not equivalent</string>
-    <string name="reading_list_review_year_evidence">Year</string>
-    <string name="reading_list_review_volume_evidence">Volume</string>
+    <string name="reading_list_review_year_evidence">Issue year</string>
+    <string name="reading_list_review_volume_evidence">Series year / volume</string>
     <string name="reading_list_review_identifier_evidence">External identifier</string>
     <string name="reading_list_review_evidence">%1$s: %2$s • %3$s points</string>
     <string name="reading_list_review_source_preference">Source preference: %1$s • %2$s points</string>
@@ -109,8 +109,8 @@
     <string name="reading_list_review_no_conflicts">No conflicting evidence.</string>
     <string name="reading_list_review_conflict_issue">issue mismatch</string>
     <string name="reading_list_review_conflict_title">weak title similarity</string>
-    <string name="reading_list_review_conflict_year">year mismatch</string>
-    <string name="reading_list_review_conflict_volume">volume mismatch</string>
+    <string name="reading_list_review_conflict_year">issue year mismatch</string>
+    <string name="reading_list_review_conflict_volume">series year or volume mismatch</string>
     <string name="reading_list_review_conflict_identifier">identifier mismatch</string>
     <string name="reading_list_review_remote_identity">Remote series: %1$s\nRemote issue: %2$s</string>
     <string name="reading_list_review_confirm_candidate">Confirm this candidate</string>
