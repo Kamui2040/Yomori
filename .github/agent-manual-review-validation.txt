@@ -1,121 +1,284 @@
+validated_commit=239a87eb40f05b64d87718cadc7c2a1416a6297b
 spotless=0
-tests=1
+focused=0
+tests=0
 migrations=0
-assemble=1
+assemble=0
+diffcheck=0
 
+> Task :telemetry:compileDebugJavaWithJavac NO-SOURCE
+> Task :telemetry:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :core-metadata:writeDebugAarMetadata UP-TO-DATE
+> Task :data:writeDebugAarMetadata UP-TO-DATE
+> Task :i18n:writeAndroidMainAarMetadata UP-TO-DATE
+> Task :domain:compileReleaseKotlin UP-TO-DATE
+> Task :domain:javaPreCompileRelease UP-TO-DATE
+> Task :presentation-core:writeDebugAarMetadata UP-TO-DATE
 > Task :domain:compileReleaseJavaWithJavac NO-SOURCE
-> Task :domain:bundleLibCompileToJarRelease
-> Task :presentation-widget:compileDebugKotlin FROM-CACHE
-> Task :presentation-widget:compileDebugJavaWithJavac NO-SOURCE
-> Task :presentation-widget:bundleLibCompileToJarDebug
-> Task :domain:mapDebugSourceSetPaths
-> Task :domain:compileDebugLibraryResources FROM-CACHE
-> Task :data:compileDebugKotlin FROM-CACHE
-> Task :data:compileDebugJavaWithJavac NO-SOURCE
-> Task :source-local:compileAndroidMain FROM-CACHE
-> Task :source-local:bundleAndroidMainClassesToCompileJar
-> Task :domain:bundleLibRuntimeToJarDebug
-> Task :data:bundleLibRuntimeToJarDebug
-> Task :data:bundleLibCompileToJarDebug
-> Task :domain:processDebugJavaRes
-> Task :source-local:bundleAndroidMainClassesToRuntimeJar
-> Task :presentation-widget:bundleLibRuntimeToJarDebug
-> Task :source-local:processAndroidMainJavaRes
-> Task :presentation-widget:processDebugJavaRes
-> Task :domain:preDebugUnitTestBuild UP-TO-DATE
-> Task :core-metadata:compileDebugUnitTestKotlin NO-SOURCE
-> Task :data:processDebugJavaRes
+> Task :domain:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :domain:writeDebugAarMetadata UP-TO-DATE
+> Task :presentation-widget:writeDebugAarMetadata UP-TO-DATE
+> Task :app:processDebugNavigationResources UP-TO-DATE
+> Task :source-api:writeAndroidMainAarMetadata UP-TO-DATE
+> Task :core:archive:compileReleaseKotlin UP-TO-DATE
+> Task :source-local:writeAndroidMainAarMetadata UP-TO-DATE
+> Task :core:archive:javaPreCompileRelease UP-TO-DATE
+> Task :core:archive:compileReleaseJavaWithJavac NO-SOURCE
+> Task :telemetry:writeDebugAarMetadata UP-TO-DATE
+> Task :core:archive:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :core:common:writeDebugAarMetadata UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :core-metadata:extractDeepLinksDebug UP-TO-DATE
+> Task :core-metadata:processDebugManifest UP-TO-DATE
+> Task :data:extractDeepLinksDebug UP-TO-DATE
+> Task :data:processDebugManifest UP-TO-DATE
+> Task :domain:extractDeepLinksDebug UP-TO-DATE
+> Task :domain:processDebugManifest UP-TO-DATE
+> Task :core:archive:compileDebugKotlin UP-TO-DATE
+> Task :i18n:processAndroidMainManifest UP-TO-DATE
+> Task :core:archive:javaPreCompileDebug UP-TO-DATE
+> Task :presentation-core:extractDeepLinksDebug UP-TO-DATE
+> Task :presentation-core:processDebugManifest UP-TO-DATE
+> Task :core:archive:compileDebugJavaWithJavac NO-SOURCE
+> Task :presentation-widget:extractDeepLinksDebug UP-TO-DATE
+> Task :core:archive:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :app:generateDebugRFile UP-TO-DATE
+> Task :core:archive:writeDebugAarMetadata UP-TO-DATE
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :source-api:processAndroidMainManifest UP-TO-DATE
+> Task :telemetry:extractDeepLinksDebug UP-TO-DATE
+> Task :presentation-widget:processDebugManifest UP-TO-DATE
+> Task :core:archive:extractDeepLinksDebug UP-TO-DATE
+> Task :core:archive:processDebugManifest UP-TO-DATE
+> Task :core:common:extractDeepLinksDebug UP-TO-DATE
+> Task :core:common:processDebugManifest UP-TO-DATE
+> Task :telemetry:processDebugManifest UP-TO-DATE
+> Task :data:mapDebugSourceSetPaths UP-TO-DATE
+> Task :data:compileDebugLibraryResources UP-TO-DATE
+> Task :core-metadata:mapDebugSourceSetPaths UP-TO-DATE
+> Task :core-metadata:compileDebugLibraryResources UP-TO-DATE
+> Task :i18n:mapAndroidMainSourceSetPaths UP-TO-DATE
+> Task :domain:mapDebugSourceSetPaths UP-TO-DATE
+> Task :domain:compileDebugLibraryResources UP-TO-DATE
+> Task :i18n:compileAndroidMainLibraryResources UP-TO-DATE
+> Task :presentation-core:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :presentation-widget:mapDebugSourceSetPaths UP-TO-DATE
+> Task :presentation-core:compileDebugLibraryResources UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :telemetry:mapDebugSourceSetPaths UP-TO-DATE
+> Task :presentation-widget:compileDebugLibraryResources UP-TO-DATE
+> Task :source-local:compileAndroidMain UP-TO-DATE
+> Task :app:compileDebugNavigationResources UP-TO-DATE
+> Task :telemetry:compileDebugLibraryResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :source-local:bundleAndroidMainClassesToCompileJar UP-TO-DATE
+> Task :core:common:mapDebugSourceSetPaths UP-TO-DATE
+> Task :core:common:compileDebugLibraryResources UP-TO-DATE
+> Task :core:archive:mapDebugSourceSetPaths UP-TO-DATE
+> Task :core-metadata:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :source-local:processAndroidMainManifest UP-TO-DATE
+> Task :data:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :core:archive:compileDebugLibraryResources UP-TO-DATE
+> Task :core-metadata:processDebugJavaRes UP-TO-DATE
+> Task :domain:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :i18n:bundleAndroidMainClassesToRuntimeJar UP-TO-DATE
+> Task :data:processDebugJavaRes UP-TO-DATE
+> Task :i18n:processAndroidMainJavaRes UP-TO-DATE
+> Task :domain:processDebugJavaRes UP-TO-DATE
+> Task :presentation-widget:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :presentation-core:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :source-api:bundleAndroidMainClassesToRuntimeJar UP-TO-DATE
+> Task :presentation-widget:processDebugJavaRes UP-TO-DATE
+> Task :presentation-core:processDebugJavaRes UP-TO-DATE
+> Task :source-local:bundleAndroidMainClassesToRuntimeJar UP-TO-DATE
+> Task :source-api:processAndroidMainJavaRes UP-TO-DATE
+> Task :source-local:processAndroidMainJavaRes UP-TO-DATE
+> Task :telemetry:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :core:archive:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :core:common:bundleLibRuntimeToJarDebug UP-TO-DATE
+> Task :telemetry:processDebugJavaRes UP-TO-DATE
+> Task :core:archive:processDebugJavaRes UP-TO-DATE
 > Task :data:preDebugUnitTestBuild UP-TO-DATE
+> Task :core-metadata:preDebugUnitTestBuild UP-TO-DATE
+> Task :core:common:processDebugJavaRes UP-TO-DATE
+> Task :domain:preDebugUnitTestBuild UP-TO-DATE
+> Task :domain:generateDebugUnitTestStubRFile FROM-CACHE
+> Task :core-metadata:generateDebugUnitTestStubRFile FROM-CACHE
+> Task :core-metadata:compileDebugUnitTestKotlin NO-SOURCE
+> Task :data:generateDebugUnitTestStubRFile FROM-CACHE
 > Task :core-metadata:javaPreCompileDebugUnitTest FROM-CACHE
 > Task :core-metadata:compileDebugUnitTestJavaWithJavac NO-SOURCE
 > Task :core-metadata:processDebugUnitTestJavaRes NO-SOURCE
 > Task :core-metadata:testDebugUnitTest NO-SOURCE
 > Task :presentation-core:preDebugUnitTestBuild UP-TO-DATE
-> Task :domain:generateDebugUnitTestStubRFile FROM-CACHE
-> Task :data:generateDebugUnitTestStubRFile FROM-CACHE
+> Task :domain:compileDebugUnitTestKotlin FROM-CACHE
+> Task :domain:javaPreCompileDebugUnitTest FROM-CACHE
+> Task :domain:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :domain:processDebugUnitTestJavaRes
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :data:compileDebugUnitTestKotlin FROM-CACHE
+> Task :data:javaPreCompileDebugUnitTest FROM-CACHE
 > Task :presentation-core:generateDebugUnitTestStubRFile FROM-CACHE
+> Task :data:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :data:processDebugUnitTestJavaRes
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :domain:testDebugUnitTest FROM-CACHE
+> Task :app:processDebugResources UP-TO-DATE
 > Task :presentation-core:compileDebugUnitTestKotlin NO-SOURCE
+> Task :app:preDebugUnitTestBuild UP-TO-DATE
+> Task :app:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :presentation-widget:preDebugUnitTestBuild UP-TO-DATE
 > Task :presentation-core:javaPreCompileDebugUnitTest FROM-CACHE
+> Task :data:testDebugUnitTest FROM-CACHE
+> Task :telemetry:preDebugUnitTestBuild UP-TO-DATE
 > Task :presentation-core:compileDebugUnitTestJavaWithJavac NO-SOURCE
 > Task :presentation-core:processDebugUnitTestJavaRes NO-SOURCE
 > Task :presentation-core:testDebugUnitTest NO-SOURCE
-> Task :presentation-widget:preDebugUnitTestBuild UP-TO-DATE
-> Task :data:compileDebugUnitTestKotlin FROM-CACHE
-> Task :data:javaPreCompileDebugUnitTest FROM-CACHE
-> Task :data:compileDebugUnitTestJavaWithJavac NO-SOURCE
-> Task :domain:compileDebugUnitTestKotlin FROM-CACHE
-> Task :domain:javaPreCompileDebugUnitTest FROM-CACHE
-> Task :data:processDebugUnitTestJavaRes
-> Task :domain:compileDebugUnitTestJavaWithJavac NO-SOURCE
-> Task :domain:processDebugUnitTestJavaRes
+> Task :core:archive:preDebugUnitTestBuild UP-TO-DATE
+> Task :core:archive:generateDebugUnitTestStubRFile FROM-CACHE
+> Task :core:archive:compileDebugUnitTestKotlin NO-SOURCE
+> Task :core:archive:javaPreCompileDebugUnitTest FROM-CACHE
+> Task :core:archive:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :telemetry:generateDebugUnitTestStubRFile FROM-CACHE
+> Task :core:archive:processDebugUnitTestJavaRes NO-SOURCE
+> Task :core:archive:testDebugUnitTest NO-SOURCE
+> Task :core:common:preDebugUnitTestBuild UP-TO-DATE
+> Task :telemetry:compileDebugUnitTestKotlin NO-SOURCE
+> Task :telemetry:javaPreCompileDebugUnitTest FROM-CACHE
+> Task :telemetry:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :telemetry:processDebugUnitTestJavaRes NO-SOURCE
+> Task :telemetry:testDebugUnitTest NO-SOURCE
+> Task :core:common:generateDebugUnitTestStubRFile FROM-CACHE
 > Task :presentation-widget:generateDebugUnitTestStubRFile FROM-CACHE
 > Task :presentation-widget:compileDebugUnitTestKotlin NO-SOURCE
 > Task :presentation-widget:javaPreCompileDebugUnitTest FROM-CACHE
 > Task :presentation-widget:compileDebugUnitTestJavaWithJavac NO-SOURCE
 > Task :presentation-widget:processDebugUnitTestJavaRes NO-SOURCE
 > Task :presentation-widget:testDebugUnitTest NO-SOURCE
-> Task :telemetry:preDebugUnitTestBuild UP-TO-DATE
-> Task :telemetry:generateDebugUnitTestStubRFile FROM-CACHE
-> Task :telemetry:compileDebugUnitTestKotlin NO-SOURCE
-> Task :telemetry:javaPreCompileDebugUnitTest FROM-CACHE
-> Task :telemetry:compileDebugUnitTestJavaWithJavac NO-SOURCE
-> Task :telemetry:processDebugUnitTestJavaRes NO-SOURCE
-> Task :telemetry:testDebugUnitTest NO-SOURCE
-> Task :core:archive:preDebugUnitTestBuild UP-TO-DATE
-> Task :core:archive:generateDebugUnitTestStubRFile FROM-CACHE
-> Task :core:archive:compileDebugUnitTestKotlin NO-SOURCE
-> Task :core:archive:javaPreCompileDebugUnitTest FROM-CACHE
-> Task :data:testDebugUnitTest FROM-CACHE
-> Task :core:common:preDebugUnitTestBuild UP-TO-DATE
-> Task :domain:testDebugUnitTest FROM-CACHE
-> Task :core:archive:compileDebugUnitTestJavaWithJavac NO-SOURCE
-> Task :core:archive:processDebugUnitTestJavaRes NO-SOURCE
-> Task :core:archive:testDebugUnitTest NO-SOURCE
-> Task :core:common:generateDebugUnitTestStubRFile FROM-CACHE
 > Task :core:common:compileDebugUnitTestKotlin FROM-CACHE
 > Task :core:common:javaPreCompileDebugUnitTest FROM-CACHE
 > Task :core:common:compileDebugUnitTestJavaWithJavac NO-SOURCE
 > Task :core:common:processDebugUnitTestJavaRes
 > Task :core:common:testDebugUnitTest FROM-CACHE
-> Task :app:generateDebugBuildConfig
-> Task :app:packageDebugResources
-> Task :app:processDebugNavigationResources
-> Task :app:javaPreCompileDebug FROM-CACHE
-> Task :app:parseDebugLocalResources
-> Task :app:checkDebugAarMetadata
-> Task :app:mapDebugSourceSetPaths
-> Task :app:compileDebugNavigationResources FROM-CACHE
-> Task :app:createDebugCompatibleScreenManifests
-> Task :app:extractDeepLinksDebug FROM-CACHE
-> Task :app:generateDebugRFile
-> Task :app:processDebugMainManifest
-> Task :app:processDebugManifest
-> Task :app:preDebugUnitTestBuild UP-TO-DATE
-> Task :app:javaPreCompileDebugUnitTest FROM-CACHE
-> Task :app:processDebugManifestForPackage
-> Task :app:mergeDebugResources
-> Task :app:dataBindingGenBaseClassesDebug FROM-CACHE
-> Task :app:processDebugResources
-> Task :app:compileDebugKotlin
-e: file:///home/runner/work/Yomori/Yomori/app/src/main/java/eu/kanade/tachiyomi/ui/readinglist/ReadingListReviewScreen.kt:13:43 Cannot access 'val RowColumnParentData?.weight: Float': it is internal in file.
 
-> Task :app:compileDebugKotlin FAILED
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1784037528020.json
+> Task :app:compileDebugKotlin
+w: file:///home/runner/work/Yomori/Yomori/app/src/main/java/eu/kanade/tachiyomi/data/notification/NotificationReceiver.kt:200:9 This is a delicate API and its use requires care. Make sure you fully read and understand documentation of the declaration that is marked as a delicate API.
+w: file:///home/runner/work/Yomori/Yomori/app/src/main/java/eu/kanade/tachiyomi/data/notification/NotificationReceiver.kt:226:9 This is a delicate API and its use requires care. Make sure you fully read and understand documentation of the declaration that is marked as a delicate API.
+
+> Task :app:compileDebugJavaWithJavac
+> Task :app:processDebugJavaRes UP-TO-DATE
+> Task :app:bundleDebugClassesToCompileJar
+> Task :app:bundleDebugClassesToRuntimeJar
+> Task :app:compileDebugUnitTestKotlin
+> Task :app:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :app:processDebugUnitTestJavaRes UP-TO-DATE
+OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+
+> Task :app:testDebugUnitTest
+
+ReaderErrorMessageTest > detects wrapped null pointer failures() PASSED
+
+ReaderErrorMessageTest > replaces HTTP source null pointer failures() PASSED
+
+ReaderErrorMessageTest > preserves local source failures() PASSED
+
+ReaderErrorMessageTest > preserves informative HTTP source failures() PASSED
+
+CblDocumentReaderTest > empty documents decode deterministically() PASSED
+
+CblDocumentReaderTest > decodes UTF-8 with and without BOM() PASSED
+
+CblDocumentReaderTest > decodes UTF-16 little endian with and without BOM() PASSED
+
+CblDocumentReaderTest > decodes UTF-16 big endian with and without BOM() PASSED
+
+ReadingListCandidateSearchTest > unavailable confirmed mapping does not search replacement sources() PASSED
+
+ReadingListCandidateSearchTest > confirmed series mapping avoids replacement series searches() PASSED
+
+ReadingListCandidateSearchTest > confirmed series history requires the same manga() PASSED
+
+ReadingListCandidateSearchTest > confirmed and skipped entries are not searched or replaced() PASSED
+
+ReadingListCandidateSearchTest > searches one selected source once for entries in the same series() PASSED
+
+ReadingListCandidateSearchTest > one failing source does not discard another source result() PASSED
+
+ReadingListCandidateSearchTest > missing chapter override is not converted into a synthetic match() PASSED
+
+ReadingListCandidateSearchTest > unavailable entry override is not bypassed by lower priority sources() PASSED
+
+ReadingListCandidateSearchTest > queued requests receive their full timeout after acquiring the permit() PASSED
+
+ReadingListCandidateSearchTest > marks eligible entries unavailable when no selected source is installed() PASSED
+
+ReadingListCandidateSearchTest > entry override takes precedence over a confirmed series mapping() PASSED
+
+ReadingListCandidateSearchTest > entry override seed is eligible only for its owning entry() PASSED
+
+ReadingListCandidateSearchTest > source-only entry override limits the series search() PASSED
+
+ReadingListCandidateSearchTest > source requests time out without blocking the whole search() PASSED
+
+ReadingListCandidateSearchTest > rejected candidates are not returned to automatic matching() PASSED
+
+ReadingListCandidateSearchTest > simultaneous list searches share the configured request limit() PASSED
+
+ReadingListReviewScreenModelTest > series mapping removal uses the entry normalized series key() PASSED
+
+ReadingListReviewScreenModelTest > presentation preserves cbl order candidate order and orphaned rejections() PASSED
+
+ReadingListReviewScreenModelTest > presentation retains every state and excludes confirmed and skipped entries from attention() PASSED
+
+ReadingListReviewScreenModelTest > stored rejection restoration clears only its exact identity() PASSED
+
+ReadingListReviewScreenModelTest > unknown candidate identity is refused without a repository write() PASSED
+
+ReadingListReviewScreenModelTest > series mapping is a separate explicit operation() PASSED
+
+ReadingListReviewScreenModelTest > candidate rejection uses the exact persisted snapshot() PASSED
+
+ReadingListReviewScreenModelTest > orphaned rejection can be restored without a candidate snapshot() PASSED
+
+ReadingListReviewScreenModelTest > candidate confirmation uses the exact persisted snapshot() PASSED
+
+ReadingListSourceFilterTest > source search narrows a nonmatching extension to matching child sources() PASSED
+
+ReadingListSourceFilterTest > all languages leaves installed variants visible() PASSED
+
+ReadingListSourceFilterTest > extension search keeps all language-filtered variants in a matching group() PASSED
+
+ReadingListSourceFilterTest > unavailable saved sources remain visible through a language filter() PASSED
+
+ReadingListSourceFilterTest > preferred language includes matching and all-language variants() PASSED
+
+ReadingListSourceFilterTest > lists concrete installed languages without the all-language source() PASSED
+
+ReadingListSourceGroupingTest > omits installed extensions without online sources() PASSED
+
+ReadingListSourceGroupingTest > keeps installed extensions with the same display name separate() PASSED
+
+ReadingListSourceGroupingTest > groups multilingual variants under one installed extension() PASSED
+
+ReadingListSourceGroupingTest > deduplicates conflicting source IDs deterministically() PASSED
+
+MigratorTest > withinRangeMigration() PASSED
+
+MigratorTest > largeMigration() PASSED
+
+MigratorTest > sameVersion() PASSED
+
+MigratorTest > smallMigration() PASSED
+
+MigratorTest > noMigrations() PASSED
+
+MigratorTest > initialVersion() PASSED
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1784038967542.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/Yomori/Yomori/build/reports/problems/problems-report.html
-
-FAILURE: Build failed with an exception.
-
-* What went wrong:
-Execution failed for task ':app:compileDebugKotlin' (registered by plugin 'com.android.internal.application').
-> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.btapi.BuildToolsApiCompilationWork
-   > Compilation error. See log for more details
-
-* Try:
-> Run with --stacktrace option to get the stack trace.
-> Run with --info or --debug option to get more log output.
-> Run with --scan to get full insights from a Build Scan (powered by Develocity).
-> Get more help at https://help.gradle.org.
 
 Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
 
@@ -123,9 +286,10 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 For more on this, please refer to https://docs.gradle.org/9.6.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
 
-BUILD FAILED in 54s
-240 actionable tasks: 84 executed, 152 from cache, 4 up-to-date
-STATUS tests=1
+BUILD SUCCESSFUL in 11s
+247 actionable tasks: 13 executed, 22 from cache, 212 up-to-date
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.6.1/userguide/configuration_cache_enabling.html
+STATUS tests=0
 ===== migrations =====
 Configuration on demand is an incubating feature.
 Type-safe project accessors is an incubating feature.
@@ -139,7 +303,7 @@ Type-safe project accessors is an incubating feature.
 > Task :data:verifyDebugDatabaseMigration FROM-CACHE
 > Task :data:verifyReleaseDatabaseMigration FROM-CACHE
 > Task :data:verifySqlDelightMigration UP-TO-DATE
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1784037583145.json
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1784038978652.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/Yomori/Yomori/build/reports/problems/problems-report.html
 
@@ -163,282 +327,282 @@ Type-safe project accessors is an incubating feature.
 > Task :build-logic:processResources UP-TO-DATE
 > Task :build-logic:classes UP-TO-DATE
 > Task :build-logic:jar UP-TO-DATE
+> Task :core-metadata:preBuild UP-TO-DATE
 > Task :data:preBuild UP-TO-DATE
 > Task :data:preReleaseBuild UP-TO-DATE
-> Task :core-metadata:preBuild UP-TO-DATE
-> Task :core-metadata:preReleaseBuild UP-TO-DATE
 > Task :domain:preBuild UP-TO-DATE
 > Task :domain:preReleaseBuild UP-TO-DATE
 > Task :app:preBuild UP-TO-DATE
 > Task :app:prePreviewBuild UP-TO-DATE
+> Task :core-metadata:preReleaseBuild UP-TO-DATE
 > Task :domain:mergeReleaseJniLibFolders
+> Task :core-metadata:mergeReleaseJniLibFolders
+> Task :domain:mergeReleaseNativeLibs NO-SOURCE
 > Task :app:mergePreviewJniLibFolders
+> Task :data:mergeReleaseJniLibFolders
 > Task :i18n:androidPreBuild UP-TO-DATE
 > Task :i18n:preAndroidMainBuild UP-TO-DATE
-> Task :core-metadata:mergeReleaseJniLibFolders
-> Task :data:mergeReleaseJniLibFolders
-> Task :domain:mergeReleaseNativeLibs NO-SOURCE
 > Task :core-metadata:mergeReleaseNativeLibs NO-SOURCE
 > Task :data:mergeReleaseNativeLibs NO-SOURCE
 > Task :i18n:mergeAndroidMainJniLibFolders
 > Task :i18n:mergeAndroidMainNativeLibs NO-SOURCE
-> Task :data:copyReleaseJniLibsProjectOnly
 > Task :core-metadata:copyReleaseJniLibsProjectOnly
-> Task :presentation-widget:preBuild UP-TO-DATE
-> Task :presentation-widget:preReleaseBuild UP-TO-DATE
 > Task :presentation-core:preBuild UP-TO-DATE
 > Task :presentation-core:preReleaseBuild UP-TO-DATE
-> Task :domain:copyReleaseJniLibsProjectOnly
+> Task :i18n:copyAndroidMainJniLibsProjectOnly
+> Task :presentation-widget:preBuild UP-TO-DATE
+> Task :presentation-widget:preReleaseBuild UP-TO-DATE
+> Task :data:copyReleaseJniLibsProjectOnly
 > Task :source-api:androidPreBuild UP-TO-DATE
 > Task :source-api:preAndroidMainBuild UP-TO-DATE
-> Task :i18n:copyAndroidMainJniLibsProjectOnly
+> Task :domain:copyReleaseJniLibsProjectOnly
 > Task :source-local:androidPreBuild UP-TO-DATE
 > Task :source-local:preAndroidMainBuild UP-TO-DATE
+> Task :presentation-core:mergeReleaseJniLibFolders
+> Task :presentation-core:mergeReleaseNativeLibs NO-SOURCE
+> Task :source-api:mergeAndroidMainJniLibFolders
+> Task :source-api:mergeAndroidMainNativeLibs NO-SOURCE
 > Task :presentation-widget:mergeReleaseJniLibFolders
 > Task :source-local:mergeAndroidMainJniLibFolders
-> Task :presentation-core:mergeReleaseJniLibFolders
-> Task :source-api:mergeAndroidMainJniLibFolders
-> Task :source-local:mergeAndroidMainNativeLibs NO-SOURCE
-> Task :presentation-core:mergeReleaseNativeLibs NO-SOURCE
-> Task :source-api:mergeAndroidMainNativeLibs NO-SOURCE
 > Task :presentation-widget:mergeReleaseNativeLibs NO-SOURCE
-> Task :presentation-widget:copyReleaseJniLibsProjectOnly
-> Task :source-api:copyAndroidMainJniLibsProjectOnly
-> Task :source-local:copyAndroidMainJniLibsProjectOnly
+> Task :source-local:mergeAndroidMainNativeLibs NO-SOURCE
+> Task :presentation-core:copyReleaseJniLibsProjectOnly
 > Task :telemetry:preBuild UP-TO-DATE
 > Task :telemetry:preReleaseBuild UP-TO-DATE
-> Task :core:common:preBuild UP-TO-DATE
+> Task :source-api:copyAndroidMainJniLibsProjectOnly
 > Task :core:archive:preBuild UP-TO-DATE
-> Task :core:common:preReleaseBuild UP-TO-DATE
 > Task :core:archive:preReleaseBuild UP-TO-DATE
-> Task :presentation-core:copyReleaseJniLibsProjectOnly
-> Task :core-metadata:prepareReleaseArtProfile
+> Task :presentation-widget:copyReleaseJniLibsProjectOnly
+> Task :core:common:preBuild UP-TO-DATE
+> Task :core:common:preReleaseBuild UP-TO-DATE
 > Task :core:archive:mergeReleaseJniLibFolders
+> Task :source-local:copyAndroidMainJniLibsProjectOnly
+> Task :telemetry:mergeReleaseJniLibFolders
+> Task :telemetry:mergeReleaseNativeLibs NO-SOURCE
 > Task :core:archive:mergeReleaseNativeLibs NO-SOURCE
+> Task :core-metadata:prepareReleaseArtProfile
+> Task :telemetry:copyReleaseJniLibsProjectOnly
 > Task :core:common:mergeReleaseJniLibFolders
 > Task :data:prepareReleaseArtProfile
-> Task :telemetry:mergeReleaseJniLibFolders
+> Task :domain:prepareReleaseArtProfile
 > Task :core:archive:copyReleaseJniLibsProjectOnly
 > Task :core:common:mergeReleaseNativeLibs NO-SOURCE
-> Task :telemetry:mergeReleaseNativeLibs NO-SOURCE
-> Task :domain:prepareReleaseArtProfile
+> Task :presentation-core:prepareReleaseArtProfile
+> Task :presentation-widget:prepareReleaseArtProfile
 > Task :i18n:prepareAndroidMainArtProfile
 > Task :core:common:copyReleaseJniLibsProjectOnly
-> Task :presentation-widget:prepareReleaseArtProfile
-> Task :presentation-core:prepareReleaseArtProfile
 > Task :source-api:prepareAndroidMainArtProfile
 > Task :source-local:prepareAndroidMainArtProfile
 > Task :telemetry:prepareReleaseArtProfile
 > Task :core-metadata:generateReleaseResources UP-TO-DATE
-> Task :telemetry:copyReleaseJniLibsProjectOnly
-> Task :core-metadata:packageReleaseResources UP-TO-DATE
-> Task :core-metadata:processReleaseNavigationResources UP-TO-DATE
-> Task :core-metadata:parseReleaseLocalResources UP-TO-DATE
 > Task :core:archive:prepareReleaseArtProfile
-> Task :core:common:prepareReleaseArtProfile
 > Task :source-api:kmpPartiallyResolvedDependenciesChecker
-> Task :i18n:kmpPartiallyResolvedDependenciesChecker
 > Task :source-api:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :i18n:kmpPartiallyResolvedDependenciesChecker
 > Task :i18n:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :core:common:prepareReleaseArtProfile
+> Task :core-metadata:packageReleaseResources UP-TO-DATE
 > Task :core:common:generateReleaseResources UP-TO-DATE
 > Task :i18n:generateAndroidMainEmptyResourceFiles UP-TO-DATE
 > Task :i18n:generateAndroidMainLocalesConfig UP-TO-DATE
+> Task :core-metadata:processReleaseNavigationResources UP-TO-DATE
+> Task :i18n:generateMRcommonTest UP-TO-DATE
+> Task :core-metadata:parseReleaseLocalResources UP-TO-DATE
+> Task :i18n:generateMRandroidHostTest UP-TO-DATE
 > Task :core:common:packageReleaseResources UP-TO-DATE
 > Task :core:common:processReleaseNavigationResources UP-TO-DATE
-> Task :i18n:generateMRcommonTest UP-TO-DATE
-> Task :i18n:generateMRandroidHostTest UP-TO-DATE
+> Task :i18n:generateMRcommonMain UP-TO-DATE
+> Task :i18n:generateMRandroidMain UP-TO-DATE
 > Task :core:common:parseReleaseLocalResources UP-TO-DATE
 > Task :core:common:javaPreCompileRelease UP-TO-DATE
-> Task :i18n:generateMRcommonMain UP-TO-DATE
+> Task :i18n:packageAndroidMainResources UP-TO-DATE
 > Task :domain:generateReleaseResources UP-TO-DATE
-> Task :i18n:generateMRandroidMain UP-TO-DATE
+> Task :i18n:parseAndroidMainLocalResources UP-TO-DATE
 > Task :domain:packageReleaseResources UP-TO-DATE
 > Task :domain:processReleaseNavigationResources UP-TO-DATE
-> Task :i18n:packageAndroidMainResources UP-TO-DATE
 > Task :domain:parseReleaseLocalResources UP-TO-DATE
-> Task :i18n:parseAndroidMainLocalResources UP-TO-DATE
 > Task :domain:javaPreCompileRelease UP-TO-DATE
 > Task :source-local:kmpPartiallyResolvedDependenciesChecker
 > Task :source-local:checkKotlinGradlePluginConfigurationErrors SKIPPED
 > Task :core:archive:generateReleaseResources UP-TO-DATE
+> Task :i18n:generateAndroidMainRFile UP-TO-DATE
+> Task :i18n:compileAndroidMain UP-TO-DATE
+> Task :i18n:bundleAndroidMainClassesToCompileJar UP-TO-DATE
 > Task :core:archive:packageReleaseResources UP-TO-DATE
 > Task :core:archive:processReleaseNavigationResources UP-TO-DATE
 > Task :core:archive:parseReleaseLocalResources UP-TO-DATE
-> Task :i18n:generateAndroidMainRFile UP-TO-DATE
-> Task :core-metadata:generateReleaseRFile UP-TO-DATE
-> Task :core-metadata:javaPreCompileRelease UP-TO-DATE
-> Task :core:common:generateReleaseRFile UP-TO-DATE
 > Task :core:archive:generateReleaseRFile UP-TO-DATE
-> Task :i18n:compileAndroidMain UP-TO-DATE
-> Task :i18n:bundleAndroidMainClassesToCompileJar UP-TO-DATE
+> Task :core-metadata:generateReleaseRFile UP-TO-DATE
+> Task :core:common:generateReleaseRFile UP-TO-DATE
+> Task :core-metadata:javaPreCompileRelease UP-TO-DATE
 > Task :core:archive:compileReleaseKotlin UP-TO-DATE
 > Task :core:archive:javaPreCompileRelease UP-TO-DATE
 > Task :core:archive:compileReleaseJavaWithJavac NO-SOURCE
-> Task :domain:generateReleaseRFile UP-TO-DATE
 > Task :core:archive:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :domain:generateReleaseRFile UP-TO-DATE
 > Task :presentation-core:generateReleaseResources FROM-CACHE
-> Task :presentation-core:packageReleaseResources FROM-CACHE
 > Task :core:common:compileReleaseKotlin UP-TO-DATE
-> Task :core:common:compileReleaseJavaWithJavac NO-SOURCE
 > Task :data:generateReleaseDatabaseInterface FROM-CACHE
+> Task :presentation-core:packageReleaseResources FROM-CACHE
+> Task :core:common:compileReleaseJavaWithJavac NO-SOURCE
 > Task :core:common:bundleLibCompileToJarRelease UP-TO-DATE
-> Task :presentation-core:processReleaseNavigationResources FROM-CACHE
 > Task :data:generateReleaseResources FROM-CACHE
-> Task :presentation-core:parseReleaseLocalResources FROM-CACHE
+> Task :presentation-core:processReleaseNavigationResources FROM-CACHE
 > Task :data:packageReleaseResources FROM-CACHE
+> Task :presentation-core:parseReleaseLocalResources FROM-CACHE
 > Task :data:processReleaseNavigationResources FROM-CACHE
 > Task :data:parseReleaseLocalResources FROM-CACHE
 > Task :source-api:compileAndroidMain UP-TO-DATE
 > Task :source-api:bundleAndroidMainClassesToCompileJar UP-TO-DATE
 > Task :data:generateReleaseRFile FROM-CACHE
 > Task :core-metadata:compileReleaseKotlin UP-TO-DATE
-> Task :presentation-core:generateReleaseRFile FROM-CACHE
 > Task :core-metadata:compileReleaseJavaWithJavac NO-SOURCE
 > Task :core-metadata:bundleLibCompileToJarRelease UP-TO-DATE
-> Task :core-metadata:mergeReleaseGeneratedProguardFiles
-> Task :data:javaPreCompileRelease FROM-CACHE
-> Task :core-metadata:exportReleaseConsumerProguardFiles
-> Task :presentation-widget:generateReleaseResources FROM-CACHE
+> Task :presentation-core:generateReleaseRFile FROM-CACHE
 > Task :domain:compileReleaseKotlin UP-TO-DATE
+> Task :core-metadata:mergeReleaseGeneratedProguardFiles
 > Task :domain:compileReleaseJavaWithJavac NO-SOURCE
 > Task :domain:bundleLibCompileToJarRelease UP-TO-DATE
-> Task :presentation-widget:packageReleaseResources FROM-CACHE
+> Task :data:javaPreCompileRelease FROM-CACHE
+> Task :core-metadata:exportReleaseConsumerProguardFiles
 > Task :source-local:compileAndroidMain UP-TO-DATE
 > Task :source-local:bundleAndroidMainClassesToRuntimeJar UP-TO-DATE
 > Task :source-local:processAndroidMainJavaRes UP-TO-DATE
-> Task :presentation-core:compileReleaseKotlin FROM-CACHE
 > Task :source-local:createFullJarAndroidMain
-> Task :presentation-core:javaPreCompileRelease FROM-CACHE
-> Task :presentation-core:compileReleaseJavaWithJavac NO-SOURCE
-> Task :presentation-core:bundleLibCompileToJarRelease
+> Task :presentation-widget:generateReleaseResources FROM-CACHE
+> Task :presentation-widget:packageReleaseResources FROM-CACHE
 > Task :presentation-widget:processReleaseNavigationResources FROM-CACHE
 > Task :presentation-widget:parseReleaseLocalResources FROM-CACHE
-> Task :presentation-widget:generateReleaseRFile FROM-CACHE
 > Task :data:compileReleaseKotlin FROM-CACHE
 > Task :data:compileReleaseJavaWithJavac NO-SOURCE
-> Task :presentation-widget:compileReleaseKotlin FROM-CACHE
+> Task :data:mergeReleaseGeneratedProguardFiles
+> Task :presentation-core:compileReleaseKotlin FROM-CACHE
+> Task :data:exportReleaseConsumerProguardFiles
+> Task :presentation-core:javaPreCompileRelease FROM-CACHE
+> Task :presentation-core:compileReleaseJavaWithJavac NO-SOURCE
+> Task :presentation-widget:generateReleaseRFile FROM-CACHE
 > Task :presentation-widget:javaPreCompileRelease FROM-CACHE
-> Task :presentation-widget:compileReleaseJavaWithJavac NO-SOURCE
-> Task :presentation-widget:mergeReleaseGeneratedProguardFiles
-> Task :presentation-widget:exportReleaseConsumerProguardFiles
 > Task :domain:mergeReleaseGeneratedProguardFiles
 > Task :domain:exportReleaseConsumerProguardFiles
 > Task :source-api:mergeAndroidMainGeneratedProguardFiles
+> Task :presentation-core:bundleLibCompileToJarRelease
 > Task :source-api:exportAndroidMainConsumerProguardFiles
 > Task :presentation-core:mergeReleaseGeneratedProguardFiles
 > Task :presentation-core:exportReleaseConsumerProguardFiles
 > Task :telemetry:generateReleaseResources FROM-CACHE
 > Task :telemetry:packageReleaseResources FROM-CACHE
 > Task :telemetry:processReleaseNavigationResources FROM-CACHE
+> Task :presentation-widget:compileReleaseKotlin FROM-CACHE
 > Task :telemetry:parseReleaseLocalResources FROM-CACHE
-> Task :app:mergePreviewNativeLibs
-> Task :data:mergeReleaseGeneratedProguardFiles
+> Task :presentation-widget:compileReleaseJavaWithJavac NO-SOURCE
+> Task :presentation-widget:mergeReleaseGeneratedProguardFiles
+> Task :presentation-widget:exportReleaseConsumerProguardFiles
+> Task :telemetry:generateReleaseRFile FROM-CACHE
 > Task :core:common:mergeReleaseGeneratedProguardFiles
-> Task :data:exportReleaseConsumerProguardFiles
+> Task :core:common:exportReleaseConsumerProguardFiles
 > Task :i18n:bundleAndroidMainClassesToRuntimeJar UP-TO-DATE
 > Task :i18n:processAndroidMainJavaRes UP-TO-DATE
-> Task :core:common:exportReleaseConsumerProguardFiles
-> Task :telemetry:generateReleaseRFile FROM-CACHE
-> Task :core:archive:mergeReleaseGeneratedProguardFiles
 > Task :i18n:createFullJarAndroidMain
+> Task :telemetry:compileReleaseKotlin FROM-CACHE
+> Task :core:archive:mergeReleaseGeneratedProguardFiles
+> Task :telemetry:javaPreCompileRelease FROM-CACHE
+> Task :telemetry:compileReleaseJavaWithJavac NO-SOURCE
+> Task :telemetry:mergeReleaseGeneratedProguardFiles
 > Task :core:archive:exportReleaseConsumerProguardFiles
 > Task :source-api:generateAndroidMainEmptyResourceFiles UP-TO-DATE
 > Task :source-local:generateAndroidMainEmptyResourceFiles UP-TO-DATE
+> Task :telemetry:exportReleaseConsumerProguardFiles
 > Task :presentation-widget:bundleLibCompileToJarRelease
 > Task :source-local:bundleAndroidMainClassesToCompileJar UP-TO-DATE
+> Task :telemetry:bundleLibCompileToJarRelease
 > Task :core-metadata:writeReleaseAarMetadata
-> Task :data:bundleLibCompileToJarRelease
-> Task :domain:writeReleaseAarMetadata
-> Task :telemetry:compileReleaseKotlin FROM-CACHE
 > Task :data:writeReleaseAarMetadata
-> Task :telemetry:javaPreCompileRelease FROM-CACHE
+> Task :domain:writeReleaseAarMetadata
 > Task :i18n:writeAndroidMainAarMetadata UP-TO-DATE
-> Task :telemetry:compileReleaseJavaWithJavac NO-SOURCE
-> Task :telemetry:mergeReleaseGeneratedProguardFiles
-> Task :telemetry:exportReleaseConsumerProguardFiles
-> Task :presentation-widget:writeReleaseAarMetadata
 > Task :presentation-core:writeReleaseAarMetadata
+> Task :presentation-widget:writeReleaseAarMetadata
+> Task :data:bundleLibCompileToJarRelease
 > Task :source-api:writeAndroidMainAarMetadata UP-TO-DATE
 > Task :source-local:writeAndroidMainAarMetadata UP-TO-DATE
-> Task :telemetry:bundleLibCompileToJarRelease
-> Task :core:common:writeReleaseAarMetadata
 > Task :telemetry:writeReleaseAarMetadata
 > Task :core:archive:writeReleaseAarMetadata
-> Task :data:extractDeepLinksRelease FROM-CACHE
+> Task :core:common:writeReleaseAarMetadata
 > Task :core-metadata:extractDeepLinksRelease FROM-CACHE
+> Task :data:extractDeepLinksRelease FROM-CACHE
 > Task :core-metadata:processReleaseManifest FROM-CACHE
-> Task :domain:extractDeepLinksRelease FROM-CACHE
 > Task :data:processReleaseManifest FROM-CACHE
+> Task :domain:extractDeepLinksRelease FROM-CACHE
 > Task :i18n:processAndroidMainManifest UP-TO-DATE
 > Task :presentation-core:extractDeepLinksRelease FROM-CACHE
-> Task :app:mergePreviewArtProfile
+> Task :app:mergePreviewNativeLibs
 > Task :domain:processReleaseManifest FROM-CACHE
-> Task :presentation-core:processReleaseManifest FROM-CACHE
-> Task :presentation-widget:extractDeepLinksRelease FROM-CACHE
 > Task :source-api:processAndroidMainManifest UP-TO-DATE
 > Task :source-local:processAndroidMainManifest UP-TO-DATE
+> Task :presentation-core:processReleaseManifest FROM-CACHE
 > Task :telemetry:extractDeepLinksRelease FROM-CACHE
-> Task :presentation-widget:processReleaseManifest FROM-CACHE
+> Task :presentation-widget:extractDeepLinksRelease FROM-CACHE
 > Task :core:archive:extractDeepLinksRelease FROM-CACHE
 > Task :telemetry:processReleaseManifest FROM-CACHE
+> Task :presentation-widget:processReleaseManifest FROM-CACHE
 > Task :core:archive:processReleaseManifest FROM-CACHE
 > Task :core:common:extractDeepLinksRelease FROM-CACHE
-> Task :core-metadata:mapReleaseSourceSetPaths
-> Task :core-metadata:compileReleaseLibraryResources FROM-CACHE
-> Task :core:common:processReleaseManifest FROM-CACHE
 > Task :data:mapReleaseSourceSetPaths
-> Task :domain:mapReleaseSourceSetPaths
-> Task :domain:compileReleaseLibraryResources FROM-CACHE
-> Task :data:compileReleaseLibraryResources FROM-CACHE
+> Task :core-metadata:mapReleaseSourceSetPaths
+> Task :core:common:processReleaseManifest FROM-CACHE
+> Task :core-metadata:compileReleaseLibraryResources FROM-CACHE
 > Task :i18n:mapAndroidMainSourceSetPaths UP-TO-DATE
+> Task :data:compileReleaseLibraryResources FROM-CACHE
 > Task :i18n:compileAndroidMainLibraryResources UP-TO-DATE
+> Task :domain:mapReleaseSourceSetPaths
 > Task :presentation-core:mapReleaseSourceSetPaths
 > Task :presentation-widget:mapReleaseSourceSetPaths
+> Task :domain:compileReleaseLibraryResources FROM-CACHE
 > Task :presentation-core:compileReleaseLibraryResources FROM-CACHE
-> Task :presentation-widget:compileReleaseLibraryResources FROM-CACHE
-> Task :telemetry:mapReleaseSourceSetPaths
 > Task :core:archive:mapReleaseSourceSetPaths
+> Task :telemetry:mapReleaseSourceSetPaths
+> Task :presentation-widget:compileReleaseLibraryResources FROM-CACHE
 > Task :core:archive:compileReleaseLibraryResources FROM-CACHE
-> Task :telemetry:compileReleaseLibraryResources FROM-CACHE
 > Task :core:common:mapReleaseSourceSetPaths
+> Task :telemetry:compileReleaseLibraryResources FROM-CACHE
 > Task :core:common:compileReleaseLibraryResources FROM-CACHE
 > Task :core-metadata:bundleLibRuntimeToJarRelease
 > Task :data:bundleLibRuntimeToJarRelease
 > Task :domain:bundleLibRuntimeToJarRelease
-> Task :app:checkPreviewDuplicateClasses
+> Task :app:mergePreviewArtProfile
 > Task :presentation-widget:bundleLibRuntimeToJarRelease
-> Task :source-api:bundleAndroidMainClassesToRuntimeJar UP-TO-DATE
 > Task :presentation-core:bundleLibRuntimeToJarRelease
+> Task :source-api:bundleAndroidMainClassesToRuntimeJar UP-TO-DATE
 > Task :telemetry:bundleLibRuntimeToJarRelease
 > Task :core:archive:bundleLibRuntimeToJarRelease
 > Task :core:common:bundleLibRuntimeToJarRelease
 > Task :core-metadata:processReleaseJavaRes
+> Task :app:checkPreviewDuplicateClasses
 > Task :data:processReleaseJavaRes
 > Task :presentation-core:processReleaseJavaRes
-> Task :app:stripPreviewDebugSymbols
-> Task :source-api:processAndroidMainJavaRes UP-TO-DATE
+> Task :presentation-widget:processReleaseJavaRes
 > Task :domain:processReleaseJavaRes
+> Task :source-api:processAndroidMainJavaRes UP-TO-DATE
 > Task :core:archive:processReleaseJavaRes
 > Task :telemetry:processReleaseJavaRes
 > Task :core-metadata:generateReleaseAssets UP-TO-DATE
-> Task :presentation-widget:processReleaseJavaRes
-> Task :core:common:processReleaseJavaRes
-> Task :data:generateReleaseAssets UP-TO-DATE
-> Task :domain:generateReleaseAssets UP-TO-DATE
 > Task :core-metadata:mergeReleaseAssets
+> Task :data:generateReleaseAssets UP-TO-DATE
+> Task :core:common:processReleaseJavaRes
+> Task :domain:generateReleaseAssets UP-TO-DATE
+> Task :data:mergeReleaseAssets
 > Task :i18n:generateAndroidMainAssets UP-TO-DATE
 > Task :i18n:mergeAndroidMainAssets
 > Task :presentation-core:generateReleaseAssets UP-TO-DATE
-> Task :data:mergeReleaseAssets
-> Task :presentation-widget:generateReleaseAssets UP-TO-DATE
-> Task :domain:mergeReleaseAssets
-> Task :telemetry:generateReleaseAssets UP-TO-DATE
 > Task :presentation-core:mergeReleaseAssets
+> Task :presentation-widget:generateReleaseAssets UP-TO-DATE
+> Task :app:stripPreviewDebugSymbols
+> Task :telemetry:generateReleaseAssets UP-TO-DATE
+> Task :domain:mergeReleaseAssets
 > Task :core:archive:generateReleaseAssets UP-TO-DATE
 > Task :telemetry:mergeReleaseAssets
 > Task :core:common:generateReleaseAssets UP-TO-DATE
-> Task :presentation-widget:mergeReleaseAssets
 > Task :core:archive:mergeReleaseAssets
+> Task :presentation-widget:mergeReleaseAssets
 > Task :core:common:mergeReleaseAssets
 > Task :app:expandPreviewL8ArtProfileWildcards FROM-CACHE
 > Task :app:extractPreviewNativeSymbolTables FROM-CACHE
@@ -462,37 +626,73 @@ Type-safe project accessors is an incubating feature.
 > Task :app:processPreviewManifest
 > Task :app:extractProguardFiles
 > Task :app:mergePreviewStartupProfile
-> Task :app:processPreviewManifestForPackage
 > Task :app:generatePreviewAssets UP-TO-DATE
-> Task :app:mergePreviewAssets
 > Task :app:generatePreviewRFile
+> Task :app:mergePreviewAssets
 > Task :app:compressPreviewAssets FROM-CACHE
 > Task :app:extractPreviewVersionControlInfo
 > Task :app:validateSigningPreview
 > Task :app:writePreviewAppMetadata
+> Task :app:processPreviewManifestForPackage
 > Task :app:writePreviewSigningConfigVersions
 > Task :app:mergePreviewResources
 > Task :app:dataBindingGenBaseClassesPreview FROM-CACHE
 > Task :app:processPreviewResources
+> Task :app:compilePreviewKotlin
+w: file:///home/runner/work/Yomori/Yomori/app/src/main/java/eu/kanade/tachiyomi/data/download/DownloadManager.kt:224:9 This is a delicate API and its use requires care. Make sure you fully read and understand documentation of the declaration that is marked as a delicate API.
+w: file:///home/runner/work/Yomori/Yomori/app/src/main/java/eu/kanade/tachiyomi/data/download/DownloadManager.kt:251:9 This is a delicate API and its use requires care. Make sure you fully read and understand documentation of the declaration that is marked as a delicate API.
+w: file:///home/runner/work/Yomori/Yomori/app/src/main/java/eu/kanade/tachiyomi/data/download/Downloader.kt:115:9 This is a delicate API and its use requires care. Make sure you fully read and understand documentation of the declaration that is marked as a delicate API.
+w: file:///home/runner/work/Yomori/Yomori/app/src/main/java/eu/kanade/tachiyomi/data/library/LibraryUpdateNotifier.kt:211:13 This is a delicate API and its use requires care. Make sure you fully read and understand documentation of the declaration that is marked as a delicate API.
+w: file:///home/runner/work/Yomori/Yomori/app/src/main/java/eu/kanade/tachiyomi/data/notification/NotificationReceiver.kt:200:9 This is a delicate API and its use requires care. Make sure you fully read and understand documentation of the declaration that is marked as a delicate API.
+w: file:///home/runner/work/Yomori/Yomori/app/src/main/java/eu/kanade/tachiyomi/data/notification/NotificationReceiver.kt:226:9 This is a delicate API and its use requires care. Make sure you fully read and understand documentation of the declaration that is marked as a delicate API.
+w: file:///home/runner/work/Yomori/Yomori/app/src/main/java/eu/kanade/tachiyomi/ui/reader/loader/HttpPageLoader.kt:134:13 This is a delicate API and its use requires care. Make sure you fully read and understand documentation of the declaration that is marked as a delicate API.
+w: file:///home/runner/work/Yomori/Yomori/app/src/main/java/eu/kanade/tachiyomi/ui/readinglist/ReadingListsTab.kt:98:57 'val Icons.Outlined.List: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.List.
+w: file:///home/runner/work/Yomori/Yomori/app/src/main/java/eu/kanade/tachiyomi/ui/readinglist/ReadingListsTab.kt:295:46 'val Icons.Outlined.List: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.List.
+w: file:///home/runner/work/Yomori/Yomori/app/src/main/java/eu/kanade/tachiyomi/ui/readinglist/ReadingListsTab.kt:352:5 'fun ListItem(headlineContent: ComposableFunction0<Unit>, modifier: Modifier = ..., overlineContent: ComposableFunction0<Unit>? = ..., supportingContent: ComposableFunction0<Unit>? = ..., leadingContent: ComposableFunction0<Unit>? = ..., trailingContent: ComposableFunction0<Unit>? = ..., colors: ListItemColors = ..., tonalElevation: Dp = ..., shadowElevation: Dp = ...): Unit' is deprecated. Use the overload where `headlineContent` is now a trailing `content` lambda.
+w: file:///home/runner/work/Yomori/Yomori/app/src/main/java/eu/kanade/tachiyomi/ui/readinglist/ReadingListsTab.kt:388:54 'val Icons.Outlined.List: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Outlined.List.
 
-> Task :app:compilePreviewKotlin FAILED
-e: file:///home/runner/work/Yomori/Yomori/app/src/main/java/eu/kanade/tachiyomi/ui/readinglist/ReadingListReviewScreen.kt:13:43 Cannot access 'val RowColumnParentData?.weight: Float': it is internal in file.
-gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1784037584987.json
+> Task :app:compilePreviewJavaWithJavac
+> Task :app:mergePreviewGeneratedProguardFiles
+> Task :app:processPreviewJavaRes
+> Task :app:mergePreviewJavaResource
+> Task :app:expandPreviewArtProfileWildcards
+> Task :app:producePreviewComposeMapping
+
+> Task :app:reportPreviewComposeMappingErrors
+warning: Failed to collect Compose stack trace mapping (Failed to tokenize tachiyomi.presentation.widget.BaseUpdatesGridGlanceWidget.provideGlance$suspendImpl(Ltachiyomi/presentation/widget/BaseUpdatesGridGlanceWidget;Landroid/content/Context;Landroidx/glance/GlanceId;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;). Please report to Google through https://goo.gle/compose-feedback
+
+> Task :app:minifyPreviewWithR8
+WARNING: /home/runner/work/Yomori/Yomori/app/build/intermediates/merged_java_res/preview/mergePreviewJavaResource/base.jar: R8: Unexpected reference to missing service class: META-INF/services/nl.adaptivity.xmlutil.util.SerializationProvider.
+WARNING: /home/runner/work/Yomori/Yomori/app/build/intermediates/merged_java_res/preview/mergePreviewJavaResource/base.jar: R8: Unexpected reference to missing service implementation class in META-INF/services/nl.adaptivity.xmlutil.util.SerializationProvider: nl.adaptivity.xmlutil.serialization.KotlinxSerializationProvider.
+WARNING: /home/runner/work/Yomori/Yomori/app/build/intermediates/merged_java_res/preview/mergePreviewJavaResource/base.jar: R8: Unexpected reference to missing service implementation class in META-INF/services/nl.adaptivity.xmlutil.util.SerializationProvider: nl.adaptivity.xmlutil.util.DefaultSerializationProvider.
+WARNING: R8: Missing class androidx.window.extensions.WindowExtensions (referenced from: int androidx.window.core.ExtensionsUtil.getSafeVendorApiLevel() and 1 other context)
+Missing class androidx.window.extensions.WindowExtensionsProvider (referenced from: int androidx.window.core.ExtensionsUtil.getSafeVendorApiLevel() and 1 other context)
+Missing class androidx.window.extensions.area.ExtensionWindowAreaPresentation (referenced from: androidx.window.extensions.area.ExtensionWindowAreaPresentation androidx.window.area.reflectionguard.WindowAreaComponentApi3Requirements.getRearDisplayPresentation())
+Missing class androidx.window.extensions.core.util.function.Consumer (referenced from: void androidx.window.area.reflectionguard.WindowAreaComponentApi3Requirements.addRearDisplayPresentationStatusListener(androidx.window.extensions.core.util.function.Consumer) and 9 other contexts)
+Missing class androidx.window.extensions.core.util.function.Function (referenced from: androidx.window.reflection.JFunction2)
+Missing class androidx.window.extensions.core.util.function.Predicate (referenced from: androidx.window.reflection.Predicate2)
+Missing class androidx.window.extensions.layout.DisplayFeature (referenced from: androidx.window.layout.WindowLayoutInfo androidx.window.layout.adapter.extensions.ExtensionsWindowLayoutInfoAdapter.translate$window_release(androidx.window.layout.WindowMetrics, androidx.window.extensions.layout.WindowLayoutInfo))
+Missing class androidx.window.extensions.layout.FoldingFeature (referenced from: androidx.window.layout.FoldingFeature androidx.window.layout.adapter.extensions.ExtensionsWindowLayoutInfoAdapter.translate$window_release(androidx.window.layout.WindowMetrics, androidx.window.extensions.layout.FoldingFeature) and 1 other context)
+Missing class androidx.window.extensions.layout.WindowLayoutComponent (referenced from: androidx.window.extensions.layout.WindowLayoutComponent androidx.window.layout.adapter.extensions.ExtensionWindowBackendApi1.component and 9 other contexts)
+Missing class androidx.window.extensions.layout.WindowLayoutInfo (referenced from: void androidx.window.layout.adapter.extensions.ExtensionWindowBackendApi1$registerLayoutChangeCallback$1$2$disposableToken$1.invoke(androidx.window.extensions.layout.WindowLayoutInfo) and 8 other contexts)
+Missing class androidx.window.sidecar.SidecarDeviceState (referenced from: androidx.window.sidecar.SidecarDeviceState androidx.window.layout.adapter.sidecar.DistinctElementSidecarCallback.mLastDeviceState and 12 other contexts)
+Missing class androidx.window.sidecar.SidecarDisplayFeature (referenced from: boolean androidx.window.layout.adapter.sidecar.SidecarAdapter.isEqualSidecarDisplayFeature(androidx.window.sidecar.SidecarDisplayFeature, androidx.window.sidecar.SidecarDisplayFeature) and 8 other contexts)
+Missing class androidx.window.sidecar.SidecarInterface$SidecarCallback (referenced from: androidx.window.sidecar.SidecarInterface$SidecarCallback androidx.window.layout.adapter.sidecar.DistinctElementSidecarCallback.mCallback and 7 other contexts)
+Missing class androidx.window.sidecar.SidecarInterface (referenced from: androidx.window.sidecar.SidecarInterface androidx.window.layout.adapter.sidecar.SidecarCompat.sidecar and 11 other contexts)
+Missing class androidx.window.sidecar.SidecarProvider (referenced from: androidx.window.sidecar.SidecarInterface androidx.window.layout.adapter.sidecar.SidecarCompat$Companion.getSidecarCompat$window_release(android.content.Context) and 1 other context)
+Missing class androidx.window.sidecar.SidecarWindowLayoutInfo (referenced from: void androidx.window.layout.adapter.sidecar.DistinctElementSidecarCallback.onWindowLayoutChanged(android.os.IBinder, androidx.window.sidecar.SidecarWindowLayoutInfo) and 7 other contexts)
+
+> Task :app:mergePreviewComposeMapping
+> Task :app:convertShrunkResourcesToBinaryPreview
+> Task :app:optimizePreviewResources
+> Task :app:l8DexDesugarLibPreview
+> Task :app:compilePreviewArtProfile
+> Task :app:packagePreview
+> Task :app:createPreviewApkListingFileRedirect
+> Task :app:assemblePreview
+gradle/actions: Writing build results to /home/runner/work/_temp/.gradle-actions/build-results/__run-1784038979967.json
 
 [Incubating] Problems report is available at: file:///home/runner/work/Yomori/Yomori/build/reports/problems/problems-report.html
-
-FAILURE: Build failed with an exception.
-
-* What went wrong:
-Execution failed for task ':app:compilePreviewKotlin' (registered by plugin 'com.android.internal.application').
-> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.btapi.BuildToolsApiCompilationWork
-   > Compilation error. See log for more details
-
-* Try:
-> Run with --stacktrace option to get the stack trace.
-> Run with --info or --debug option to get more log output.
-> Run with --scan to get full insights from a Build Scan (powered by Develocity).
-> Get more help at https://help.gradle.org.
 
 Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
 
@@ -500,6 +700,9 @@ You can use '--warning-mode all' to show the individual deprecation warnings and
 
 For more on this, please refer to https://docs.gradle.org/9.6.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
 
-BUILD FAILED in 29s
-260 actionable tasks: 130 executed, 63 from cache, 67 up-to-date
-STATUS assemble=1
+BUILD SUCCESSFUL in 3m 41s
+275 actionable tasks: 145 executed, 63 from cache, 67 up-to-date
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.6.1/userguide/configuration_cache_enabling.html
+STATUS assemble=0
+===== diffcheck =====
+STATUS diffcheck=0
