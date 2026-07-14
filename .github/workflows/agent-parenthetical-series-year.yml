@@ -1,0 +1,396 @@
+name: Agent apply parenthetical series year
+
+on:
+  push:
+    branches:
+      - agent/manual-review-ui
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          ref: agent/manual-review-ui
+          fetch-depth: 0
+
+      - name: Set up JDK
+        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a
+        with:
+          java-version-file: .github/.java-version
+          distribution: temurin
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92
+
+      - name: Apply scoring correction and tests
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          def replace_once(path: str, old: str, new: str) -> None:
+              file = Path(path)
+              text = file.read_text(encoding="utf-8")
+              count = text.count(old)
+              if count != 1:
+                  raise RuntimeError(f"Expected one match in {path}, found {count}")
+              file.write_text(text.replace(old, new), encoding="utf-8")
+
+          scorer = "domain/src/main/java/tachiyomi/domain/readinglist/matching/ReadingListMatchScorer.kt"
+          replace_once(
+              scorer,
+              '''        val candidateTitle = TitleNormalizer.normalize(candidate.seriesTitle)
+                  val candidateIssue = IssueNumberNormalizer.normalize(candidate.issueNumber)
+                  val titleSimilarity = calculateTitleSimilarity(query.title, candidateTitle).roundForDisplay()
+                  val titlePoints = (titleSimilarity * config.titleWeight).roundForDisplay()
+                  val issueEquivalent = query.issue.isEquivalentTo(candidateIssue)
+                  val issuePoints = if (issueEquivalent) config.issueWeight else 0.0
+                  val yearEvidence = evidence(query.year, candidate.year)
+                  val yearPoints = metadataPoints(yearEvidence)
+                  val volumeEvidence = evidence(query.volume, candidate.volume)
+                  val volumePoints = metadataPoints(volumeEvidence)
+          ''',
+              '''        val candidateTitle = TitleNormalizer.normalize(candidate.seriesTitle)
+                  val candidateIssue = IssueNumberNormalizer.normalize(candidate.issueNumber)
+                  val candidateVolume = candidate.volume ?: candidateTitle.volume
+                  val titleSimilarity = calculateTitleSimilarity(query.title, candidateTitle).roundForDisplay()
+                  val titlePoints = (titleSimilarity * config.titleWeight).roundForDisplay()
+                  val issueEquivalent = query.issue.isEquivalentTo(candidateIssue)
+                  val issuePoints = if (issueEquivalent) config.issueWeight else 0.0
+                  val yearEvidence = evidence(query.year, candidate.year)
+                  val yearPoints = metadataPoints(yearEvidence)
+                  val volumeEvidence = editionEvidence(
+                      expectedVolume = query.volume,
+                      actualVolume = candidateVolume,
+                      expectedSeriesYear = query.seriesYear,
+                      actualSeriesYear = candidateTitle.year,
+                  )
+                  val volumePoints = metadataPoints(volumeEvidence)
+          ''',
+          )
+          replace_once(
+              scorer,
+              '''    private data class NormalizedMatchQuery(
+                  val title: NormalizedTitle,
+                  val issue: NormalizedIssueNumber,
+                  val volume: Int?,
+                  val year: Int?,
+              ) {
+                  companion object {
+                      fun from(query: ReadingListMatchQuery): NormalizedMatchQuery {
+                          val normalizedTitle = TitleNormalizer.normalize(query.seriesTitle)
+                          return NormalizedMatchQuery(
+                              title = normalizedTitle,
+                              issue = IssueNumberNormalizer.normalize(query.issueNumber),
+                              volume = query.volume ?: normalizedTitle.volume,
+                              year = query.year ?: normalizedTitle.year,
+                          )
+                      }
+                  }
+              }
+          ''',
+              '''    private data class NormalizedMatchQuery(
+                  val title: NormalizedTitle,
+                  val issue: NormalizedIssueNumber,
+                  val volume: Int?,
+                  val year: Int?,
+                  val seriesYear: Int?,
+              ) {
+                  companion object {
+                      fun from(query: ReadingListMatchQuery): NormalizedMatchQuery {
+                          val normalizedTitle = TitleNormalizer.normalize(query.seriesTitle)
+                          val rawVolume = query.volume
+                          return NormalizedMatchQuery(
+                              title = normalizedTitle,
+                              issue = IssueNumberNormalizer.normalize(query.issueNumber),
+                              volume = rawVolume
+                                  ?.takeUnless { value -> value.isEditionYear() }
+                                  ?: normalizedTitle.volume,
+                              year = query.year,
+                              seriesYear = rawVolume
+                                  ?.takeIf { value -> value.isEditionYear() }
+                                  ?: normalizedTitle.year,
+                          )
+                      }
+                  }
+              }
+          ''',
+          )
+          replace_once(
+              scorer,
+              '''private fun evidence(expected: Int?, actual: Int?): EvidenceAgreement {
+              return when {
+                  expected == null || actual == null -> EvidenceAgreement.UNKNOWN
+                  expected == actual -> EvidenceAgreement.MATCH
+                  else -> EvidenceAgreement.MISMATCH
+              }
+          }
+
+          private fun calculateTitleSimilarity(
+          ''',
+              '''private fun evidence(expected: Int?, actual: Int?): EvidenceAgreement {
+              return when {
+                  expected == null || actual == null -> EvidenceAgreement.UNKNOWN
+                  expected == actual -> EvidenceAgreement.MATCH
+                  else -> EvidenceAgreement.MISMATCH
+              }
+          }
+
+          private fun editionEvidence(
+              expectedVolume: Int?,
+              actualVolume: Int?,
+              expectedSeriesYear: Int?,
+              actualSeriesYear: Int?,
+          ): EvidenceAgreement {
+              val volumeEvidence = evidence(expectedVolume, actualVolume)
+              val seriesYearEvidence = evidence(expectedSeriesYear, actualSeriesYear)
+              return when {
+                  volumeEvidence == EvidenceAgreement.MISMATCH ||
+                      seriesYearEvidence == EvidenceAgreement.MISMATCH -> EvidenceAgreement.MISMATCH
+                  volumeEvidence == EvidenceAgreement.MATCH ||
+                      seriesYearEvidence == EvidenceAgreement.MATCH -> EvidenceAgreement.MATCH
+                  else -> EvidenceAgreement.UNKNOWN
+              }
+          }
+
+          private fun Int.isEditionYear(): Boolean = this in 1800..2199
+
+          private fun calculateTitleSimilarity(
+          ''',
+          )
+
+          search = "app/src/main/java/eu/kanade/tachiyomi/ui/readinglist/ReadingListCandidateSearch.kt"
+          replace_once(
+              search,
+              '''        val expectedTitle = TitleNormalizer.normalize(entry.series)
+                  val expectedYear = entry.year?.trim()?.toIntOrNull() ?: expectedTitle.year
+                  val expectedVolume = entry.volume?.trim()?.toIntOrNull() ?: expectedTitle.volume
+          ''',
+              '''        val expectedTitle = TitleNormalizer.normalize(entry.series)
+                  val rawExpectedVolume = entry.volume?.trim()?.toIntOrNull()
+                  val expectedSeriesYear = rawExpectedVolume
+                      ?.takeIf { value -> value.isEditionYear() }
+                      ?: expectedTitle.year
+                  val expectedVolume = rawExpectedVolume
+                      ?.takeUnless { value -> value.isEditionYear() }
+                      ?: expectedTitle.volume
+          ''',
+          )
+          replace_once(
+              search,
+              '''                    yearRank = metadataRank(expectedYear, actualTitle.year),
+          ''',
+              '''                    yearRank = metadataRank(expectedSeriesYear, actualTitle.year),
+          ''',
+          )
+          replace_once(
+              search,
+              '''                volume = titleMetadata.volume,
+                              year = titleMetadata.year,
+                              sourcePreference = sourcePreference(
+          ''',
+              '''                volume = titleMetadata.volume,
+                              sourcePreference = sourcePreference(
+          ''',
+          )
+          replace_once(
+              search,
+              '''    private fun issueDistance(
+          ''',
+              '''    private fun Int.isEditionYear(): Boolean = this in 1800..2199
+
+              private fun issueDistance(
+          ''',
+          )
+          replace_once(
+              search,
+              '''    val matcherVersion: Long = 1,
+          ''',
+              '''    val matcherVersion: Long = 2,
+          ''',
+          )
+
+          scorer_test = "domain/src/test/java/tachiyomi/domain/readinglist/matching/ReadingListMatchScorerTest.kt"
+          replace_once(
+              scorer_test,
+              '''    @Test
+              fun `title edition metadata supplies separate year evidence`() {
+                  val result = scorer.score(
+                      query = ReadingListMatchQuery(
+                          seriesTitle = "Batman (2016)",
+                          issueNumber = "1",
+                      ),
+                      candidate = ReadingListMatchCandidate(
+                          id = "batman",
+                          sourceId = 1,
+                          seriesTitle = "Batman",
+                          issueNumber = "Issue 01",
+                          year = 2016,
+                      ),
+                  )
+
+                  result.breakdown.titleSimilarity shouldBe 1.0
+                  result.breakdown.issueEquivalent shouldBe true
+                  result.breakdown.yearEvidence shouldBe EvidenceAgreement.MATCH
+                  result.breakdown.yearPoints shouldBe 4.0
+                  result.score shouldBe 92.0
+              }
+          ''',
+              '''    @Test
+              fun `parenthetical title year supplies series evidence without impersonating issue year`() {
+                  val result = scorer.score(
+                      query = ReadingListMatchQuery(
+                          seriesTitle = "Watchmen",
+                          issueNumber = "5",
+                          volume = 1986,
+                          year = 1987,
+                      ),
+                      candidate = ReadingListMatchCandidate(
+                          id = "watchmen",
+                          sourceId = 1,
+                          seriesTitle = "Watchmen (1986)",
+                          issueNumber = "5",
+                      ),
+                  )
+
+                  result.breakdown.titleSimilarity shouldBe 1.0
+                  result.breakdown.issueEquivalent shouldBe true
+                  result.breakdown.yearEvidence shouldBe EvidenceAgreement.UNKNOWN
+                  result.breakdown.yearPoints shouldBe 0.0
+                  result.breakdown.volumeEvidence shouldBe EvidenceAgreement.MATCH
+                  result.breakdown.volumePoints shouldBe 4.0
+                  result.score shouldBe 92.0
+              }
+
+              @Test
+              fun `explicit issue year remains independent from parenthetical series year`() {
+                  val result = scorer.score(
+                      query = ReadingListMatchQuery(
+                          seriesTitle = "Watchmen",
+                          issueNumber = "5",
+                          volume = 1986,
+                          year = 1987,
+                      ),
+                      candidate = ReadingListMatchCandidate(
+                          id = "watchmen-dated",
+                          sourceId = 1,
+                          seriesTitle = "Watchmen (1986)",
+                          issueNumber = "5",
+                          year = 1987,
+                      ),
+                  )
+
+                  result.breakdown.yearEvidence shouldBe EvidenceAgreement.MATCH
+                  result.breakdown.volumeEvidence shouldBe EvidenceAgreement.MATCH
+                  result.score shouldBe 96.0
+              }
+          ''',
+          )
+
+          search_test = "app/src/test/java/eu/kanade/tachiyomi/ui/readinglist/ReadingListCandidateSearchTest.kt"
+          replace_once(
+              search_test,
+              '''import tachiyomi.domain.readinglist.matching.ConfirmedHistoryEvidence
+          ''',
+              '''import tachiyomi.domain.readinglist.matching.ConfirmedHistoryEvidence
+          import tachiyomi.domain.readinglist.matching.EvidenceAgreement
+          ''',
+          )
+          marker = '''    @Test
+              fun `marks eligible entries unavailable when no selected source is installed`() = runTest {
+          '''
+          test = '''    @Test
+              fun `parenthetical series year matches a year-like cbl volume before bounded fetching`() = runTest {
+                  val source = FakeHttpSource(
+                      sourceName = "Selected",
+                      mangas = listOf(
+                          manga("/series/watchmen-1987", "Watchmen (1987)"),
+                          manga("/series/watchmen-1986", "Watchmen (1986)"),
+                      ),
+                      chaptersByMangaUrl = mapOf(
+                          "/series/watchmen-1987" to listOf(chapter("/chapter/wrong", "Watchmen #5", 5.0f)),
+                          "/series/watchmen-1986" to listOf(chapter("/chapter/correct", "Watchmen #5", 5.0f)),
+                      ),
+                  )
+                  val readingList = readingList(
+                      selectedSourceIds = listOf(source.id),
+                      entries = listOf(
+                          entry(
+                              id = 10,
+                              position = 0,
+                              series = "Watchmen",
+                              number = "5",
+                              volume = "1986",
+                              year = "1987",
+                          ),
+                      ),
+                  )
+                  val writes = mutableListOf<PersistedWrite>()
+                  val search = search(
+                      readingList = readingList,
+                      resolution = emptyResolution(readingList.id),
+                      sourceManager = FakeSourceManager(source),
+                      writes = writes,
+                      config = ReadingListCandidateSearchConfig(maxSeriesFetchesPerSource = 1),
+                  )
+
+                  val result = search.search(readingList.id) as ReadingListCandidateSearchResult.Completed
+                  val candidate = writes.single().candidates.single()
+
+                  source.chapterFetchCalls shouldBe 1
+                  candidate.mangaUrl shouldBe "/series/watchmen-1986"
+                  candidate.year shouldBe null
+                  candidate.matcherVersion shouldBe 2
+                  candidate.breakdown.yearEvidence shouldBe EvidenceAgreement.UNKNOWN
+                  candidate.breakdown.volumeEvidence shouldBe EvidenceAgreement.MATCH
+                  candidate.breakdown.total shouldBe 93.0
+                  writes.single().update.state shouldBe ReadingListEntryResolutionState.AUTO_MATCHED
+                  result.summary.autoMatchedEntries shouldBe 1
+              }
+
+          '''
+          replace_once(search_test, marker, test + marker)
+
+          strings = "app/src/main/res/values/yomori_reading_list_strings.xml"
+          replace_once(strings, '<string name="reading_list_review_year_evidence">Year</string>', '<string name="reading_list_review_year_evidence">Issue year</string>')
+          replace_once(strings, '<string name="reading_list_review_volume_evidence">Volume</string>', '<string name="reading_list_review_volume_evidence">Series year / volume</string>')
+          replace_once(strings, '<string name="reading_list_review_conflict_year">year mismatch</string>', '<string name="reading_list_review_conflict_year">issue year mismatch</string>')
+          replace_once(strings, '<string name="reading_list_review_conflict_volume">volume mismatch</string>', '<string name="reading_list_review_conflict_volume">series year or volume mismatch</string>')
+
+          replace_once(
+              "docs/architecture/IMPORT_FLOW.md",
+              '''Each source/series search reads only the first result page, retains at most ten series results, fetches issue lists for at most the three strongest series results per source, and stores at most twenty-four ranked issue candidates per entry. Search results remain outside the normal library.''',
+              '''Each source/series search reads only the first result page, retains at most ten series results, fetches issue lists for at most the three strongest series results per source, and stores at most twenty-four ranked issue candidates per entry. A trailing parenthetical title year is treated as series-edition evidence: it is compared with a year-like CBL `Volume` value and is never substituted for the issue publication year. Search results remain outside the normal library.''',
+          )
+          replace_once(
+              "docs/architecture/MANUAL_REVIEW.md",
+              '''- volume and year evidence;''',
+              '''- issue-year and series-year/volume evidence;''',
+          )
+          replace_once(
+              "PROJECT_CONTEXT.md",
+              '''The basic score combines normalized series-title similarity, issue-number equivalence, volume/year agreement, external identifiers, source preference, and confirmed user history. The complete score breakdown is retained for the manual-review interface.''',
+              '''The basic score combines normalized series-title similarity, issue-number equivalence, issue-year agreement, series-year/volume agreement, external identifiers, source preference, and confirmed user history. Parenthetical title years are series-edition evidence and may match year-like CBL `Volume` values; they are not treated as issue publication years. The complete score breakdown is retained for the manual-review interface.''',
+          )
+          PY
+
+          ./gradlew spotlessApply
+          ./gradlew :domain:testDebugUnitTest --tests tachiyomi.domain.readinglist.matching.ReadingListMatchScorerTest
+          ./gradlew :app:testDebugUnitTest --tests eu.kanade.tachiyomi.ui.readinglist.ReadingListCandidateSearchTest
+          git diff --check
+
+      - name: Commit correction
+        shell: bash
+        run: |
+          rm .github/workflows/agent-parenthetical-series-year.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Use parenthetical years as series evidence"
+          git push origin HEAD:agent/manual-review-ui
