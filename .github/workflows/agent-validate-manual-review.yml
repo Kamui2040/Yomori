@@ -1,0 +1,78 @@
+name: Agent validate manual review
+
+on:
+  push:
+    branches:
+      - agent/manual-review-ui
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          ref: agent/manual-review-ui
+          fetch-depth: 0
+
+      - name: Set up JDK
+        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a
+        with:
+          java-version-file: .github/.java-version
+          distribution: temurin
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92
+
+      - name: Validate implementation
+        shell: bash
+        run: |
+          set +e
+          : > "$RUNNER_TEMP/validation.log"
+
+          run_check() {
+            local name="$1"
+            shift
+            echo "===== $name =====" | tee -a "$RUNNER_TEMP/validation.log"
+            "$@" >> "$RUNNER_TEMP/validation.log" 2>&1
+            local status=$?
+            echo "STATUS $name=$status" | tee -a "$RUNNER_TEMP/validation.log"
+            return $status
+          }
+
+          spotless=0
+          tests=0
+          migrations=0
+          assemble=0
+
+          run_check spotless ./gradlew spotlessCheck || spotless=$?
+          if [[ $spotless -eq 0 ]]; then
+            run_check tests ./gradlew testDebugUnitTest || tests=$?
+            run_check migrations ./gradlew verifySqlDelightMigration || migrations=$?
+            run_check assemble ./gradlew assemblePreview || assemble=$?
+          else
+            tests=99
+            migrations=99
+            assemble=99
+          fi
+
+          {
+            echo "spotless=$spotless"
+            echo "tests=$tests"
+            echo "migrations=$migrations"
+            echo "assemble=$assemble"
+            echo
+            tail -n 500 "$RUNNER_TEMP/validation.log"
+          } > .github/agent-manual-review-validation.txt
+
+      - name: Publish validation result
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .github/agent-manual-review-validation.txt
+          git commit -m "Record manual-review validation result"
+          git push origin HEAD:agent/manual-review-ui
