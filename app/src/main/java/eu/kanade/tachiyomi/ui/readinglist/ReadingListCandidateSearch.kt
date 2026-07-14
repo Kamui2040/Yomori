@@ -134,6 +134,10 @@ class ReadingListCandidateSearch(
         val entriesWithoutOverride = entries.filter { entry ->
             entry.id !in operation.entryOverrideById
         }
+        val eligibleEntryIdsBySeries = mutableMapOf<RemoteSeriesIdentity, MutableSet<Long>>()
+        fun allow(identity: RemoteSeriesIdentity, entryIds: Iterable<Long>) {
+            eligibleEntryIdsBySeries.getOrPut(identity, { mutableSetOf() }).addAll(entryIds)
+        }
 
         val directSeeds = buildDirectSeeds(
             entries = entries,
@@ -141,17 +145,46 @@ class ReadingListCandidateSearch(
             includeMapping = entriesWithoutOverride.isNotEmpty(),
             operation = operation,
         )
-        val sourcesToSearch = buildList {
-            if (confirmedMapping == null && entriesWithoutOverride.isNotEmpty()) {
-                addAll(operation.selectedSources)
+        mapping
+            ?.takeIf { entriesWithoutOverride.isNotEmpty() }
+            ?.let { storedMapping ->
+                val identity = RemoteSeriesIdentity(storedMapping.sourceId, storedMapping.mangaUrl)
+                allow(identity, entriesWithoutOverride.map(ReadingListEntry::id))
+                entries.forEach { entry ->
+                    val override = operation.entryOverrideById[entry.id]
+                    if (
+                        override?.sourceId == storedMapping.sourceId &&
+                        (override.mangaUrl == null || override.mangaUrl == storedMapping.mangaUrl)
+                    ) {
+                        allow(identity, listOf(entry.id))
+                    }
+                }
             }
-            entries.mapNotNullTo(this) { entry ->
-                val override = operation.entryOverrideById[entry.id]
-                    ?: return@mapNotNullTo null
-                if (override.mangaUrl != null) return@mapNotNullTo null
-                operation.selectedSourceById[override.sourceId]
+        entries.forEach { entry ->
+            val override = operation.entryOverrideById[entry.id] ?: return@forEach
+            val mangaUrl = override.mangaUrl ?: return@forEach
+            allow(RemoteSeriesIdentity(override.sourceId, mangaUrl), listOf(entry.id))
+        }
+
+        val eligibleSearchEntryIdsBySource = mutableMapOf<Long, MutableSet<Long>>()
+        if (confirmedMapping == null && entriesWithoutOverride.isNotEmpty()) {
+            operation.selectedSources.forEach { source ->
+                eligibleSearchEntryIdsBySource
+                    .getOrPut(source.source.id, { mutableSetOf() })
+                    .addAll(entriesWithoutOverride.map(ReadingListEntry::id))
             }
-        }.distinctBy { selectedSource -> selectedSource.source.id }
+        }
+        entries.forEach { entry ->
+            val override = operation.entryOverrideById[entry.id] ?: return@forEach
+            if (override.mangaUrl == null && override.sourceId in operation.selectedSourceById) {
+                eligibleSearchEntryIdsBySource
+                    .getOrPut(override.sourceId, { mutableSetOf() })
+                    .add(entry.id)
+            }
+        }
+        val sourcesToSearch = operation.selectedSources.filter { source ->
+            eligibleSearchEntryIdsBySource[source.source.id].orEmpty().isNotEmpty()
+        }
         val searchedSeeds = sourcesToSearch.map { selectedSource ->
             async {
                 searchSourceForSeries(
@@ -161,6 +194,12 @@ class ReadingListCandidateSearch(
                 )
             }
         }.awaitAll().flatten()
+        searchedSeeds.forEach { seed ->
+            allow(
+                seed.identity,
+                eligibleSearchEntryIdsBySource[seed.source.source.id].orEmpty(),
+            )
+        }
         val confirmedSeed = confirmedMapping
             ?.takeIf { entriesWithoutOverride.isNotEmpty() }
             ?.let { storedMapping ->
@@ -209,7 +248,14 @@ class ReadingListCandidateSearch(
                 entry = entry,
                 seriesKey = seriesKey,
                 mapping = mapping,
-                fetchedSeries = fetchedSeries,
+                fetchedSeries = fetchedSeries.filter { content ->
+                    entry.id in eligibleEntryIdsBySeries[
+                        RemoteSeriesIdentity(
+                            sourceId = content.source.source.id,
+                            mangaUrl = content.manga.url,
+                        ),
+                    ].orEmpty()
+                },
                 operation = operation,
             )
             persistDecision(
@@ -365,8 +411,8 @@ class ReadingListCandidateSearch(
         block: suspend () -> T,
     ): T? {
         return try {
-            withTimeout(config.requestTimeoutMillis) {
-                operation.requestSemaphore.withPermit {
+            operation.requestSemaphore.withPermit {
+                withTimeout(config.requestTimeoutMillis) {
                     block()
                 }
             }
@@ -737,7 +783,14 @@ class ReadingListCandidateSearch(
         operation: SearchOperation,
     ) {
         operation.failedSourceIds += sourceId
-        if (error is NullPointerException) {
+        val recommendsUpdate = generateSequence(error as Throwable?) { throwable ->
+            throwable.cause
+        }.any { throwable ->
+            throwable is NullPointerException ||
+                throwable.message.orEmpty()
+                    .contains("NullPointerException", ignoreCase = true)
+        }
+        if (recommendsUpdate) {
             operation.updateRecommendedSourceIds += sourceId
         }
     }

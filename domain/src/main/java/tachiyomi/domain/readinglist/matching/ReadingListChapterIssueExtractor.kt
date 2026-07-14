@@ -18,10 +18,13 @@ object ReadingListChapterIssueExtractor {
         val explicitRawCandidates = linkedSetOf<String>()
         val weakRawCandidates = linkedSetOf<String>()
 
-        KIND_PREFIX.find(withoutSeries)?.let { match ->
+        KIND_WITH_FOLLOWING_ISSUE.findAll(withoutSeries).forEach { match ->
             explicitRawCandidates.addIfNotBlank(match.value)
         }
-        KIND_SUFFIX.find(withoutSeries)?.let { match ->
+        ISSUE_BEFORE_KIND.findAll(withoutSeries).forEach { match ->
+            explicitRawCandidates.addIfNotBlank(match.value)
+        }
+        KIND_PREFIX.find(withoutSeries)?.let { match ->
             explicitRawCandidates.addIfNotBlank(match.value)
         }
         LABELED_ISSUE.findAll(withoutSeries).forEach { match ->
@@ -163,12 +166,16 @@ private const val ISSUE_NUMBER_PATTERN =
 private const val ISSUE_KIND_PATTERN =
     """(?:free\s+comic\s+book\s+day|fcbd|one[ -]?shot|oneshot|annual|special)"""
 
-private val KIND_PREFIX = Regex(
+private val KIND_WITH_FOLLOWING_ISSUE = Regex(
     pattern =
-    """(?i)^$ISSUE_KIND_PATTERN(?:\s*[:#-]?\s*$ISSUE_NUMBER_PATTERN(?=$|\s)|(?=$|\s*[:\-–—]))""",
+    """(?i)\b$ISSUE_KIND_PATTERN(?!\s+edition\b)\s*[:#-]?\s*$ISSUE_NUMBER_PATTERN(?=$|[\s:\-–—])""",
 )
-private val KIND_SUFFIX = Regex(
-    pattern = """(?i)\b$ISSUE_NUMBER_PATTERN\s*$ISSUE_KIND_PATTERN\s*$""",
+private val ISSUE_BEFORE_KIND = Regex(
+    pattern =
+    """(?i)\b$ISSUE_NUMBER_PATTERN\s*[:\-–—]?\s*$ISSUE_KIND_PATTERN(?!\s+edition\b)(?=$|[\s:\-–—])""",
+)
+private val KIND_PREFIX = Regex(
+    pattern = """(?i)^$ISSUE_KIND_PATTERN(?!\s+edition\b)(?=$|\s*[:\-–—])""",
 )
 private val LABELED_ISSUE = Regex(
     pattern = """(?i)\b(?:issue|iss|chapter|ch|number|no)\.?\s*#?\s*($ISSUE_NUMBER_PATTERN)""",

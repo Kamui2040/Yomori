@@ -157,7 +157,10 @@ class ReadingListCandidateSearchTest {
             sourceName = "Outdated",
             mangas = emptyList(),
             chaptersByMangaUrl = emptyMap(),
-            searchFailure = NullPointerException("fixture"),
+            searchFailure = IllegalStateException(
+                "Extension request failed",
+                NullPointerException("fixture"),
+            ),
         )
         val healthySource = FakeHttpSource(
             sourceName = "Healthy",
@@ -236,7 +239,7 @@ class ReadingListCandidateSearchTest {
     }
 
     @Test
-    fun `request concurrency remains within the configured limit`() = runTest {
+    fun `queued requests receive their full timeout after acquiring the permit`() = runTest {
         val tracker = RequestTracker()
         val firstSource = FakeHttpSource(
             sourceName = "First",
@@ -245,7 +248,7 @@ class ReadingListCandidateSearchTest {
                 "/series/first" to listOf(chapter("/chapter/first", "Example #1", 1.0f)),
             ),
             tracker = tracker,
-            requestDelayMillis = 10,
+            requestDelayMillis = 75,
         )
         val secondSource = FakeHttpSource(
             sourceName = "Second",
@@ -254,7 +257,7 @@ class ReadingListCandidateSearchTest {
                 "/series/second" to listOf(chapter("/chapter/second", "Example #1", 1.0f)),
             ),
             tracker = tracker,
-            requestDelayMillis = 10,
+            requestDelayMillis = 75,
         )
         val readingList = readingList(
             selectedSourceIds = listOf(firstSource.id, secondSource.id),
@@ -267,12 +270,16 @@ class ReadingListCandidateSearchTest {
             writes = mutableListOf(),
             config = ReadingListCandidateSearchConfig(
                 maxConcurrentRequests = 1,
+                requestTimeoutMillis = 100,
             ),
         )
 
         val result = search.search(readingList.id) as ReadingListCandidateSearchResult.Completed
 
         tracker.maximumActiveRequests shouldBe 1
+        firstSource.chapterFetchCalls shouldBe 1
+        secondSource.chapterFetchCalls shouldBe 1
+        result.summary.failedSourceCount shouldBe 0
         result.summary.reviewEntries shouldBe 1
     }
 
@@ -406,6 +413,64 @@ class ReadingListCandidateSearchTest {
 
         writes.single().candidates.single().breakdown.confirmedHistory shouldBe
             ConfirmedHistoryEvidence.SOURCE
+    }
+
+    @Test
+    fun `entry override seed is eligible only for its owning entry`() = runTest {
+        val mappedSource = FakeHttpSource(
+            sourceName = "Mapped scope",
+            mangas = emptyList(),
+            chaptersByMangaUrl = mapOf(
+                "/series/mapped-scope" to listOf(chapter("/chapter/mapped-2", "Example #2", 2.0f)),
+            ),
+        )
+        val overrideSource = FakeHttpSource(
+            sourceName = "Override scope",
+            mangas = emptyList(),
+            chaptersByMangaUrl = mapOf(
+                "/series/override-scope" to listOf(chapter("/chapter/override-1", "Example #1", 1.0f)),
+            ),
+        )
+        val readingList = readingList(
+            selectedSourceIds = listOf(mappedSource.id, overrideSource.id),
+            entries = listOf(
+                entry(id = 10, position = 0, number = "1"),
+                entry(id = 11, position = 1, number = "2"),
+            ),
+        )
+        val resolution = emptyResolution(readingList.id).copy(
+            entryOverrides = listOf(
+                ReadingListEntryOverride(10, overrideSource.id, "/series/override-scope", null, 1, 1),
+            ),
+            seriesMappings = listOf(
+                ReadingListSeriesMapping(
+                    readingList.id,
+                    ReadingListSeriesKey.from("Example"),
+                    "Example",
+                    mappedSource.id,
+                    "/series/mapped-scope",
+                    true,
+                    1,
+                    1,
+                ),
+            ),
+        )
+        val writes = mutableListOf<PersistedWrite>()
+        val search = search(
+            readingList,
+            resolution,
+            FakeSourceManager(mappedSource, overrideSource),
+            writes,
+        )
+
+        val result = search.search(readingList.id) as ReadingListCandidateSearchResult.Completed
+
+        writes.map { write -> write.entryId to write.candidates.map { it.mangaUrl } } shouldContainExactly
+            listOf(
+                10L to listOf("/series/override-scope"),
+                11L to listOf("/series/mapped-scope"),
+            )
+        result.summary.autoMatchedEntries shouldBe 2
     }
 
     @Test

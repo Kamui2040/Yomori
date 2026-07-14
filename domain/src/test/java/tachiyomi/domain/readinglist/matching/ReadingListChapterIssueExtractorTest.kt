@@ -25,7 +25,7 @@ class ReadingListChapterIssueExtractorTest {
     fun `preserves annual issue identity`() {
         val issue = ReadingListChapterIssueExtractor.extract(
             seriesTitle = "Batman",
-            chapterName = "Batman Annual #2",
+            chapterName = "Batman Vol. 1 Annual #2",
             chapterNumber = 2.0f,
             expectedIssue = "Annual 2",
         )
@@ -37,7 +37,7 @@ class ReadingListChapterIssueExtractorTest {
     fun `annual issue does not collapse to the regular chapter fallback`() {
         val issue = ReadingListChapterIssueExtractor.extract(
             seriesTitle = "Batman",
-            chapterName = "Batman Annual #2",
+            chapterName = "Batman Vol. 1 Annual #2",
             chapterNumber = 2.0f,
             expectedIssue = "2",
         )
@@ -59,6 +59,24 @@ class ReadingListChapterIssueExtractorTest {
         val normalized = IssueNumberNormalizer.normalize(issue.orEmpty())
         normalized.canonical shouldBe "12a"
         normalized.isEquivalentTo(IssueNumberNormalizer.normalize("12")) shouldBe false
+    }
+
+    @Test
+    fun `preserves issue-kind markers in additional chapter-name positions`() {
+        listOf(
+            Triple("Chapter 1 - Annual", "Annual 1", "annual 1"),
+            Triple("Example - Special #3", "Special 3", "special 3"),
+            Triple("Example Vol. 2 FCBD 2024", "FCBD 2024", "fcbd 2024"),
+        ).forEach { (chapterName, expectedIssue, canonical) ->
+            val issue = ReadingListChapterIssueExtractor.extract(
+                seriesTitle = "Example",
+                chapterName = chapterName,
+                chapterNumber = IssueNumberNormalizer.normalize(expectedIssue).numericValue?.toFloat() ?: -1.0f,
+                expectedIssue = expectedIssue,
+            )
+
+            IssueNumberNormalizer.normalize(issue.orEmpty()).canonical shouldBe canonical
+        }
     }
 
     @Test
