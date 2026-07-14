@@ -60,10 +60,18 @@ jobs:
 
           path = Path('/tmp/apply-candidate-fixes.py')
           text = path.read_text(encoding='utf-8')
-          target = '    if text.count(old) != 1:\n'
-          if text.count(target) != 1:
+
+          guard = '    if text.count(old) != 1:\n'
+          if text.count(guard) != 1:
               raise SystemExit('Unable to isolate the intentionally repeated test fixture')
-          path.write_text(text.replace(target, '    if text.count(old) < 1:\n', 1), encoding='utf-8')
+          text = text.replace(guard, '    if text.count(old) < 1:\n', 1)
+
+          factory = '::mutableSetOf'
+          if text.count(factory) != 2:
+              raise SystemExit('Unexpected generated mutable-set factory count')
+          text = text.replace(factory, '{ mutableSetOf() }')
+
+          path.write_text(text, encoding='utf-8')
           PY
           python3 -m py_compile /tmp/apply-candidate-fixes.py
           python3 /tmp/apply-candidate-fixes.py
