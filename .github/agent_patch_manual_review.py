@@ -4,9 +4,11 @@ from pathlib import Path
 def replace_once(path: str, old: str, new: str) -> None:
     file = Path(path)
     text = file.read_text(encoding="utf-8")
-    if new in text:
+    if new and new in text:
         return
     if old not in text:
+        if not new:
+            return
         raise RuntimeError(f"Expected patch context not found in {path}: {old[:80]!r}")
     file.write_text(text.replace(old, new, 1), encoding="utf-8")
 
@@ -89,8 +91,8 @@ replace_once(
 
 replace_once(REVIEW, "import androidx.compose.foundation.layout.Spacer\n", "")
 replace_once(REVIEW, "import androidx.compose.foundation.layout.size\n", "")
-replace_once(REVIEW, "import androidx.compose.foundation.layout.width\n", "import androidx.compose.foundation.layout.weight\n")
 replace_once(REVIEW, "import androidx.compose.material3.CircularProgressIndicator\n", "")
+replace_once(REVIEW, "import androidx.compose.foundation.layout.width\n", "import androidx.compose.foundation.layout.weight\n")
 replace_once(
     REVIEW,
     "import androidx.compose.ui.Modifier\n",
@@ -106,8 +108,33 @@ replace_once(
 replace_once(REVIEW, "resourceId -> navigator.context.getString(resourceId)", "resourceId -> context.getString(resourceId)")
 replace_once(
     REVIEW,
-    '''                    Text(\n                        text = buildString {\n                            append(stringResource(entry.resolutionState.labelRes))\n                            if (entry.userConfirmed) append(" • ").append(stringResource(R.string.reading_list_review_user_confirmed))\n                            if (entry.skipped) append(" • ").append(stringResource(R.string.reading_list_review_skipped))\n                            append(" • ").append(\n                                stringResource(\n                                    R.string.reading_list_review_candidate_count,\n                                    item.candidates.size,\n                                ),\n                            )\n                        },\n''',
-    '''                    val statusParts = mutableListOf(stringResource(entry.resolutionState.labelRes))\n                    if (entry.userConfirmed) {\n                        statusParts += stringResource(R.string.reading_list_review_user_confirmed)\n                    }\n                    if (entry.skipped) {\n                        statusParts += stringResource(R.string.reading_list_review_skipped)\n                    }\n                    statusParts += stringResource(\n                        R.string.reading_list_review_candidate_count,\n                        item.candidates.size,\n                    )\n                    Text(\n                        text = statusParts.joinToString(" • "),\n''',
+    '''                    Text(
+                        text = buildString {
+                            append(stringResource(entry.resolutionState.labelRes))
+                            if (entry.userConfirmed) append(" • ").append(stringResource(R.string.reading_list_review_user_confirmed))
+                            if (entry.skipped) append(" • ").append(stringResource(R.string.reading_list_review_skipped))
+                            append(" • ").append(
+                                stringResource(
+                                    R.string.reading_list_review_candidate_count,
+                                    item.candidates.size,
+                                ),
+                            )
+                        },
+''',
+    '''                    val statusParts = mutableListOf(stringResource(entry.resolutionState.labelRes))
+                    if (entry.userConfirmed) {
+                        statusParts += stringResource(R.string.reading_list_review_user_confirmed)
+                    }
+                    if (entry.skipped) {
+                        statusParts += stringResource(R.string.reading_list_review_skipped)
+                    }
+                    statusParts += stringResource(
+                        R.string.reading_list_review_candidate_count,
+                        item.candidates.size,
+                    )
+                    Text(
+                        text = statusParts.joinToString(" • "),
+''',
 )
 replace_once(
     REVIEW,
@@ -116,17 +143,55 @@ replace_once(
 )
 replace_once(
     REVIEW,
-    '''    val conflicts = buildList {\n        if (!breakdown.issueEquivalent) add(stringResource(R.string.reading_list_review_conflict_issue))\n        if (breakdown.titleSimilarity < 0.85) add(stringResource(R.string.reading_list_review_conflict_title))\n        if (breakdown.yearEvidence == EvidenceAgreement.MISMATCH) add(stringResource(R.string.reading_list_review_conflict_year))\n        if (breakdown.volumeEvidence == EvidenceAgreement.MISMATCH) add(stringResource(R.string.reading_list_review_conflict_volume))\n        if (breakdown.externalIdentifierEvidence == EvidenceAgreement.MISMATCH) {\n            add(stringResource(R.string.reading_list_review_conflict_identifier))\n        }\n    }\n''',
-    '''    val conflicts = mutableListOf<String>()\n    if (!breakdown.issueEquivalent) conflicts += stringResource(R.string.reading_list_review_conflict_issue)\n    if (breakdown.titleSimilarity < 0.85) conflicts += stringResource(R.string.reading_list_review_conflict_title)\n    if (breakdown.yearEvidence == EvidenceAgreement.MISMATCH) {\n        conflicts += stringResource(R.string.reading_list_review_conflict_year)\n    }\n    if (breakdown.volumeEvidence == EvidenceAgreement.MISMATCH) {\n        conflicts += stringResource(R.string.reading_list_review_conflict_volume)\n    }\n    if (breakdown.externalIdentifierEvidence == EvidenceAgreement.MISMATCH) {\n        conflicts += stringResource(R.string.reading_list_review_conflict_identifier)\n    }\n''',
+    '''    val conflicts = buildList {
+        if (!breakdown.issueEquivalent) add(stringResource(R.string.reading_list_review_conflict_issue))
+        if (breakdown.titleSimilarity < 0.85) add(stringResource(R.string.reading_list_review_conflict_title))
+        if (breakdown.yearEvidence == EvidenceAgreement.MISMATCH) add(stringResource(R.string.reading_list_review_conflict_year))
+        if (breakdown.volumeEvidence == EvidenceAgreement.MISMATCH) add(stringResource(R.string.reading_list_review_conflict_volume))
+        if (breakdown.externalIdentifierEvidence == EvidenceAgreement.MISMATCH) {
+            add(stringResource(R.string.reading_list_review_conflict_identifier))
+        }
+    }
+''',
+    '''    val conflicts = mutableListOf<String>()
+    if (!breakdown.issueEquivalent) conflicts += stringResource(R.string.reading_list_review_conflict_issue)
+    if (breakdown.titleSimilarity < 0.85) conflicts += stringResource(R.string.reading_list_review_conflict_title)
+    if (breakdown.yearEvidence == EvidenceAgreement.MISMATCH) {
+        conflicts += stringResource(R.string.reading_list_review_conflict_year)
+    }
+    if (breakdown.volumeEvidence == EvidenceAgreement.MISMATCH) {
+        conflicts += stringResource(R.string.reading_list_review_conflict_volume)
+    }
+    if (breakdown.externalIdentifierEvidence == EvidenceAgreement.MISMATCH) {
+        conflicts += stringResource(R.string.reading_list_review_conflict_identifier)
+    }
+''',
 )
 
 replace_once(
     MODEL,
-    '''val ReadingListEntry.needsManualAttention: Boolean\n    get() = when (resolutionState) {\n''',
-    '''val ReadingListEntry.needsManualAttention: Boolean\n    get() {\n        if (userConfirmed || skipped) return false\n        return when (resolutionState) {\n''',
+    '''val ReadingListEntry.needsManualAttention: Boolean
+    get() = when (resolutionState) {
+''',
+    '''val ReadingListEntry.needsManualAttention: Boolean
+    get() {
+        if (userConfirmed || skipped) return false
+        return when (resolutionState) {
+''',
 )
 replace_once(
     MODEL,
-    '''        ReadingListEntryResolutionState.USER_CONFIRMED,\n        -> false\n    }\n\nsealed interface ReadingListReviewAction {\n''',
-    '''        ReadingListEntryResolutionState.USER_CONFIRMED,\n        -> false\n        }\n    }\n\nsealed interface ReadingListReviewAction {\n''',
+    '''        ReadingListEntryResolutionState.USER_CONFIRMED,
+        -> false
+    }
+
+sealed interface ReadingListReviewAction {
+''',
+    '''        ReadingListEntryResolutionState.USER_CONFIRMED,
+        -> false
+        }
+    }
+
+sealed interface ReadingListReviewAction {
+''',
 )
