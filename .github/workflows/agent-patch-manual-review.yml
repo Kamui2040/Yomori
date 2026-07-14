@@ -11,16 +11,28 @@ permissions:
 jobs:
   patch:
     if: github.actor != 'github-actions[bot]'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
           ref: agent/manual-review-ui
           fetch-depth: 0
 
       - name: Apply exact source patches
         run: python .github/agent_patch_manual_review.py
+
+      - name: Set up JDK
+        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a
+        with:
+          java-version-file: .github/.java-version
+          distribution: temurin
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92
+
+      - name: Format implementation
+        run: ./gradlew spotlessApply
 
       - name: Commit patched files
         run: |
@@ -32,6 +44,8 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add app/src/main/java/eu/kanade/tachiyomi/ui/readinglist/ReadingListsTab.kt \
                   app/src/main/java/eu/kanade/tachiyomi/ui/readinglist/ReadingListReviewScreen.kt \
-                  app/src/main/java/eu/kanade/tachiyomi/ui/readinglist/ReadingListReviewScreenModel.kt
-          git commit -m "Wire reading-list manual review UI"
+                  app/src/main/java/eu/kanade/tachiyomi/ui/readinglist/ReadingListReviewScreenModel.kt \
+                  app/src/test/java/eu/kanade/tachiyomi/ui/readinglist/ReadingListReviewScreenModelTest.kt \
+                  app/src/main/res/values/yomori_reading_list_strings.xml
+          git commit -m "Format reading-list manual review implementation"
           git push origin HEAD:agent/manual-review-ui
