@@ -195,21 +195,20 @@ class ReadingListReaderStateRepositoryTest {
         )
         val readingListId = queries.lastInsertRowId().awaitAsOne()
 
-        val entryIds = buildList {
-            repeat(2) { position ->
-                queries.insertReadingListEntry(
-                    readingListId = readingListId,
-                    position = position.toLong(),
-                    series = "Series $position",
-                    number = (position + 1).toString(),
-                    volume = null,
-                    year = null,
-                    extraAttributes = "{}",
-                    extraElements = "{}",
-                    resolutionState = ReadingListEntryResolutionState.UNSEARCHED.name,
-                )
-                add(queries.lastInsertRowId().awaitAsOne())
-            }
+        val entryIds = mutableListOf<Long>()
+        repeat(2) { position ->
+            queries.insertReadingListEntry(
+                readingListId = readingListId,
+                position = position.toLong(),
+                series = "Series $position",
+                number = (position + 1).toString(),
+                volume = null,
+                year = null,
+                extraAttributes = "{}",
+                extraElements = "{}",
+                resolutionState = ReadingListEntryResolutionState.UNSEARCHED.name,
+            )
+            entryIds += queries.lastInsertRowId().awaitAsOne()
         }
 
         return Fixture(
