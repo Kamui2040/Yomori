@@ -13,7 +13,6 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
-import io.mockk.slot
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -75,7 +74,7 @@ class ReadingListReaderNavigatorTest {
         val first = readableEntry(10, 0, source.id, "/series/first", "/chapter/first")
         val second = readableEntry(11, 1, source.id, "/series/second", "/chapter/second")
         val secondRows = localRows(second, mangaId = 101, chapterId = 201).let { rows ->
-            rows.copy(chapter = rows.chapter.copy(read = true, lastPageRead = 99))
+            rows.copy(chapter = rows.chapter.copy(read = true, lastPageRead = 99L))
         }
         val fixture = fixture(
             readingList = readingList(
@@ -312,8 +311,8 @@ class ReadingListReaderNavigatorTest {
             ),
         )
         val entry = readableEntry(10, 0, source.id, "/series", "/chapter/exact")
-        val mangaSlot = slot<List<Manga>>()
-        val chapterSlot = slot<List<Chapter>>()
+        val insertedMangas = mutableListOf<Manga>()
+        val insertedChapters = mutableListOf<Chapter>()
         val insertedManga = Manga.create().copy(
             id = 100,
             source = source.id,
@@ -332,11 +331,11 @@ class ReadingListReaderNavigatorTest {
             readingList = readingList(entries = listOf(entry), sourceIds = listOf(source.id)),
             sources = listOf(source),
             mangaInsert = { mangas ->
-                mangaSlot.captured = mangas
+                insertedMangas += mangas
                 listOf(insertedManga)
             },
             chapterInsert = { chapters ->
-                chapterSlot.captured = chapters
+                insertedChapters += chapters
                 listOf(insertedChapter)
             },
         )
@@ -347,9 +346,9 @@ class ReadingListReaderNavigatorTest {
         ready.destination.mangaId shouldBe insertedManga.id
         ready.destination.chapterId shouldBe insertedChapter.id
         source.updateCalls shouldBe 1
-        mangaSlot.captured.single().favorite shouldBe false
-        mangaSlot.captured.single().url shouldBe "/series"
-        chapterSlot.captured.map(Chapter::url).shouldContainExactly("/chapter/exact")
+        insertedMangas.single().favorite shouldBe false
+        insertedMangas.single().url shouldBe "/series"
+        insertedChapters.map(Chapter::url).shouldContainExactly("/chapter/exact")
     }
 
     @Test
