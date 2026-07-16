@@ -17,7 +17,11 @@ interface ReadingListRepository {
 
     suspend fun updateSources(id: Long, selectedSourceIds: List<Long>): Boolean
 
-    suspend fun updateProgress(id: Long, currentPosition: Int?): Boolean
+    suspend fun updateProgress(
+        id: Long,
+        currentPosition: Int?,
+        completed: Boolean = false,
+    ): Boolean
 
     suspend fun delete(id: Long)
 }
