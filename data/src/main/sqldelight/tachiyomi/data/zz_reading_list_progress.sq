@@ -1,0 +1,60 @@
+import kotlin.Boolean;
+
+ALTER TABLE reading_lists
+ADD COLUMN completed INTEGER AS Boolean NOT NULL DEFAULT 0;
+
+getReadingListCompleted:
+SELECT completed
+FROM reading_lists
+WHERE _id = :id
+LIMIT 1;
+
+getReadingListsWithProgress:
+SELECT
+    RL._id AS id,
+    RL.name,
+    (
+        SELECT count(*)
+        FROM reading_list_entries RLE
+        WHERE RLE.reading_list_id = RL._id
+    ) AS entryCount,
+    (
+        SELECT count(*)
+        FROM reading_list_sources RLS
+        WHERE RLS.reading_list_id = RL._id
+    ) AS sourceCount,
+    RL.current_position AS currentPosition,
+    RL.completed,
+    RL.created_at AS createdAt,
+    RL.updated_at AS updatedAt
+FROM reading_lists RL
+ORDER BY RL.updated_at DESC, RL._id DESC;
+
+updateReadingListProgress:
+UPDATE reading_lists
+SET current_position = :currentPosition,
+    completed = :completed,
+    updated_at = :updatedAt
+WHERE _id = :id;
+
+setReadingListEntrySkipped:
+UPDATE reading_list_entries
+SET skipped = :skipped
+WHERE _id = :entryId;
+
+markReadingListEntryReaderFailure:
+UPDATE reading_list_entries
+SET resolution_state = :resolutionState
+WHERE _id = :entryId;
+
+clearReadingListEntryReaderFailure:
+UPDATE reading_list_entries
+SET resolution_state = CASE
+        WHEN user_confirmed = 1 THEN 'USER_CONFIRMED'
+        ELSE 'AUTO_MATCHED'
+    END
+WHERE _id = :entryId
+  AND matched_source_id IS NOT NULL
+  AND matched_manga_url IS NOT NULL
+  AND matched_chapter_url IS NOT NULL
+  AND resolution_state IN ('SOURCE_UNAVAILABLE', 'CHAPTER_REMOVED', 'NEEDS_REMATCH');
