@@ -1,0 +1,126 @@
+name: Agent staging navigation cleanup
+
+on:
+  push:
+    branches:
+      - agent/cross-series-reader-navigation-staging
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          ref: agent/cross-series-reader-navigation-staging
+          fetch-depth: 0
+      - shell: bash
+        run: |
+          set +e
+          python3 - <<'PY'
+          from pathlib import Path
+
+          def replace(path: str, old: str, new: str) -> None:
+              file = Path(path)
+              text = file.read_text(encoding="utf-8")
+              if text.count(old) != 1:
+                  raise RuntimeError(f"{path}: replacement anchor count is {text.count(old)}")
+              file.write_text(text.replace(old, new), encoding="utf-8")
+
+          path = "app/src/main/java/eu/kanade/tachiyomi/ui/readinglist/ReadingListReaderNavigator.kt"
+          replace(
+              path,
+              "package eu.kanade.tachiyomi.ui.readinglist\n\n",
+              "package eu.kanade.tachiyomi.ui.readinglist\n\nimport app.cash.sqldelight.async.coroutines.awaitAsOneOrNull\n",
+          )
+          replace(
+              path,
+              '''        val readingList = readingListRepository.get(readingListId)
+            ?: return ReadingListReaderResult.MissingReadingList(readingListId)
+        val currentIndex = readingList.entries.indexOfFirst { entry -> entry.id == currentEntryId }
+        if (currentIndex < 0) {
+            return ReadingListReaderResult.MissingEntry(readingList.id, currentEntryId)
+        }
+
+        val targetIndex = when (direction) {
+            ReadingListReaderDirection.PREVIOUS -> currentIndex - 1
+            ReadingListReaderDirection.NEXT -> currentIndex + 1
+        }
+        if (targetIndex < 0) {
+            return ReadingListReaderResult.Boundary(
+                readingListId = readingList.id,
+                direction = direction,
+            )
+        }
+        if (targetIndex >= readingList.entries.size) {''',
+              '''        val readingList = readingListRepository.get(readingListId)
+            ?: return ReadingListReaderResult.MissingReadingList(readingListId)
+        val orderedEntries = readingList.entries.sortedBy(ReadingListEntry::position)
+        val currentIndex = orderedEntries.indexOfFirst { entry -> entry.id == currentEntryId }
+        if (currentIndex < 0) {
+            return ReadingListReaderResult.MissingEntry(readingList.id, currentEntryId)
+        }
+
+        val targetIndex = when (direction) {
+            ReadingListReaderDirection.PREVIOUS -> currentIndex - 1
+            ReadingListReaderDirection.NEXT -> currentIndex + 1
+        }
+        if (targetIndex < 0) {
+            return ReadingListReaderResult.Boundary(
+                readingListId = readingList.id,
+                direction = direction,
+            )
+        }
+        if (targetIndex >= orderedEntries.size) {''',
+          )
+          replace(
+              path,
+              '''        val readingList = readingListRepository.get(readingListId)
+            ?: return ReadingListReaderResult.MissingReadingList(readingListId)
+        val blockedIndex = readingList.entries.indexOfFirst { entry -> entry.id == blockedEntryId }
+        if (blockedIndex < 0) {
+            return ReadingListReaderResult.MissingEntry(readingList.id, blockedEntryId)
+        }
+        if (!stateStore.setSkipped(readingList.id, blockedEntryId, skipped = true)) {
+            return ReadingListReaderResult.MissingEntry(readingList.id, blockedEntryId)
+        }
+
+        val targetIndex = blockedIndex + 1
+        if (targetIndex >= readingList.entries.size) {''',
+              '''        val readingList = readingListRepository.get(readingListId)
+            ?: return ReadingListReaderResult.MissingReadingList(readingListId)
+        val orderedEntries = readingList.entries.sortedBy(ReadingListEntry::position)
+        val blockedIndex = orderedEntries.indexOfFirst { entry -> entry.id == blockedEntryId }
+        if (blockedIndex < 0) {
+            return ReadingListReaderResult.MissingEntry(readingList.id, blockedEntryId)
+        }
+        if (!stateStore.setSkipped(readingList.id, blockedEntryId, skipped = true)) {
+            return ReadingListReaderResult.MissingEntry(readingList.id, blockedEntryId)
+        }
+
+        val targetIndex = blockedIndex + 1
+        if (targetIndex >= orderedEntries.size) {''',
+          )
+          file = Path(path)
+          text = file.read_text(encoding="utf-8")
+          if text.count(".executeAsOneOrNull()") != 3:
+              raise RuntimeError("Unexpected synchronous query count")
+          file.write_text(text.replace(".executeAsOneOrNull()", ".awaitAsOneOrNull()"), encoding="utf-8")
+
+          activity = Path("app/src/main/java/eu/kanade/tachiyomi/ui/reader/ReadingListReaderActivity.kt")
+          text = activity.read_text(encoding="utf-8")
+          text = text.replace("import eu.kanade.tachiyomi.ui.readinglist.ReadingListReaderBlockReason\n", "")
+          activity.write_text(text, encoding="utf-8")
+          PY
+          status=$?
+          if [ "$status" -ne 0 ]; then git reset --hard HEAD; fi
+          rm -f .github/workflows/agent-staging-navigation-cleanup.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then exit 0; fi
+          if [ "$status" -eq 0 ]; then git commit -m "Harden reading-list navigation state handling"; else git commit -m "Remove unsuccessful navigation cleanup helper"; fi
+          git push origin HEAD:agent/cross-series-reader-navigation-staging
+          exit 0
