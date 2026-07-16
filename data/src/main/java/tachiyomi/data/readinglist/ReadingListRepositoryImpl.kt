@@ -209,6 +209,68 @@ class ReadingListRepositoryImpl(
         }
     }
 
+    override suspend fun setEntrySkipped(
+        readingListId: Long,
+        entryId: Long,
+        skipped: Boolean,
+    ): Boolean {
+        return database.transactionWithResult {
+            val guard = database.reading_listsQueries.getEntryResolutionGuard(entryId).awaitAsOneOrNull()
+                ?: return@transactionWithResult false
+            if (guard.readingListId != readingListId) return@transactionWithResult false
+
+            database.zz_reading_list_progressQueries.setReadingListEntrySkipped(
+                skipped = skipped,
+                entryId = entryId,
+            )
+            database.reading_listsQueries.touchReadingList(
+                updatedAt = currentTimeMillis(),
+                id = readingListId,
+            )
+            true
+        }
+    }
+
+    override suspend fun markEntryReaderFailure(
+        entryId: Long,
+        state: ReadingListEntryResolutionState,
+    ): Boolean {
+        require(
+            state == ReadingListEntryResolutionState.SOURCE_UNAVAILABLE ||
+                state == ReadingListEntryResolutionState.CHAPTER_REMOVED ||
+                state == ReadingListEntryResolutionState.NEEDS_REMATCH,
+        ) {
+            "Reader failures may only use a repairable resolution state"
+        }
+
+        return database.transactionWithResult {
+            val guard = database.reading_listsQueries.getEntryResolutionGuard(entryId).awaitAsOneOrNull()
+                ?: return@transactionWithResult false
+            database.zz_reading_list_progressQueries.markReadingListEntryReaderFailure(
+                resolutionState = state.name,
+                entryId = entryId,
+            )
+            database.reading_listsQueries.touchReadingList(
+                updatedAt = currentTimeMillis(),
+                id = guard.readingListId,
+            )
+            true
+        }
+    }
+
+    override suspend fun clearEntryReaderFailure(entryId: Long): Boolean {
+        return database.transactionWithResult {
+            val guard = database.reading_listsQueries.getEntryResolutionGuard(entryId).awaitAsOneOrNull()
+                ?: return@transactionWithResult false
+            database.zz_reading_list_progressQueries.clearReadingListEntryReaderFailure(entryId)
+            database.reading_listsQueries.touchReadingList(
+                updatedAt = currentTimeMillis(),
+                id = guard.readingListId,
+            )
+            true
+        }
+    }
+
     override suspend fun delete(id: Long) {
         database.reading_listsQueries.deleteReadingList(id)
     }
