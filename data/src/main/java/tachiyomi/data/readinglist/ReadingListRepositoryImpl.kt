@@ -28,6 +28,10 @@ class ReadingListRepositoryImpl(
             .getReadingList(id, ::mapReadingListRow)
             .awaitAsOneOrNull()
             ?: return null
+        val completed = database.zz_reading_list_progressQueries
+            .getReadingListCompleted(id)
+            .awaitAsOneOrNull()
+            ?: false
 
         val entries = database.reading_listsQueries
             .getReadingListEntries(id, ::mapEntryRow)
@@ -82,19 +86,19 @@ class ReadingListRepositoryImpl(
             currentPosition = readingList.currentPosition?.toInt(),
             createdAt = readingList.createdAt,
             updatedAt = readingList.updatedAt,
-            completed = readingList.completed,
+            completed = completed,
         )
     }
 
     override suspend fun getAll(): List<ReadingListSummary> {
-        return database.reading_listsQueries
-            .getReadingLists(::mapSummary)
+        return database.zz_reading_list_progressQueries
+            .getReadingListsWithProgress(::mapSummary)
             .awaitAsList()
     }
 
     override fun getAllAsFlow(): Flow<List<ReadingListSummary>> {
-        return database.reading_listsQueries
-            .getReadingLists(::mapSummary)
+        return database.zz_reading_list_progressQueries
+            .getReadingListsWithProgress(::mapSummary)
             .subscribeToList()
     }
 
@@ -195,7 +199,7 @@ class ReadingListRepositoryImpl(
                 return@transactionWithResult false
             }
 
-            database.reading_listsQueries.updateProgress(
+            database.zz_reading_list_progressQueries.updateReadingListProgress(
                 currentPosition = currentPosition?.toLong(),
                 completed = completed,
                 updatedAt = currentTimeMillis(),
@@ -228,7 +232,6 @@ class ReadingListRepositoryImpl(
         extraElements: String,
         warnings: String,
         currentPosition: Long?,
-        completed: Boolean,
         createdAt: Long,
         updatedAt: Long,
     ): ReadingListRow {
@@ -241,7 +244,6 @@ class ReadingListRepositoryImpl(
             extraElements = extraElements,
             warnings = warnings,
             currentPosition = currentPosition,
-            completed = completed,
             createdAt = createdAt,
             updatedAt = updatedAt,
         )
@@ -338,7 +340,6 @@ class ReadingListRepositoryImpl(
         val extraElements: String,
         val warnings: String,
         val currentPosition: Long?,
-        val completed: Boolean,
         val createdAt: Long,
         val updatedAt: Long,
     )
