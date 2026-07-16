@@ -1,0 +1,700 @@
+name: Agent cross-series reader integration
+
+on:
+  push:
+    branches:
+      - agent/cross-series-reader-navigation
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          ref: agent/cross-series-reader-navigation
+          fetch-depth: 0
+
+      - name: Set up JDK
+        uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a
+        with:
+          java-version-file: .github/.java-version
+          distribution: temurin
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92
+
+      - name: Apply exact integration patches
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          def replace(path: str, old: str, new: str, count: int = 1) -> None:
+              file = Path(path)
+              text = file.read_text(encoding='utf-8')
+              actual = text.count(old)
+              if actual != count:
+                  raise SystemExit(f'{path}: expected {count} occurrence(s), found {actual}: {old[:100]!r}')
+              file.write_text(text.replace(old, new, count), encoding='utf-8')
+
+          # Fix async SQLDelight reads and carry exact entry labels in reader intents.
+          navigator = 'app/src/main/java/eu/kanade/tachiyomi/ui/readinglist/ReadingListReaderNavigator.kt'
+          replace(
+              navigator,
+              'package eu.kanade.tachiyomi.ui.readinglist\n\n',
+              'package eu.kanade.tachiyomi.ui.readinglist\n\nimport app.cash.sqldelight.async.coroutines.awaitAsOneOrNull\n',
+          )
+          replace(navigator, '.executeAsOneOrNull()', '.awaitAsOneOrNull()', 3)
+          replace(
+              navigator,
+              '''                        entryCount = orderedEntries.size,
+                        mangaId = materialized.manga.id,''',
+              '''                        entryCount = orderedEntries.size,
+                        series = entry.series,
+                        issueNumber = entry.number,
+                        mangaId = materialized.manga.id,''',
+          )
+          replace(
+              navigator,
+              '''    val entryCount: Int,
+    val mangaId: Long,''',
+              '''    val entryCount: Int,
+    val series: String,
+    val issueNumber: String,
+    val mangaId: Long,''',
+          )
+
+          # Route the reader back to the exact reading-list review screen.
+          constants = 'core/common/src/main/kotlin/tachiyomi/core/common/Constants.kt'
+          replace(
+              constants,
+              '    const val MANGA_EXTRA = "manga"\n',
+              '    const val MANGA_EXTRA = "manga"\n    const val READING_LIST_EXTRA = "reading_list"\n',
+          )
+          replace(
+              constants,
+              '    const val SHORTCUT_DOWNLOADS = "eu.kanade.tachiyomi.SHOW_DOWNLOADS"\n',
+              '    const val SHORTCUT_DOWNLOADS = "eu.kanade.tachiyomi.SHOW_DOWNLOADS"\n    const val SHORTCUT_READING_LIST = "io.github.kamui2040.yomori.SHOW_READING_LIST"\n',
+          )
+
+          main_activity = 'app/src/main/java/eu/kanade/tachiyomi/ui/main/MainActivity.kt'
+          replace(
+              main_activity,
+              '''            Constants.SHORTCUT_HISTORY -> HomeScreen.Tab.History
+            Constants.SHORTCUT_SOURCES -> HomeScreen.Tab.Browse(false)''',
+              '''            Constants.SHORTCUT_HISTORY -> HomeScreen.Tab.History
+            Constants.SHORTCUT_READING_LIST -> {
+                val readingListId = intent.getLongExtra(Constants.READING_LIST_EXTRA, -1L)
+                if (readingListId < 0L) return false
+                navigator.popUntilRoot()
+                HomeScreen.Tab.ReadingLists(readingListId)
+            }
+            Constants.SHORTCUT_SOURCES -> HomeScreen.Tab.Browse(false)''',
+          )
+
+          home = 'app/src/main/java/eu/kanade/tachiyomi/ui/home/HomeScreen.kt'
+          replace(
+              home,
+              'import eu.kanade.tachiyomi.ui.readinglist.ReadingListsTab\n',
+              'import eu.kanade.tachiyomi.ui.readinglist.ReadingListReviewScreen\nimport eu.kanade.tachiyomi.ui.readinglist.ReadingListsTab\n',
+          )
+          replace(home, '                            Tab.ReadingLists -> ReadingListsTab\n', '                            is Tab.ReadingLists -> ReadingListsTab\n')
+          replace(
+              home,
+              '''                        if (it is Tab.Library && it.mangaIdToOpen != null) {
+                            navigator.push(MangaScreen(it.mangaIdToOpen))
+                        }
+                        if (it is Tab.More && it.toDownloads) {''',
+              '''                        if (it is Tab.Library && it.mangaIdToOpen != null) {
+                            navigator.push(MangaScreen(it.mangaIdToOpen))
+                        }
+                        if (it is Tab.ReadingLists && it.readingListIdToReview != null) {
+                            navigator.push(ReadingListReviewScreen(it.readingListIdToReview))
+                        }
+                        if (it is Tab.More && it.toDownloads) {''',
+          )
+          replace(home, '        data object ReadingLists : Tab\n', '        data class ReadingLists(val readingListIdToReview: Long? = null) : Tab\n')
+
+          # Add a dedicated standard-mode reader activity without changing ordinary ReaderActivity launch behavior.
+          manifest = 'app/src/main/AndroidManifest.xml'
+          replace(
+              manifest,
+              '''        <activity
+            android:name=".ui.reader.ReaderActivity"
+            android:exported="false"
+            android:launchMode="singleTask">
+            <intent-filter>
+                <action android:name="com.samsung.android.support.REMOTE_ACTION" />
+            </intent-filter>
+
+            <meta-data
+                android:name="com.samsung.android.support.REMOTE_ACTION"
+                android:resource="@xml/s_pen_actions" />
+        </activity>
+''',
+              '''        <activity
+            android:name=".ui.reader.ReaderActivity"
+            android:exported="false"
+            android:launchMode="singleTask">
+            <intent-filter>
+                <action android:name="com.samsung.android.support.REMOTE_ACTION" />
+            </intent-filter>
+
+            <meta-data
+                android:name="com.samsung.android.support.REMOTE_ACTION"
+                android:resource="@xml/s_pen_actions" />
+        </activity>
+
+        <activity
+            android:name=".ui.reader.ReadingListReaderActivity"
+            android:exported="false" />
+''',
+          )
+
+          # Reading-list overview: read/resume/restart, blocking dialog, and reader launch events.
+          tab = 'app/src/main/java/eu/kanade/tachiyomi/ui/readinglist/ReadingListsTab.kt'
+          replace(tab, 'import androidx.compose.material.icons.Icons\n', 'import androidx.compose.material.icons.Icons\nimport androidx.compose.material.icons.filled.PlayArrow\n')
+          replace(tab, 'import eu.kanade.tachiyomi.ui.main.MainActivity\n', 'import eu.kanade.tachiyomi.ui.main.MainActivity\nimport eu.kanade.tachiyomi.ui.reader.ReaderActivity\n')
+          replace(
+              tab,
+              '''        val screenModel = rememberScreenModel { ReadingListsScreenModel() }
+        val state by screenModel.state.collectAsState()
+        val snackbarHostState = remember { SnackbarHostState() }''',
+              '''        val screenModel = rememberScreenModel { ReadingListsScreenModel() }
+        val state by screenModel.state.collectAsState()
+        val readerLaunchScreenModel = rememberScreenModel { ReadingListReaderLaunchScreenModel() }
+        val readerLaunchState by readerLaunchScreenModel.state.collectAsState()
+        val snackbarHostState = remember { SnackbarHostState() }''',
+          )
+          replace(
+              tab,
+              '''            onImport = launchImport,
+            onReview = { readingListId -> navigator.push(ReadingListReviewScreen(readingListId)) },''',
+              '''            onImport = launchImport,
+            readerLoading = readerLaunchState.isLoading,
+            onRead = readerLaunchScreenModel::start,
+            onReview = { readingListId -> navigator.push(ReadingListReviewScreen(readingListId)) },''',
+          )
+          replace(
+              tab,
+              '''            null -> Unit
+        }
+
+        LaunchedEffect(Unit) {''',
+              '''            null -> Unit
+        }
+
+        when (val readerDialog = readerLaunchState.dialog) {
+            is ReadingListReaderLaunchDialog.Restart -> ReadingListReaderRestartDialog(
+                readingList = readerDialog.readingList,
+                onRestart = readerLaunchScreenModel::confirmRestart,
+                onDismiss = readerLaunchScreenModel::dismissDialog,
+            )
+            is ReadingListReaderLaunchDialog.Blocked -> ReadingListReaderBlockedDialog(
+                entry = readerDialog.entry,
+                onReview = readerLaunchScreenModel::reviewBlocked,
+                onSkip = readerLaunchScreenModel::skipBlocked,
+                onStop = readerLaunchScreenModel::dismissDialog,
+            )
+            null -> Unit
+        }
+
+        LaunchedEffect(Unit) {''',
+          )
+          replace(
+              tab,
+              '''        LaunchedEffect(state.isLoading) {
+            if (!state.isLoading) {''',
+              '''        LaunchedEffect(Unit) {
+            readerLaunchScreenModel.events.collectLatest { event ->
+                when (event) {
+                    is ReadingListReaderLaunchEvent.OpenReader -> context.startActivity(
+                        ReaderActivity.newReadingListIntent(context, event.destination),
+                    )
+                    is ReadingListReaderLaunchEvent.Review -> navigator.push(
+                        ReadingListReviewScreen(event.readingListId),
+                    )
+                    is ReadingListReaderLaunchEvent.Completed -> snackbarHostState.showSnackbar(
+                        context.getString(
+                            R.string.reading_list_reader_completed,
+                            event.readingListName ?: context.getString(R.string.reading_list_untitled),
+                        ),
+                    )
+                    ReadingListReaderLaunchEvent.Failed -> snackbarHostState.showSnackbar(
+                        context.getString(R.string.reading_list_reader_failed),
+                    )
+                }
+            }
+        }
+
+        LaunchedEffect(state.isLoading) {
+            if (!state.isLoading) {''',
+          )
+          replace(
+              tab,
+              '''    onImport: () -> Unit,
+    onReview: (Long) -> Unit,''',
+              '''    onImport: () -> Unit,
+    readerLoading: Boolean,
+    onRead: (ReadingListSummary) -> Unit,
+    onReview: (Long) -> Unit,''',
+          )
+          replace(
+              tab,
+              '''                searchingReadingListIds = state.searchingReadingListIds,
+                contentPadding = paddingValues,
+                onReview = onReview,''',
+              '''                searchingReadingListIds = state.searchingReadingListIds,
+                readerLoading = readerLoading,
+                contentPadding = paddingValues,
+                onRead = onRead,
+                onReview = onReview,''',
+          )
+          replace(
+              tab,
+              '''    searchingReadingListIds: Set<Long>,
+    contentPadding: PaddingValues,
+    onReview: (Long) -> Unit,''',
+              '''    searchingReadingListIds: Set<Long>,
+    readerLoading: Boolean,
+    contentPadding: PaddingValues,
+    onRead: (ReadingListSummary) -> Unit,
+    onReview: (Long) -> Unit,''',
+          )
+          replace(
+              tab,
+              '''                isSearching = readingList.id in searchingReadingListIds,
+                onReview = { onReview(readingList.id) },''',
+              '''                isSearching = readingList.id in searchingReadingListIds,
+                isReaderLoading = readerLoading,
+                onRead = { onRead(readingList) },
+                onReview = { onReview(readingList.id) },''',
+          )
+          replace(
+              tab,
+              '''    isSearching: Boolean,
+    onReview: () -> Unit,''',
+              '''    isSearching: Boolean,
+    isReaderLoading: Boolean,
+    onRead: () -> Unit,
+    onReview: () -> Unit,''',
+          )
+          replace(
+              tab,
+              '''        modifier = Modifier.clickable(enabled = !isSearching, onClick = onReview),
+        headlineContent = {''',
+              '''        modifier = Modifier.clickable(enabled = !isSearching, onClick = onReview),
+        leadingContent = {
+            IconButton(
+                onClick = onRead,
+                enabled = !isSearching && !isReaderLoading,
+            ) {
+                if (isReaderLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp,
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Filled.PlayArrow,
+                        contentDescription = stringResource(
+                            when {
+                                readingList.completed -> R.string.reading_list_read_again
+                                readingList.currentPosition != null -> R.string.reading_list_resume
+                                else -> R.string.reading_list_read
+                            },
+                        ),
+                    )
+                }
+            }
+        },
+        headlineContent = {''',
+          )
+          replace(
+              tab,
+              '''                readingList.currentPosition?.let { position ->
+                    Text(
+                        text = stringResource(
+                            R.string.reading_list_progress,
+                            (position + 1).coerceAtMost(readingList.entryCount),
+                            readingList.entryCount,
+                        ),
+                    )
+                }''',
+              '''                if (readingList.completed) {
+                    Text(text = stringResource(R.string.reading_list_completed))
+                } else {
+                    readingList.currentPosition?.let { position ->
+                        Text(
+                            text = stringResource(
+                                R.string.reading_list_progress,
+                                (position + 1).coerceAtMost(readingList.entryCount),
+                                readingList.entryCount,
+                            ),
+                        )
+                    }
+                }''',
+          )
+
+          # Reader activity: list-specific toolbar navigation and explicit blocking actions.
+          reader = 'app/src/main/java/eu/kanade/tachiyomi/ui/reader/ReaderActivity.kt'
+          replace(reader, 'import eu.kanade.tachiyomi.ui.main.MainActivity\n', '''import eu.kanade.tachiyomi.ui.main.MainActivity
+import eu.kanade.tachiyomi.ui.readinglist.ReadingListReaderBlockReason
+import eu.kanade.tachiyomi.ui.readinglist.ReadingListReaderBlockedDialog
+import eu.kanade.tachiyomi.ui.readinglist.ReadingListReaderBlockedEntry
+import eu.kanade.tachiyomi.ui.readinglist.ReadingListReaderDestination
+import eu.kanade.tachiyomi.ui.readinglist.ReadingListReaderDirection
+import eu.kanade.tachiyomi.ui.readinglist.ReadingListReaderNavigator
+import eu.kanade.tachiyomi.ui.readinglist.ReadingListReaderResult
+import eu.kanade.tachiyomi.ui.readinglist.ReadingListReaderStateStore
+''')
+          replace(reader, 'import kotlinx.coroutines.flow.combine\n', 'import kotlinx.coroutines.flow.MutableStateFlow\nimport kotlinx.coroutines.flow.combine\n')
+          replace(reader, 'import tachiyomi.core.common.util.lang.withUIContext\n', 'import tachiyomi.core.common.util.lang.withIOContext\nimport tachiyomi.core.common.util.lang.withUIContext\n')
+          replace(reader, 'class ReaderActivity : BaseActivity() {\n', 'open class ReaderActivity : BaseActivity() {\n')
+          replace(
+              reader,
+              '''        fun newIntent(context: Context, mangaId: Long?, chapterId: Long?): Intent {
+            return Intent(context, ReaderActivity::class.java).apply {
+                putExtra("manga", mangaId)
+                putExtra("chapter", chapterId)
+                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            }
+        }
+''',
+              '''        fun newIntent(context: Context, mangaId: Long?, chapterId: Long?): Intent {
+            return Intent(context, ReaderActivity::class.java).apply {
+                putExtra("manga", mangaId)
+                putExtra("chapter", chapterId)
+                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            }
+        }
+
+        fun newReadingListIntent(
+            context: Context,
+            destination: ReadingListReaderDestination,
+        ): Intent {
+            return Intent(context, ReadingListReaderActivity::class.java).apply {
+                putExtra("manga", destination.mangaId)
+                putExtra("chapter", destination.chapterId)
+                putExtra(EXTRA_READING_LIST_ID, destination.readingListId)
+                putExtra(EXTRA_READING_LIST_NAME, destination.readingListName)
+                putExtra(EXTRA_READING_LIST_ENTRY_ID, destination.entryId)
+                putExtra(EXTRA_READING_LIST_POSITION, destination.position)
+                putExtra(EXTRA_READING_LIST_ENTRY_COUNT, destination.entryCount)
+                putExtra(EXTRA_READING_LIST_SERIES, destination.series)
+                putExtra(EXTRA_READING_LIST_ISSUE, destination.issueNumber)
+                putExtra(EXTRA_READING_LIST_HAS_PREVIOUS, destination.hasPrevious)
+                putExtra(EXTRA_READING_LIST_HAS_NEXT, destination.hasNext)
+            }
+        }
+
+        private const val EXTRA_READING_LIST_ID = "reading_list_id"
+        private const val EXTRA_READING_LIST_NAME = "reading_list_name"
+        private const val EXTRA_READING_LIST_ENTRY_ID = "reading_list_entry_id"
+        private const val EXTRA_READING_LIST_POSITION = "reading_list_position"
+        private const val EXTRA_READING_LIST_ENTRY_COUNT = "reading_list_entry_count"
+        private const val EXTRA_READING_LIST_SERIES = "reading_list_series"
+        private const val EXTRA_READING_LIST_ISSUE = "reading_list_issue"
+        private const val EXTRA_READING_LIST_HAS_PREVIOUS = "reading_list_has_previous"
+        private const val EXTRA_READING_LIST_HAS_NEXT = "reading_list_has_next"
+''',
+          )
+          replace(
+              reader,
+              '''    val viewModel by viewModels<ReaderViewModel>()
+    private var assistUrl: String? = null
+''',
+              '''    val viewModel by viewModels<ReaderViewModel>()
+    private var assistUrl: String? = null
+    private var readingListSession: ReadingListReaderDestination? = null
+    private val readingListBlockedEntry = MutableStateFlow<ReadingListReaderBlockedEntry?>(null)
+    private val readingListNavigator by lazy { ReadingListReaderNavigator() }
+    private val readingListStateStore by lazy { ReadingListReaderStateStore() }
+''',
+          )
+          replace(
+              reader,
+              '''        binding = ReaderActivityBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        binding.setComposeOverlay()
+''',
+              '''        binding = ReaderActivityBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        readingListSession = intent.toReadingListDestination()
+        binding.setComposeOverlay()
+''',
+          )
+          replace(
+              reader,
+              '''        val state by viewModel.state.collectAsState()
+        val showPageNumber by readerPreferences.showPageNumber.collectAsState()''',
+              '''        val state by viewModel.state.collectAsState()
+        val blockedEntry by readingListBlockedEntry.collectAsState()
+        val showPageNumber by readerPreferences.showPageNumber.collectAsState()''',
+          )
+          replace(
+              reader,
+              '''            null -> {}
+        }
+    }
+''',
+              '''            null -> {}
+        }
+
+        blockedEntry?.let { entry ->
+            ReadingListReaderBlockedDialog(
+                entry = entry,
+                onReview = { reviewReadingList(entry.readingListId) },
+                onSkip = { skipReadingListEntry(entry) },
+                onStop = {
+                    readingListBlockedEntry.value = null
+                    finish()
+                },
+            )
+        }
+    }
+''',
+          )
+          replace(
+              reader,
+              '            chapterTitle = state.currentChapter?.chapter?.name,\n',
+              '''            chapterTitle = state.currentChapter?.chapter?.name?.let { chapterTitle ->
+                readingListSession?.let { session ->
+                    "$chapterTitle • ${getString(R.string.reading_list_reader_position, session.position + 1, session.entryCount)}"
+                } ?: chapterTitle
+            },
+''',
+          )
+          replace(
+              reader,
+              '''            onNextChapter = ::loadNextChapter,
+            enabledNext = state.viewerChapters?.nextChapter != null,
+            onPreviousChapter = ::loadPreviousChapter,
+            enabledPrevious = state.viewerChapters?.prevChapter != null,''',
+              '''            onNextChapter = ::loadNextChapter,
+            enabledNext = readingListSession?.hasNext ?: (state.viewerChapters?.nextChapter != null),
+            onPreviousChapter = ::loadPreviousChapter,
+            enabledPrevious = readingListSession?.hasPrevious ?: (state.viewerChapters?.prevChapter != null),''',
+          )
+          replace(
+              reader,
+              '''        binding.readerContainer.removeView(loadingIndicator)
+        viewModel.state.value.viewer?.setChapters(viewerChapters)
+''',
+              '''        binding.readerContainer.removeView(loadingIndicator)
+        val displayedChapters = if (readingListSession != null) {
+            viewerChapters.copy(prevChapter = null, nextChapter = null)
+        } else {
+            viewerChapters
+        }
+        viewModel.state.value.viewer?.setChapters(displayedChapters)
+''',
+          )
+          replace(
+              reader,
+              '''    private fun setInitialChapterError(error: Throwable) {
+        logcat(LogPriority.ERROR, error)
+        finish()
+        toast(error.message)
+    }
+''',
+              '''    private fun setInitialChapterError(error: Throwable) {
+        logcat(LogPriority.ERROR, error)
+        val session = readingListSession
+        if (session != null) {
+            lifecycleScope.launchIO {
+                readingListStateStore.markFailure(
+                    session.entryId,
+                    tachiyomi.domain.readinglist.model.ReadingListEntryResolutionState.NEEDS_REMATCH,
+                )
+            }
+            readingListBlockedEntry.value = session.toBlocked(
+                ReadingListReaderBlockReason.MATERIALIZATION_FAILED,
+            )
+            toast(error.message)
+            return
+        }
+        finish()
+        toast(error.message)
+    }
+''',
+          )
+          replace(
+              reader,
+              '''    private fun loadNextChapter() {
+        lifecycleScope.launch {
+            viewModel.loadNextChapter()
+            moveToPageIndex(0)
+        }
+    }
+''',
+              '''    private fun loadNextChapter() {
+        val session = readingListSession
+        if (session != null) {
+            moveReadingList(session, ReadingListReaderDirection.NEXT)
+            return
+        }
+        lifecycleScope.launch {
+            viewModel.loadNextChapter()
+            moveToPageIndex(0)
+        }
+    }
+''',
+          )
+          replace(
+              reader,
+              '''    private fun loadPreviousChapter() {
+        lifecycleScope.launch {
+            viewModel.loadPreviousChapter()
+            moveToPageIndex(0)
+        }
+    }
+''',
+              '''    private fun loadPreviousChapter() {
+        val session = readingListSession
+        if (session != null) {
+            moveReadingList(session, ReadingListReaderDirection.PREVIOUS)
+            return
+        }
+        lifecycleScope.launch {
+            viewModel.loadPreviousChapter()
+            moveToPageIndex(0)
+        }
+    }
+
+    private fun moveReadingList(
+        session: ReadingListReaderDestination,
+        direction: ReadingListReaderDirection,
+    ) {
+        lifecycleScope.launch {
+            setProgressDialog(true)
+            val result = try {
+                withIOContext {
+                    readingListNavigator.move(session.readingListId, session.entryId, direction)
+                }
+            } finally {
+                setProgressDialog(false)
+            }
+            handleReadingListResult(result)
+        }
+    }
+
+    private fun skipReadingListEntry(entry: ReadingListReaderBlockedEntry) {
+        readingListBlockedEntry.value = null
+        lifecycleScope.launch {
+            setProgressDialog(true)
+            val result = try {
+                withIOContext {
+                    readingListNavigator.skip(entry.readingListId, entry.entryId)
+                }
+            } finally {
+                setProgressDialog(false)
+            }
+            handleReadingListResult(result)
+        }
+    }
+
+    private fun handleReadingListResult(result: ReadingListReaderResult) {
+        when (result) {
+            is ReadingListReaderResult.Ready -> {
+                startActivity(newReadingListIntent(this, result.destination))
+                finish()
+            }
+            is ReadingListReaderResult.Blocked -> readingListBlockedEntry.value = result.entry
+            is ReadingListReaderResult.Completed -> {
+                toast(
+                    getString(
+                        R.string.reading_list_reader_completed,
+                        result.readingListName ?: getString(R.string.reading_list_untitled),
+                    ),
+                )
+                finish()
+            }
+            is ReadingListReaderResult.Boundary -> Unit
+            is ReadingListReaderResult.MissingReadingList,
+            is ReadingListReaderResult.MissingEntry,
+            is ReadingListReaderResult.MissingEntryAtPosition,
+            -> toast(R.string.reading_list_reader_failed)
+        }
+    }
+
+    private fun reviewReadingList(readingListId: Long) {
+        readingListBlockedEntry.value = null
+        startActivity(
+            Intent(this, MainActivity::class.java).apply {
+                action = Constants.SHORTCUT_READING_LIST
+                putExtra(Constants.READING_LIST_EXTRA, readingListId)
+                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            },
+        )
+        finish()
+    }
+
+    private fun Intent.toReadingListDestination(): ReadingListReaderDestination? {
+        val readingListId = getLongExtra(EXTRA_READING_LIST_ID, -1L)
+        val entryId = getLongExtra(EXTRA_READING_LIST_ENTRY_ID, -1L)
+        val position = getIntExtra(EXTRA_READING_LIST_POSITION, -1)
+        val entryCount = getIntExtra(EXTRA_READING_LIST_ENTRY_COUNT, -1)
+        val mangaId = getLongExtra("manga", -1L)
+        val chapterId = getLongExtra("chapter", -1L)
+        val series = getStringExtra(EXTRA_READING_LIST_SERIES)
+        val issueNumber = getStringExtra(EXTRA_READING_LIST_ISSUE)
+        if (
+            readingListId < 0L || entryId < 0L || position < 0 || entryCount <= 0 ||
+            mangaId < 0L || chapterId < 0L || series == null || issueNumber == null
+        ) {
+            return null
+        }
+        return ReadingListReaderDestination(
+            readingListId = readingListId,
+            readingListName = getStringExtra(EXTRA_READING_LIST_NAME),
+            entryId = entryId,
+            position = position,
+            entryCount = entryCount,
+            series = series,
+            issueNumber = issueNumber,
+            mangaId = mangaId,
+            chapterId = chapterId,
+            hasPrevious = getBooleanExtra(EXTRA_READING_LIST_HAS_PREVIOUS, false),
+            hasNext = getBooleanExtra(EXTRA_READING_LIST_HAS_NEXT, false),
+        )
+    }
+
+    private fun ReadingListReaderDestination.toBlocked(
+        reason: ReadingListReaderBlockReason,
+    ): ReadingListReaderBlockedEntry {
+        return ReadingListReaderBlockedEntry(
+            readingListId = readingListId,
+            readingListName = readingListName,
+            entryId = entryId,
+            position = position,
+            entryCount = entryCount,
+            series = series,
+            issueNumber = issueNumber,
+            reason = reason,
+        )
+    }
+''',
+          )
+
+          # Remove source extraction scaffolding and this one-time workflow from the final commit.
+          Path('app/src/test/java/eu/kanade/tachiyomi/ui/reader/AgentRepositorySourceDumpTest.kt').unlink(missing_ok=True)
+          Path('app/src/main/assets/agent-repository-source.zip').unlink(missing_ok=True)
+          Path('.github/workflows/agent-cross-series-integration.yml').unlink()
+          PY
+
+          ./gradlew spotlessApply
+          git diff --check
+
+      - name: Commit integration
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Integrate cross-series reader navigation"
+          git push origin HEAD:agent/cross-series-reader-navigation
