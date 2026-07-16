@@ -103,7 +103,6 @@ class WebtoonViewer(val activity: ReaderActivity, val isContinuous: Boolean = tr
                             activity.requestPreloadChapter(firstItem.to)
                         }
                     }
-
                 }
             },
         )
