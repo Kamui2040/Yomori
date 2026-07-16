@@ -1,0 +1,250 @@
+name: Agent staging reader integration
+
+on:
+  push:
+    branches:
+      - agent/cross-series-reader-navigation-staging
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout staging branch
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          ref: agent/cross-series-reader-navigation-staging
+          fetch-depth: 0
+
+      - name: Apply exact integration edits
+        shell: bash
+        run: |
+          set +e
+          python3 - <<'PY'
+          from pathlib import Path
+
+          def replace(path: str, old: str, new: str, count: int = 1) -> None:
+              file = Path(path)
+              text = file.read_text(encoding="utf-8")
+              actual = text.count(old)
+              if actual != count:
+                  raise RuntimeError(f"{path}: expected {count} occurrences, found {actual}: {old[:80]!r}")
+              file.write_text(text.replace(old, new, count), encoding="utf-8")
+
+          # Fresh schema and migration use one completed column; the query file only defines queries.
+          replace(
+              "data/src/main/sqldelight/tachiyomi/data/reading_lists.sq",
+              "    current_position INTEGER,\n    created_at INTEGER NOT NULL,",
+              "    current_position INTEGER,\n    completed INTEGER AS Boolean NOT NULL DEFAULT 0,\n    created_at INTEGER NOT NULL,",
+          )
+          replace(
+              "data/src/main/sqldelight/tachiyomi/data/zz_reading_list_progress.sq",
+              "ALTER TABLE reading_lists\nADD COLUMN completed INTEGER AS Boolean NOT NULL DEFAULT 0;\n\n",
+              "",
+          )
+
+          # Reader base hooks preserve ordinary behavior while allowing list-scoped navigation.
+          replace(
+              "app/src/main/java/eu/kanade/tachiyomi/ui/reader/ReaderActivity.kt",
+              "class ReaderActivity : BaseActivity() {",
+              "open class ReaderActivity : BaseActivity() {",
+          )
+          replace(
+              "app/src/main/java/eu/kanade/tachiyomi/ui/reader/ReaderActivity.kt",
+              "    private var loadingIndicator: ReaderProgressIndicator? = null\n\n    var isScrollingThroughPages = false",
+              "    private var loadingIndicator: ReaderProgressIndicator? = null\n\n    @Composable\n    protected open fun AdditionalReaderContent() = Unit\n\n    protected open fun canLoadNextChapter(): Boolean =\n        viewModel.state.value.viewerChapters?.nextChapter != null\n\n    protected open fun canLoadPreviousChapter(): Boolean =\n        viewModel.state.value.viewerChapters?.prevChapter != null\n\n    protected open fun readerMangaTitle(): String? = viewModel.state.value.manga?.title\n\n    protected open fun readerChapterTitle(): String? =\n        viewModel.state.value.currentChapter?.chapter?.name\n\n    var isScrollingThroughPages = false",
+          )
+          replace(
+              "app/src/main/java/eu/kanade/tachiyomi/ui/reader/ReaderActivity.kt",
+              "            null -> {}\n        }\n    }\n\n    /**\n     * Called when the activity is destroyed.",
+              "            null -> {}\n        }\n\n        AdditionalReaderContent()\n    }\n\n    /**\n     * Called when the activity is destroyed.",
+          )
+          replace(
+              "app/src/main/java/eu/kanade/tachiyomi/ui/reader/ReaderActivity.kt",
+              "            mangaTitle = state.manga?.title,\n            chapterTitle = state.currentChapter?.chapter?.name,",
+              "            mangaTitle = readerMangaTitle(),\n            chapterTitle = readerChapterTitle(),",
+          )
+          replace(
+              "app/src/main/java/eu/kanade/tachiyomi/ui/reader/ReaderActivity.kt",
+              "            enabledNext = state.viewerChapters?.nextChapter != null,",
+              "            enabledNext = canLoadNextChapter(),",
+          )
+          replace(
+              "app/src/main/java/eu/kanade/tachiyomi/ui/reader/ReaderActivity.kt",
+              "            enabledPrevious = state.viewerChapters?.prevChapter != null,",
+              "            enabledPrevious = canLoadPreviousChapter(),",
+          )
+          replace(
+              "app/src/main/java/eu/kanade/tachiyomi/ui/reader/ReaderActivity.kt",
+              "    private fun setChapters(viewerChapters: ViewerChapters) {",
+              "    protected open fun setChapters(viewerChapters: ViewerChapters) {",
+          )
+          replace(
+              "app/src/main/java/eu/kanade/tachiyomi/ui/reader/ReaderActivity.kt",
+              "    private fun loadNextChapter() {",
+              "    protected open fun loadNextChapter() {",
+          )
+          replace(
+              "app/src/main/java/eu/kanade/tachiyomi/ui/reader/ReaderActivity.kt",
+              "    private fun loadPreviousChapter() {",
+              "    protected open fun loadPreviousChapter() {",
+          )
+          replace(
+              "app/src/main/java/eu/kanade/tachiyomi/ui/reader/ReaderActivity.kt",
+              "    fun showMenu() {\n        if (!viewModel.state.value.menuVisible) {\n            setMenuVisibility(true)\n        }\n    }\n\n    /**\n     * Called from the viewer to hide the menu.",
+              "    fun showMenu() {\n        if (!viewModel.state.value.menuVisible) {\n            setMenuVisibility(true)\n        }\n    }\n\n    open fun onChapterBoundary(boundary: ReaderChapterBoundary) {\n        if (boundary == ReaderChapterBoundary.NEXT) {\n            showMenu()\n        }\n    }\n\n    /**\n     * Called from the viewer to hide the menu.",
+          )
+
+          # Pager and webtoon transition pages delegate a real boundary to the activity.
+          replace(
+              "app/src/main/java/eu/kanade/tachiyomi/ui/reader/viewer/pager/PagerViewer.kt",
+              "import eu.kanade.tachiyomi.ui.reader.ReaderActivity\n",
+              "import eu.kanade.tachiyomi.ui.reader.ReaderActivity\nimport eu.kanade.tachiyomi.ui.reader.ReaderChapterBoundary\n",
+          )
+          replace(
+              "app/src/main/java/eu/kanade/tachiyomi/ui/reader/viewer/pager/PagerViewer.kt",
+              "        } else if (transition is ChapterTransition.Next) {\n            // No more chapters, show menu because the user is probably going to close the reader\n            activity.showMenu()\n        }",
+              "        } else {\n            activity.onChapterBoundary(\n                if (transition is ChapterTransition.Prev) {\n                    ReaderChapterBoundary.PREVIOUS\n                } else {\n                    ReaderChapterBoundary.NEXT\n                },\n            )\n        }",
+          )
+          replace(
+              "app/src/main/java/eu/kanade/tachiyomi/ui/reader/viewer/webtoon/WebtoonViewer.kt",
+              "import eu.kanade.tachiyomi.ui.reader.ReaderActivity\n",
+              "import eu.kanade.tachiyomi.ui.reader.ReaderActivity\nimport eu.kanade.tachiyomi.ui.reader.ReaderChapterBoundary\n",
+          )
+          replace(
+              "app/src/main/java/eu/kanade/tachiyomi/ui/reader/viewer/webtoon/WebtoonViewer.kt",
+              "\n                    val lastIndex = layoutManager.findLastEndVisibleItemPosition()\n                    val lastItem = adapter.items.getOrNull(lastIndex)\n                    if (lastItem is ChapterTransition.Next && lastItem.to == null) {\n                        activity.showMenu()\n                    }",
+              "",
+          )
+          replace(
+              "app/src/main/java/eu/kanade/tachiyomi/ui/reader/viewer/webtoon/WebtoonViewer.kt",
+              "        if (toChapter != null) {\n            logcat { \"Request preload destination chapter because we're on the transition\" }\n            activity.requestPreloadChapter(toChapter)\n        }\n    }",
+              "        if (toChapter != null) {\n            logcat { \"Request preload destination chapter because we're on the transition\" }\n            activity.requestPreloadChapter(toChapter)\n        } else {\n            activity.onChapterBoundary(\n                if (transition is ChapterTransition.Prev) {\n                    ReaderChapterBoundary.PREVIOUS\n                } else {\n                    ReaderChapterBoundary.NEXT\n                },\n            )\n        }\n    }",
+          )
+
+          # Register a standard-launch-mode reader activity for fresh cross-series loaders.
+          replace(
+              "app/src/main/AndroidManifest.xml",
+              "        <activity\n            android:name=\".ui.security.UnlockActivity\"",
+              "        <activity\n            android:name=\".ui.reader.ReadingListReaderActivity\"\n            android:exported=\"false\" />\n\n        <activity\n            android:name=\".ui.security.UnlockActivity\"",
+          )
+
+          # Main navigation can route the reader's Review action directly to the exact list.
+          replace(
+              "app/src/main/java/eu/kanade/tachiyomi/ui/home/HomeScreen.kt",
+              "import eu.kanade.tachiyomi.ui.readinglist.ReadingListsTab\n",
+              "import eu.kanade.tachiyomi.ui.readinglist.ReadingListReviewScreen\nimport eu.kanade.tachiyomi.ui.readinglist.ReadingListsTab\n",
+          )
+          replace(
+              "app/src/main/java/eu/kanade/tachiyomi/ui/home/HomeScreen.kt",
+              "    private val librarySearchEvent = Channel<String>()\n    private val openTabEvent = Channel<Tab>()",
+              "    private val librarySearchEvent = Channel<String>()\n    private val openReadingListReviewEvent = Channel<Long>()\n    private val openTabEvent = Channel<Tab>()",
+          )
+          replace(
+              "app/src/main/java/eu/kanade/tachiyomi/ui/home/HomeScreen.kt",
+              "                launch {\n                    openTabEvent.receiveAsFlow().collectLatest {\n                        tabNavigator.current = when (it) {",
+              "                launch {\n                    openReadingListReviewEvent.receiveAsFlow().collectLatest { readingListId ->\n                        tabNavigator.current = ReadingListsTab\n                        navigator.push(ReadingListReviewScreen(readingListId))\n                    }\n                }\n                launch {\n                    openTabEvent.receiveAsFlow().collectLatest {\n                        tabNavigator.current = when (it) {",
+          )
+          replace(
+              "app/src/main/java/eu/kanade/tachiyomi/ui/home/HomeScreen.kt",
+              "    suspend fun openTab(tab: Tab) {\n        openTabEvent.send(tab)\n    }\n\n    suspend fun showBottomNav(show: Boolean) {",
+              "    suspend fun openTab(tab: Tab) {\n        openTabEvent.send(tab)\n    }\n\n    suspend fun openReadingListReview(readingListId: Long) {\n        openReadingListReviewEvent.send(readingListId)\n    }\n\n    suspend fun showBottomNav(show: Boolean) {",
+          )
+          replace(
+              "app/src/main/java/eu/kanade/tachiyomi/ui/main/MainActivity.kt",
+              "import eu.kanade.tachiyomi.ui.more.OnboardingScreen\n",
+              "import eu.kanade.tachiyomi.ui.more.OnboardingScreen\nimport eu.kanade.tachiyomi.ui.reader.ReadingListReaderActivity\n",
+          )
+          replace(
+              "app/src/main/java/eu/kanade/tachiyomi/ui/main/MainActivity.kt",
+              "            Intent.ACTION_SEARCH, Intent.ACTION_SEND, \"com.google.android.gms.actions.SEARCH_ACTION\" -> {",
+              "            ReadingListReaderActivity.ACTION_REVIEW_READING_LIST -> {\n                val readingListId = intent.getLongExtra(\n                    ReadingListReaderActivity.EXTRA_READING_LIST_ID,\n                    -1L,\n                )\n                if (readingListId < 0L) return false\n                navigator.popUntilRoot()\n                lifecycleScope.launch { HomeScreen.openReadingListReview(readingListId) }\n                null\n            }\n            Intent.ACTION_SEARCH, Intent.ACTION_SEND, \"com.google.android.gms.actions.SEARCH_ACTION\" -> {",
+          )
+
+          # Reading-list overview exposes explicit Read/Resume/Read again actions and launch dialogs.
+          path = "app/src/main/java/eu/kanade/tachiyomi/ui/readinglist/ReadingListsTab.kt"
+          replace(path, "import androidx.compose.material.icons.outlined.List\n", "import androidx.compose.material.icons.outlined.List\nimport androidx.compose.material.icons.outlined.PlayArrow\n")
+          replace(path, "import eu.kanade.tachiyomi.ui.main.MainActivity\n", "import eu.kanade.tachiyomi.ui.main.MainActivity\nimport eu.kanade.tachiyomi.ui.reader.ReadingListReaderActivity\n")
+          replace(
+              path,
+              "        val screenModel = rememberScreenModel { ReadingListsScreenModel() }\n        val state by screenModel.state.collectAsState()",
+              "        val screenModel = rememberScreenModel { ReadingListsScreenModel() }\n        val readerLaunchScreenModel = rememberScreenModel { ReadingListReaderLaunchScreenModel() }\n        val state by screenModel.state.collectAsState()\n        val readerLaunchState by readerLaunchScreenModel.state.collectAsState()",
+          )
+          replace(
+              path,
+              "            onImport = launchImport,\n            onReview = { readingListId -> navigator.push(ReadingListReviewScreen(readingListId)) },",
+              "            onImport = launchImport,\n            isPreparingReader = readerLaunchState.isLoading,\n            onRead = readerLaunchScreenModel::start,\n            onReview = { readingListId -> navigator.push(ReadingListReviewScreen(readingListId)) },",
+          )
+          replace(
+              path,
+              "        when (val dialog = state.dialog) {",
+              "        when (val dialog = readerLaunchState.dialog) {\n            is ReadingListReaderLaunchDialog.Restart -> {\n                ReadingListReaderRestartDialog(\n                    readingList = dialog.readingList,\n                    onRestart = readerLaunchScreenModel::confirmRestart,\n                    onDismiss = readerLaunchScreenModel::dismissDialog,\n                )\n            }\n            is ReadingListReaderLaunchDialog.Blocked -> {\n                ReadingListReaderBlockedDialog(\n                    entry = dialog.entry,\n                    onReview = readerLaunchScreenModel::reviewBlocked,\n                    onSkip = readerLaunchScreenModel::skipBlocked,\n                    onStop = readerLaunchScreenModel::dismissDialog,\n                )\n            }\n            null -> Unit\n        }\n\n        when (val dialog = state.dialog) {",
+          )
+          replace(
+              path,
+              "        LaunchedEffect(state.isLoading) {",
+              "        LaunchedEffect(Unit) {\n            readerLaunchScreenModel.events.collectLatest { event ->\n                when (event) {\n                    is ReadingListReaderLaunchEvent.OpenReader -> {\n                        context.startActivity(ReadingListReaderActivity.newIntent(context, event.destination))\n                    }\n                    is ReadingListReaderLaunchEvent.Review -> {\n                        navigator.push(ReadingListReviewScreen(event.readingListId))\n                    }\n                    is ReadingListReaderLaunchEvent.Completed -> {\n                        snackbarHostState.showSnackbar(\n                            context.getString(\n                                R.string.reading_list_reader_completed,\n                                event.readingListName ?: context.getString(R.string.reading_list_untitled),\n                            ),\n                        )\n                    }\n                    ReadingListReaderLaunchEvent.Failed -> {\n                        snackbarHostState.showSnackbar(\n                            context.getString(R.string.reading_list_reader_failed),\n                        )\n                    }\n                }\n            }\n        }\n\n        LaunchedEffect(state.isLoading) {",
+          )
+          replace(
+              path,
+              "    onImport: () -> Unit,\n    onReview: (Long) -> Unit,",
+              "    onImport: () -> Unit,\n    isPreparingReader: Boolean,\n    onRead: (ReadingListSummary) -> Unit,\n    onReview: (Long) -> Unit,",
+          )
+          replace(
+              path,
+              "                readingLists = state.readingLists,\n                searchingReadingListIds = state.searchingReadingListIds,",
+              "                readingLists = state.readingLists,\n                searchingReadingListIds = state.searchingReadingListIds,\n                isPreparingReader = isPreparingReader,",
+          )
+          replace(
+              path,
+              "                onReview = onReview,\n                onSearch = onSearch,",
+              "                onRead = onRead,\n                onReview = onReview,\n                onSearch = onSearch,",
+          )
+          replace(
+              path,
+              "    searchingReadingListIds: Set<Long>,\n    contentPadding: PaddingValues,\n    onReview: (Long) -> Unit,",
+              "    searchingReadingListIds: Set<Long>,\n    isPreparingReader: Boolean,\n    contentPadding: PaddingValues,\n    onRead: (ReadingListSummary) -> Unit,\n    onReview: (Long) -> Unit,",
+          )
+          replace(
+              path,
+              "                isSearching = readingList.id in searchingReadingListIds,\n                onReview = { onReview(readingList.id) },",
+              "                isSearching = readingList.id in searchingReadingListIds,\n                isPreparingReader = isPreparingReader,\n                onRead = { onRead(readingList) },\n                onReview = { onReview(readingList.id) },",
+          )
+          replace(
+              path,
+              "    isSearching: Boolean,\n    onReview: () -> Unit,",
+              "    isSearching: Boolean,\n    isPreparingReader: Boolean,\n    onRead: () -> Unit,\n    onReview: () -> Unit,",
+          )
+          replace(
+              path,
+              "                readingList.currentPosition?.let { position ->\n                    Text(\n                        text = stringResource(\n                            R.string.reading_list_progress,\n                            (position + 1).coerceAtMost(readingList.entryCount),\n                            readingList.entryCount,\n                        ),\n                    )\n                }",
+              "                if (readingList.completed) {\n                    Text(stringResource(R.string.reading_list_completed))\n                } else {\n                    readingList.currentPosition?.let { position ->\n                        Text(\n                            text = stringResource(\n                                R.string.reading_list_progress,\n                                (position + 1).coerceAtMost(readingList.entryCount),\n                                readingList.entryCount,\n                            ),\n                        )\n                    }\n                }",
+          )
+          replace(
+              path,
+              "            Row {\n                IconButton(\n                    onClick = onReview,",
+              "            Row {\n                IconButton(\n                    onClick = onRead,\n                    enabled = !isSearching && !isPreparingReader,\n                ) {\n                    Icon(\n                        imageVector = Icons.Outlined.PlayArrow,\n                        contentDescription = stringResource(\n                            when {\n                                readingList.completed -> R.string.reading_list_read_again\n                                readingList.currentPosition != null -> R.string.reading_list_resume\n                                else -> R.string.reading_list_read\n                            },\n                        ),\n                    )\n                }\n                IconButton(\n                    onClick = onReview,",
+          )
+          PY
+          status=$?
+
+          if [ "$status" -ne 0 ]; then
+            git reset --hard HEAD
+          fi
+
+          rm -f .github/workflows/agent-staging-reader-integration.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          if [ "$status" -eq 0 ]; then
+            git commit -m "Integrate cross-series reader navigation"
+          else
+            git commit -m "Remove unsuccessful staging integration helper"
+          fi
+          git push origin HEAD:agent/cross-series-reader-navigation-staging
+          exit 0
