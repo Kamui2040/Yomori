@@ -1,0 +1,53 @@
+name: Agent staging test repository boundary
+
+on:
+  push:
+    branches:
+      - agent/cross-series-reader-navigation-staging
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          ref: agent/cross-series-reader-navigation-staging
+          fetch-depth: 0
+      - shell: bash
+        run: |
+          set +e
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path("app/src/test/java/eu/kanade/tachiyomi/ui/readinglist/ReadingListReaderNavigatorTest.kt")
+          text = path.read_text(encoding="utf-8")
+          replacements = {
+              "unselectedFixture.stateStore.markFailure(": "unselectedFixture.readingListRepository.markEntryReaderFailure(",
+              "unavailableFixture.stateStore.markFailure(": "unavailableFixture.readingListRepository.markEntryReaderFailure(",
+              "fixture.stateStore.markFailure(": "fixture.readingListRepository.markEntryReaderFailure(",
+              "fixture.stateStore.setSkipped(": "fixture.readingListRepository.setEntrySkipped(",
+              "        val stateStore = mockk<ReadingListReaderStateStore>()\n": "",
+              "        coEvery { stateStore.setSkipped(any(), any(), any()) } returns true\n        coEvery { stateStore.markFailure(any(), any()) } returns true\n        coEvery { stateStore.clearFailure(any()) } returns true\n": "        coEvery { readingListRepository.setEntrySkipped(any(), any(), any()) } returns true\n        coEvery { readingListRepository.markEntryReaderFailure(any(), any()) } returns true\n        coEvery { readingListRepository.clearEntryReaderFailure(any()) } returns true\n",
+              "                sourceManager = FakeSourceManager(sources),\n                stateStore = stateStore,\n                requestTimeoutMillis = requestTimeoutMillis,": "                sourceManager = FakeSourceManager(sources),\n                requestTimeoutMillis = requestTimeoutMillis,",
+              "            chapterRepository = chapterRepository,\n            stateStore = stateStore,": "            chapterRepository = chapterRepository,",
+              "        val chapterRepository: ChapterRepository,\n        val stateStore: ReadingListReaderStateStore,": "        val chapterRepository: ChapterRepository,",
+          }
+          for old, new in replacements.items():
+              count = text.count(old)
+              if count == 0:
+                  raise RuntimeError(f"Missing test replacement anchor: {old[:80]!r}")
+              text = text.replace(old, new)
+          path.write_text(text, encoding="utf-8")
+          PY
+          status=$?
+          if [ "$status" -ne 0 ]; then git reset --hard HEAD; fi
+          rm -f .github/workflows/agent-staging-test-repository-boundary.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then exit 0; fi
+          if [ "$status" -eq 0 ]; then git commit -m "Test reader states through repository boundary"; else git commit -m "Remove unsuccessful repository test helper"; fi
+          git push origin HEAD:agent/cross-series-reader-navigation-staging
+          exit 0
