@@ -1,0 +1,154 @@
+name: Agent staging static fixes
+
+on:
+  push:
+    branches:
+      - agent/cross-series-reader-navigation-staging
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          ref: agent/cross-series-reader-navigation-staging
+          fetch-depth: 0
+
+      - name: Apply exact static fixes
+        shell: bash
+        run: |
+          set +e
+          python3 - <<'PY'
+          from pathlib import Path
+
+          def replace(path: str, old: str, new: str, count: int = 1) -> None:
+              file = Path(path)
+              text = file.read_text(encoding="utf-8")
+              actual = text.count(old)
+              if actual != count:
+                  raise RuntimeError(f"{path}: expected {count} occurrences, found {actual}: {old[:100]!r}")
+              file.write_text(text.replace(old, new, count), encoding="utf-8")
+
+          tab = "app/src/main/java/eu/kanade/tachiyomi/ui/readinglist/ReadingListsTab.kt"
+          replace(
+              tab,
+              '''    ListItem(
+        modifier = Modifier.clickable(enabled = !isSearching, onClick = onReview),
+        headlineContent = {''',
+              '''    ListItem(
+        modifier = Modifier.clickable(enabled = !isSearching, onClick = onReview),
+        leadingContent = {
+            IconButton(
+                onClick = onRead,
+                enabled = !isSearching && !isPreparingReader,
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.PlayArrow,
+                    contentDescription = stringResource(
+                        when {
+                            readingList.completed -> R.string.reading_list_read_again
+                            readingList.currentPosition != null -> R.string.reading_list_resume
+                            else -> R.string.reading_list_read
+                        },
+                    ),
+                )
+            }
+        },
+        headlineContent = {''',
+          )
+          replace(
+              tab,
+              '''                IconButton(
+                    onClick = onRead,
+                    enabled = !isSearching && !isPreparingReader,
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.PlayArrow,
+                        contentDescription = stringResource(
+                            when {
+                                readingList.completed -> R.string.reading_list_read_again
+                                readingList.currentPosition != null -> R.string.reading_list_resume
+                                else -> R.string.reading_list_read
+                            },
+                        ),
+                    )
+                }
+''',
+              "",
+          )
+
+          navigator = "app/src/main/java/eu/kanade/tachiyomi/ui/readinglist/ReadingListReaderNavigator.kt"
+          replace(
+              navigator,
+              '''            is MaterializationResult.Ready -> {
+                readingListRepository.clearEntryReaderFailure(entry.id)
+                ReadingListReaderResult.Ready(''',
+              '''            is MaterializationResult.Ready -> {
+                ReadingListReaderResult.Ready(''',
+          )
+
+          activity = "app/src/main/java/eu/kanade/tachiyomi/ui/reader/ReadingListReaderActivity.kt"
+          replace(
+              activity,
+              "import eu.kanade.tachiyomi.ui.readinglist.ReadingListReaderBlockReason\n",
+              "",
+          )
+
+          state_test = "data/src/test/java/tachiyomi/data/readinglist/ReadingListReaderStateRepositoryTest.kt"
+          replace(
+              state_test,
+              '''        val entryIds = buildList {
+            repeat(2) { position ->
+                queries.insertReadingListEntry(
+                    readingListId = readingListId,
+                    position = position.toLong(),
+                    series = "Series $position",
+                    number = (position + 1).toString(),
+                    volume = null,
+                    year = null,
+                    extraAttributes = "{}",
+                    extraElements = "{}",
+                    resolutionState = ReadingListEntryResolutionState.UNSEARCHED.name,
+                )
+                add(queries.lastInsertRowId().awaitAsOne())
+            }
+        }''',
+              '''        val entryIds = mutableListOf<Long>()
+        repeat(2) { position ->
+            queries.insertReadingListEntry(
+                readingListId = readingListId,
+                position = position.toLong(),
+                series = "Series $position",
+                number = (position + 1).toString(),
+                volume = null,
+                year = null,
+                extraAttributes = "{}",
+                extraElements = "{}",
+                resolutionState = ReadingListEntryResolutionState.UNSEARCHED.name,
+            )
+            entryIds += queries.lastInsertRowId().awaitAsOne()
+        }''',
+          )
+          PY
+          status=$?
+          if [ "$status" -ne 0 ]; then
+            git reset --hard HEAD
+          fi
+
+          rm -f .github/workflows/agent-staging-static-fixes.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          if [ "$status" -eq 0 ]; then
+            git commit -m "Polish cross-series reader staging implementation"
+          else
+            git commit -m "Remove unsuccessful staging static-fix helper"
+          fi
+          git push origin HEAD:agent/cross-series-reader-navigation-staging
+          exit 0
