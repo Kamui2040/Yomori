@@ -11,7 +11,6 @@ import androidx.lifecycle.lifecycleScope
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.reader.model.ViewerChapters
-import eu.kanade.tachiyomi.ui.readinglist.ReadingListReaderBlockReason
 import eu.kanade.tachiyomi.ui.readinglist.ReadingListReaderBlockedDialog
 import eu.kanade.tachiyomi.ui.readinglist.ReadingListReaderBlockedEntry
 import eu.kanade.tachiyomi.ui.readinglist.ReadingListReaderDestination
