@@ -1,8 +1,5 @@
 import kotlin.Boolean;
 
-ALTER TABLE reading_lists
-ADD COLUMN completed INTEGER AS Boolean NOT NULL DEFAULT 0;
-
 getReadingListCompleted:
 SELECT completed
 FROM reading_lists

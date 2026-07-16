@@ -29,6 +29,7 @@ import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.List
+import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
@@ -75,6 +76,7 @@ import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.main.MainActivity
+import eu.kanade.tachiyomi.ui.reader.ReadingListReaderActivity
 import kotlinx.coroutines.flow.collectLatest
 import tachiyomi.domain.readinglist.model.ReadingListSummary
 import tachiyomi.presentation.core.components.material.Scaffold
@@ -105,7 +107,9 @@ data object ReadingListsTab : Tab {
         val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
         val screenModel = rememberScreenModel { ReadingListsScreenModel() }
+        val readerLaunchScreenModel = rememberScreenModel { ReadingListReaderLaunchScreenModel() }
         val state by screenModel.state.collectAsState()
+        val readerLaunchState by readerLaunchScreenModel.state.collectAsState()
         val snackbarHostState = remember { SnackbarHostState() }
         val documentLauncher = rememberLauncherForActivityResult(
             contract = ActivityResultContracts.OpenDocument(),
@@ -120,11 +124,32 @@ data object ReadingListsTab : Tab {
             state = state,
             snackbarHostState = snackbarHostState,
             onImport = launchImport,
+            isPreparingReader = readerLaunchState.isLoading,
+            onRead = readerLaunchScreenModel::start,
             onReview = { readingListId -> navigator.push(ReadingListReviewScreen(readingListId)) },
             onSearch = screenModel::searchCandidates,
             onEditSources = screenModel::editSources,
             onDelete = screenModel::requestDelete,
         )
+
+        when (val dialog = readerLaunchState.dialog) {
+            is ReadingListReaderLaunchDialog.Restart -> {
+                ReadingListReaderRestartDialog(
+                    readingList = dialog.readingList,
+                    onRestart = readerLaunchScreenModel::confirmRestart,
+                    onDismiss = readerLaunchScreenModel::dismissDialog,
+                )
+            }
+            is ReadingListReaderLaunchDialog.Blocked -> {
+                ReadingListReaderBlockedDialog(
+                    entry = dialog.entry,
+                    onReview = readerLaunchScreenModel::reviewBlocked,
+                    onSkip = readerLaunchScreenModel::skipBlocked,
+                    onStop = readerLaunchScreenModel::dismissDialog,
+                )
+            }
+            null -> Unit
+        }
 
         when (val dialog = state.dialog) {
             is ReadingListsDialog.SourceSelection -> {
@@ -197,6 +222,32 @@ data object ReadingListsTab : Tab {
             }
         }
 
+        LaunchedEffect(Unit) {
+            readerLaunchScreenModel.events.collectLatest { event ->
+                when (event) {
+                    is ReadingListReaderLaunchEvent.OpenReader -> {
+                        context.startActivity(ReadingListReaderActivity.newIntent(context, event.destination))
+                    }
+                    is ReadingListReaderLaunchEvent.Review -> {
+                        navigator.push(ReadingListReviewScreen(event.readingListId))
+                    }
+                    is ReadingListReaderLaunchEvent.Completed -> {
+                        snackbarHostState.showSnackbar(
+                            context.getString(
+                                R.string.reading_list_reader_completed,
+                                event.readingListName ?: context.getString(R.string.reading_list_untitled),
+                            ),
+                        )
+                    }
+                    ReadingListReaderLaunchEvent.Failed -> {
+                        snackbarHostState.showSnackbar(
+                            context.getString(R.string.reading_list_reader_failed),
+                        )
+                    }
+                }
+            }
+        }
+
         LaunchedEffect(state.isLoading) {
             if (!state.isLoading) {
                 (context as? MainActivity)?.ready = true
@@ -210,6 +261,8 @@ private fun ReadingListsScreen(
     state: ReadingListsScreenState,
     snackbarHostState: SnackbarHostState,
     onImport: () -> Unit,
+    isPreparingReader: Boolean,
+    onRead: (ReadingListSummary) -> Unit,
     onReview: (Long) -> Unit,
     onSearch: (Long) -> Unit,
     onEditSources: (Long) -> Unit,
@@ -265,7 +318,9 @@ private fun ReadingListsScreen(
             else -> ReadingListsContent(
                 readingLists = state.readingLists,
                 searchingReadingListIds = state.searchingReadingListIds,
+                isPreparingReader = isPreparingReader,
                 contentPadding = paddingValues,
+                onRead = onRead,
                 onReview = onReview,
                 onSearch = onSearch,
                 onEditSources = onEditSources,
@@ -313,7 +368,9 @@ private fun ReadingListsEmptyScreen(
 private fun ReadingListsContent(
     readingLists: List<ReadingListSummary>,
     searchingReadingListIds: Set<Long>,
+    isPreparingReader: Boolean,
     contentPadding: PaddingValues,
+    onRead: (ReadingListSummary) -> Unit,
     onReview: (Long) -> Unit,
     onSearch: (Long) -> Unit,
     onEditSources: (Long) -> Unit,
@@ -330,6 +387,8 @@ private fun ReadingListsContent(
             ReadingListItem(
                 readingList = readingList,
                 isSearching = readingList.id in searchingReadingListIds,
+                isPreparingReader = isPreparingReader,
+                onRead = { onRead(readingList) },
                 onReview = { onReview(readingList.id) },
                 onSearch = { onSearch(readingList.id) },
                 onEditSources = { onEditSources(readingList.id) },
@@ -344,6 +403,8 @@ private fun ReadingListsContent(
 private fun ReadingListItem(
     readingList: ReadingListSummary,
     isSearching: Boolean,
+    isPreparingReader: Boolean,
+    onRead: () -> Unit,
     onReview: () -> Unit,
     onSearch: () -> Unit,
     onEditSources: () -> Unit,
@@ -367,19 +428,38 @@ private fun ReadingListItem(
                         readingList.sourceCount,
                     ),
                 )
-                readingList.currentPosition?.let { position ->
-                    Text(
-                        text = stringResource(
-                            R.string.reading_list_progress,
-                            (position + 1).coerceAtMost(readingList.entryCount),
-                            readingList.entryCount,
-                        ),
-                    )
+                if (readingList.completed) {
+                    Text(stringResource(R.string.reading_list_completed))
+                } else {
+                    readingList.currentPosition?.let { position ->
+                        Text(
+                            text = stringResource(
+                                R.string.reading_list_progress,
+                                (position + 1).coerceAtMost(readingList.entryCount),
+                                readingList.entryCount,
+                            ),
+                        )
+                    }
                 }
             }
         },
         trailingContent = {
             Row {
+                IconButton(
+                    onClick = onRead,
+                    enabled = !isSearching && !isPreparingReader,
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.PlayArrow,
+                        contentDescription = stringResource(
+                            when {
+                                readingList.completed -> R.string.reading_list_read_again
+                                readingList.currentPosition != null -> R.string.reading_list_resume
+                                else -> R.string.reading_list_read
+                            },
+                        ),
+                    )
+                }
                 IconButton(
                     onClick = onReview,
                     enabled = !isSearching,

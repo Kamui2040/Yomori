@@ -176,6 +176,10 @@
         </activity>
 
         <activity
+            android:name=".ui.reader.ReadingListReaderActivity"
+            android:exported="false" />
+
+        <activity
             android:name=".ui.security.UnlockActivity"
             android:exported="false"
             android:theme="@style/Theme.Tachiyomi" />

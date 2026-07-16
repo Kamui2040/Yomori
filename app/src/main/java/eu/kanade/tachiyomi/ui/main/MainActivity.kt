@@ -91,6 +91,7 @@ import eu.kanade.tachiyomi.ui.home.HomeScreen
 import eu.kanade.tachiyomi.ui.manga.MangaScreen
 import eu.kanade.tachiyomi.ui.more.NewUpdateScreen
 import eu.kanade.tachiyomi.ui.more.OnboardingScreen
+import eu.kanade.tachiyomi.ui.reader.ReadingListReaderActivity
 import eu.kanade.tachiyomi.ui.setting.SettingsScreen
 import eu.kanade.tachiyomi.util.system.dpToPx
 import eu.kanade.tachiyomi.util.system.isBenchmarkBuildType
@@ -540,6 +541,16 @@ class MainActivity : BaseActivity() {
             Intent.ACTION_APPLICATION_PREFERENCES -> {
                 navigator.popUntilRoot()
                 navigator.push(SettingsScreen())
+                null
+            }
+            ReadingListReaderActivity.ACTION_REVIEW_READING_LIST -> {
+                val readingListId = intent.getLongExtra(
+                    ReadingListReaderActivity.EXTRA_READING_LIST_ID,
+                    -1L,
+                )
+                if (readingListId < 0L) return false
+                navigator.popUntilRoot()
+                lifecycleScope.launch { HomeScreen.openReadingListReview(readingListId) }
                 null
             }
             Intent.ACTION_SEARCH, Intent.ACTION_SEND, "com.google.android.gms.actions.SEARCH_ACTION" -> {
