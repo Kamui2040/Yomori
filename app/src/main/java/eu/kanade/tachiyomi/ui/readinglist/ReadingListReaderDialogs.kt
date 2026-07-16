@@ -8,6 +8,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import eu.kanade.tachiyomi.R
 import tachiyomi.domain.readinglist.model.ReadingListSummary
@@ -20,23 +21,23 @@ fun ReadingListReaderRestartDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(androidx.compose.ui.res.stringResource(R.string.reading_list_reader_restart_title)) },
+        title = { Text(stringResource(R.string.reading_list_reader_restart_title)) },
         text = {
             Text(
-                androidx.compose.ui.res.stringResource(
+                stringResource(
                     R.string.reading_list_reader_restart_message,
-                    readingList.name ?: androidx.compose.ui.res.stringResource(R.string.reading_list_untitled),
+                    readingList.name ?: stringResource(R.string.reading_list_untitled),
                 ),
             )
         },
         confirmButton = {
             TextButton(onClick = onRestart) {
-                Text(androidx.compose.ui.res.stringResource(R.string.reading_list_reader_restart))
+                Text(stringResource(R.string.reading_list_reader_restart))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(androidx.compose.ui.res.stringResource(R.string.reading_list_cancel_action))
+                Text(stringResource(R.string.reading_list_cancel_action))
             }
         },
     )
@@ -51,11 +52,11 @@ fun ReadingListReaderBlockedDialog(
 ) {
     AlertDialog(
         onDismissRequest = onStop,
-        title = { Text(androidx.compose.ui.res.stringResource(R.string.reading_list_reader_blocked_title)) },
+        title = { Text(stringResource(R.string.reading_list_reader_blocked_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
-                    androidx.compose.ui.res.stringResource(
+                    stringResource(
                         R.string.reading_list_reader_blocked_entry,
                         entry.position + 1,
                         entry.entryCount,
@@ -63,22 +64,22 @@ fun ReadingListReaderBlockedDialog(
                         entry.issueNumber,
                     ),
                 )
-                Text(androidx.compose.ui.res.stringResource(entry.reason.stringRes))
+                Text(stringResource(entry.reason.stringRes))
             }
         },
         confirmButton = {
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 TextButton(onClick = onReview) {
-                    Text(androidx.compose.ui.res.stringResource(R.string.reading_list_reader_review))
+                    Text(stringResource(R.string.reading_list_reader_review))
                 }
                 TextButton(onClick = onSkip) {
-                    Text(androidx.compose.ui.res.stringResource(R.string.reading_list_reader_skip))
+                    Text(stringResource(R.string.reading_list_reader_skip))
                 }
             }
         },
         dismissButton = {
             TextButton(onClick = onStop) {
-                Text(androidx.compose.ui.res.stringResource(R.string.reading_list_reader_stop))
+                Text(stringResource(R.string.reading_list_reader_stop))
             }
         },
     )
@@ -98,5 +99,6 @@ val ReadingListReaderBlockReason.stringRes: Int
         ReadingListReaderBlockReason.MISSING_MATCH_IDENTITY -> R.string.reading_list_reader_reason_missing_identity
         ReadingListReaderBlockReason.SOURCE_NOT_SELECTED -> R.string.reading_list_reader_reason_source_not_selected
         ReadingListReaderBlockReason.SOURCE_REQUEST_FAILED -> R.string.reading_list_reader_reason_source_failed
-        ReadingListReaderBlockReason.MATERIALIZATION_FAILED -> R.string.reading_list_reader_reason_materialization_failed
+        ReadingListReaderBlockReason.MATERIALIZATION_FAILED ->
+            R.string.reading_list_reader_reason_materialization_failed
     }
