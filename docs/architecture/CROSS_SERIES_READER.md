@@ -81,7 +81,7 @@ A failure marks only the affected entry as source unavailable, chapter removed, 
 
 ## Persistence
 
-SQLDelight stores list-specific completion separately from `current_position`. Repository updates validate that any non-null current position belongs to the list. Completion and current position are written transactionally.
+SQLDelight stores list-specific completion separately from `current_position`. Repository updates validate that any non-null current position belongs to the list. Progress, completion, explicit skips, and repairable reader failures are written through `ReadingListRepository`; the app layer does not issue direct SQLDelight writes. Entry-state writes preserve the persisted source/manga/chapter identity and user-confirmation flag.
 
 ## Required tests
 
