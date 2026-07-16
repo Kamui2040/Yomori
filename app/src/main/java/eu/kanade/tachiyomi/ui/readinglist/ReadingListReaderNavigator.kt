@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.ui.readinglist
 
+import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import eu.kanade.tachiyomi.source.model.SChapter
 import eu.kanade.tachiyomi.source.model.SManga
 import eu.kanade.tachiyomi.source.online.HttpSource
@@ -38,8 +39,16 @@ class ReadingListReaderNavigator(
         val readingList = readingListRepository.get(readingListId)
             ?: return ReadingListReaderResult.MissingReadingList(readingListId)
         if (readingList.entries.isEmpty()) {
-            readingListRepository.updateProgress(readingList.id, currentPosition = null, completed = true)
-            return ReadingListReaderResult.Completed(readingList.id, readingList.name)
+            val saved = readingListRepository.updateProgress(
+                id = readingList.id,
+                currentPosition = null,
+                completed = true,
+            )
+            return if (saved) {
+                ReadingListReaderResult.Completed(readingList.id, readingList.name)
+            } else {
+                ReadingListReaderResult.MissingReadingList(readingList.id)
+            }
         }
         if (readingList.completed && !restartCompleted) {
             return ReadingListReaderResult.Completed(readingList.id, readingList.name)
@@ -60,7 +69,8 @@ class ReadingListReaderNavigator(
     ): ReadingListReaderResult {
         val readingList = readingListRepository.get(readingListId)
             ?: return ReadingListReaderResult.MissingReadingList(readingListId)
-        val currentIndex = readingList.entries.indexOfFirst { entry -> entry.id == currentEntryId }
+        val orderedEntries = readingList.entries.sortedBy(ReadingListEntry::position)
+        val currentIndex = orderedEntries.indexOfFirst { entry -> entry.id == currentEntryId }
         if (currentIndex < 0) {
             return ReadingListReaderResult.MissingEntry(readingList.id, currentEntryId)
         }
@@ -75,7 +85,7 @@ class ReadingListReaderNavigator(
                 direction = direction,
             )
         }
-        if (targetIndex >= readingList.entries.size) {
+        if (targetIndex >= orderedEntries.size) {
             val saved = readingListRepository.updateProgress(
                 id = readingList.id,
                 currentPosition = null,
@@ -96,7 +106,8 @@ class ReadingListReaderNavigator(
     ): ReadingListReaderResult {
         val readingList = readingListRepository.get(readingListId)
             ?: return ReadingListReaderResult.MissingReadingList(readingListId)
-        val blockedIndex = readingList.entries.indexOfFirst { entry -> entry.id == blockedEntryId }
+        val orderedEntries = readingList.entries.sortedBy(ReadingListEntry::position)
+        val blockedIndex = orderedEntries.indexOfFirst { entry -> entry.id == blockedEntryId }
         if (blockedIndex < 0) {
             return ReadingListReaderResult.MissingEntry(readingList.id, blockedEntryId)
         }
@@ -105,7 +116,7 @@ class ReadingListReaderNavigator(
         }
 
         val targetIndex = blockedIndex + 1
-        if (targetIndex >= readingList.entries.size) {
+        if (targetIndex >= orderedEntries.size) {
             val saved = readingListRepository.updateProgress(
                 id = readingList.id,
                 currentPosition = null,
@@ -247,7 +258,7 @@ class ReadingListReaderNavigator(
                     )
                 }
             }
-        } catch (error: TimeoutCancellationException) {
+        } catch (_: TimeoutCancellationException) {
             return MaterializationResult.SourceFailure
         } catch (error: CancellationException) {
             throw error
@@ -258,12 +269,14 @@ class ReadingListReaderNavigator(
         val remoteChapter = update.chapters.firstOrNull { chapter -> chapter.url == chapterUrl }
             ?: return MaterializationResult.ChapterMissing
         val manga = existingManga ?: insertManga(source.id, mangaUrl, entry, update.manga)
+            ?: mangaRepository.getMangaByUrlAndSourceId(mangaUrl, source.id)
             ?: return MaterializationResult.PersistenceFailure
         val existingChapter = chapterRepository.getChapterByUrlAndMangaId(chapterUrl, manga.id)
         if (existingChapter != null) {
             return MaterializationResult.Ready(manga, existingChapter)
         }
         val chapter = insertChapter(manga.id, chapterUrl, remoteChapter)
+            ?: chapterRepository.getChapterByUrlAndMangaId(chapterUrl, manga.id)
             ?: return MaterializationResult.PersistenceFailure
         return MaterializationResult.Ready(manga, chapter)
     }
@@ -371,7 +384,7 @@ class ReadingListReaderStateStore(
         skipped: Boolean,
     ): Boolean {
         return database.transactionWithResult {
-            val guard = database.reading_listsQueries.getEntryResolutionGuard(entryId).executeAsOneOrNull()
+            val guard = database.reading_listsQueries.getEntryResolutionGuard(entryId).awaitAsOneOrNull()
                 ?: return@transactionWithResult false
             if (guard.readingListId != readingListId) return@transactionWithResult false
             database.zz_reading_list_progressQueries.setReadingListEntrySkipped(skipped, entryId)
@@ -392,7 +405,7 @@ class ReadingListReaderStateStore(
             "Reader failures may only use a repairable resolution state"
         }
         return database.transactionWithResult {
-            val guard = database.reading_listsQueries.getEntryResolutionGuard(entryId).executeAsOneOrNull()
+            val guard = database.reading_listsQueries.getEntryResolutionGuard(entryId).awaitAsOneOrNull()
                 ?: return@transactionWithResult false
             database.zz_reading_list_progressQueries.markReadingListEntryReaderFailure(state.name, entryId)
             database.reading_listsQueries.touchReadingList(currentTimeMillis(), guard.readingListId)
@@ -402,7 +415,7 @@ class ReadingListReaderStateStore(
 
     suspend fun clearFailure(entryId: Long): Boolean {
         return database.transactionWithResult {
-            val guard = database.reading_listsQueries.getEntryResolutionGuard(entryId).executeAsOneOrNull()
+            val guard = database.reading_listsQueries.getEntryResolutionGuard(entryId).awaitAsOneOrNull()
                 ?: return@transactionWithResult false
             database.zz_reading_list_progressQueries.clearReadingListEntryReaderFailure(entryId)
             database.reading_listsQueries.touchReadingList(currentTimeMillis(), guard.readingListId)
@@ -462,6 +475,7 @@ sealed interface ReadingListReaderResult {
         val readingListId: Long,
         val direction: ReadingListReaderDirection,
     ) : ReadingListReaderResult
+
     data class MissingReadingList(val readingListId: Long) : ReadingListReaderResult
     data class MissingEntry(val readingListId: Long, val entryId: Long) : ReadingListReaderResult
     data class MissingEntryAtPosition(val readingListId: Long, val position: Int) : ReadingListReaderResult
