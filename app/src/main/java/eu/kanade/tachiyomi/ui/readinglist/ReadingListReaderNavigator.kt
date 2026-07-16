@@ -1,6 +1,5 @@
 package eu.kanade.tachiyomi.ui.readinglist
 
-import app.cash.sqldelight.async.coroutines.awaitAsOneOrNull
 import eu.kanade.tachiyomi.source.model.SChapter
 import eu.kanade.tachiyomi.source.model.SManga
 import eu.kanade.tachiyomi.source.online.HttpSource
@@ -10,7 +9,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withTimeout
-import tachiyomi.data.Database
 import tachiyomi.domain.chapter.model.Chapter
 import tachiyomi.domain.chapter.repository.ChapterRepository
 import tachiyomi.domain.manga.model.Manga
@@ -28,7 +26,6 @@ class ReadingListReaderNavigator(
     private val mangaRepository: MangaRepository = Injekt.get(),
     private val chapterRepository: ChapterRepository = Injekt.get(),
     private val sourceManager: SourceManager = Injekt.get(),
-    private val stateStore: ReadingListReaderStateStore = ReadingListReaderStateStore(),
     private val requestTimeoutMillis: Long = DEFAULT_REQUEST_TIMEOUT_MILLIS,
 ) {
 
@@ -111,7 +108,7 @@ class ReadingListReaderNavigator(
         if (blockedIndex < 0) {
             return ReadingListReaderResult.MissingEntry(readingList.id, blockedEntryId)
         }
-        if (!stateStore.setSkipped(readingList.id, blockedEntryId, skipped = true)) {
+        if (!readingListRepository.setEntrySkipped(readingList.id, blockedEntryId, skipped = true)) {
             return ReadingListReaderResult.MissingEntry(readingList.id, blockedEntryId)
         }
 
@@ -170,7 +167,10 @@ class ReadingListReaderNavigator(
                 entry.toBlocked(readingList, ReadingListReaderBlockReason.MISSING_MATCH_IDENTITY),
             )
         if (sourceId !in readingList.selectedSourceIds) {
-            stateStore.markFailure(entry.id, ReadingListEntryResolutionState.NEEDS_REMATCH)
+            readingListRepository.markEntryReaderFailure(
+                entry.id,
+                ReadingListEntryResolutionState.NEEDS_REMATCH,
+            )
             return ReadingListReaderResult.Blocked(
                 entry.toBlocked(readingList, ReadingListReaderBlockReason.SOURCE_NOT_SELECTED),
             )
@@ -179,7 +179,10 @@ class ReadingListReaderNavigator(
         sourceManager.isInitialized.first { initialized -> initialized }
         val source = sourceManager.get(sourceId) as? HttpSource
         if (source == null) {
-            stateStore.markFailure(entry.id, ReadingListEntryResolutionState.SOURCE_UNAVAILABLE)
+            readingListRepository.markEntryReaderFailure(
+                entry.id,
+                ReadingListEntryResolutionState.SOURCE_UNAVAILABLE,
+            )
             return ReadingListReaderResult.Blocked(
                 entry.toBlocked(readingList, ReadingListReaderBlockReason.SOURCE_UNAVAILABLE),
             )
@@ -194,7 +197,7 @@ class ReadingListReaderNavigator(
             )
         ) {
             is MaterializationResult.Ready -> {
-                stateStore.clearFailure(entry.id)
+                readingListRepository.clearEntryReaderFailure(entry.id)
                 ReadingListReaderResult.Ready(
                     ReadingListReaderDestination(
                         readingListId = readingList.id,
@@ -210,19 +213,28 @@ class ReadingListReaderNavigator(
                 )
             }
             MaterializationResult.ChapterMissing -> {
-                stateStore.markFailure(entry.id, ReadingListEntryResolutionState.CHAPTER_REMOVED)
+                readingListRepository.markEntryReaderFailure(
+                    entry.id,
+                    ReadingListEntryResolutionState.CHAPTER_REMOVED,
+                )
                 ReadingListReaderResult.Blocked(
                     entry.toBlocked(readingList, ReadingListReaderBlockReason.CHAPTER_REMOVED),
                 )
             }
             MaterializationResult.SourceFailure -> {
-                stateStore.markFailure(entry.id, ReadingListEntryResolutionState.SOURCE_UNAVAILABLE)
+                readingListRepository.markEntryReaderFailure(
+                    entry.id,
+                    ReadingListEntryResolutionState.SOURCE_UNAVAILABLE,
+                )
                 ReadingListReaderResult.Blocked(
                     entry.toBlocked(readingList, ReadingListReaderBlockReason.SOURCE_REQUEST_FAILED),
                 )
             }
             MaterializationResult.PersistenceFailure -> {
-                stateStore.markFailure(entry.id, ReadingListEntryResolutionState.NEEDS_REMATCH)
+                readingListRepository.markEntryReaderFailure(
+                    entry.id,
+                    ReadingListEntryResolutionState.NEEDS_REMATCH,
+                )
                 ReadingListReaderResult.Blocked(
                     entry.toBlocked(readingList, ReadingListReaderBlockReason.MATERIALIZATION_FAILED),
                 )
@@ -370,57 +382,6 @@ class ReadingListReaderNavigator(
     private companion object {
         val requestSemaphore = Semaphore(2)
         const val DEFAULT_REQUEST_TIMEOUT_MILLIS = 30_000L
-    }
-}
-
-class ReadingListReaderStateStore(
-    private val database: Database = Injekt.get(),
-    private val currentTimeMillis: () -> Long = { System.currentTimeMillis() },
-) {
-
-    suspend fun setSkipped(
-        readingListId: Long,
-        entryId: Long,
-        skipped: Boolean,
-    ): Boolean {
-        return database.transactionWithResult {
-            val guard = database.reading_listsQueries.getEntryResolutionGuard(entryId).awaitAsOneOrNull()
-                ?: return@transactionWithResult false
-            if (guard.readingListId != readingListId) return@transactionWithResult false
-            database.zz_reading_list_progressQueries.setReadingListEntrySkipped(skipped, entryId)
-            database.reading_listsQueries.touchReadingList(currentTimeMillis(), readingListId)
-            true
-        }
-    }
-
-    suspend fun markFailure(
-        entryId: Long,
-        state: ReadingListEntryResolutionState,
-    ): Boolean {
-        require(
-            state == ReadingListEntryResolutionState.SOURCE_UNAVAILABLE ||
-                state == ReadingListEntryResolutionState.CHAPTER_REMOVED ||
-                state == ReadingListEntryResolutionState.NEEDS_REMATCH,
-        ) {
-            "Reader failures may only use a repairable resolution state"
-        }
-        return database.transactionWithResult {
-            val guard = database.reading_listsQueries.getEntryResolutionGuard(entryId).awaitAsOneOrNull()
-                ?: return@transactionWithResult false
-            database.zz_reading_list_progressQueries.markReadingListEntryReaderFailure(state.name, entryId)
-            database.reading_listsQueries.touchReadingList(currentTimeMillis(), guard.readingListId)
-            true
-        }
-    }
-
-    suspend fun clearFailure(entryId: Long): Boolean {
-        return database.transactionWithResult {
-            val guard = database.reading_listsQueries.getEntryResolutionGuard(entryId).awaitAsOneOrNull()
-                ?: return@transactionWithResult false
-            database.zz_reading_list_progressQueries.clearReadingListEntryReaderFailure(entryId)
-            database.reading_listsQueries.touchReadingList(currentTimeMillis(), guard.readingListId)
-            true
-        }
     }
 }
 
