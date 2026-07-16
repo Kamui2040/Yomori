@@ -256,7 +256,7 @@ class ReadingListReaderNavigatorTest {
             .shouldBeInstanceOf<ReadingListReaderResult.Blocked>()
         unselected.entry.reason shouldBe ReadingListReaderBlockReason.SOURCE_NOT_SELECTED
         coVerify {
-            unselectedFixture.stateStore.markFailure(
+            unselectedFixture.readingListRepository.markEntryReaderFailure(
                 entry.id,
                 ReadingListEntryResolutionState.NEEDS_REMATCH,
             )
@@ -272,7 +272,7 @@ class ReadingListReaderNavigatorTest {
             .shouldBeInstanceOf<ReadingListReaderResult.Blocked>()
         unavailable.entry.reason shouldBe ReadingListReaderBlockReason.SOURCE_UNAVAILABLE
         coVerify {
-            unavailableFixture.stateStore.markFailure(
+            unavailableFixture.readingListRepository.markEntryReaderFailure(
                 entry.id,
                 ReadingListEntryResolutionState.SOURCE_UNAVAILABLE,
             )
@@ -368,7 +368,7 @@ class ReadingListReaderNavigatorTest {
 
         blocked.entry.reason shouldBe ReadingListReaderBlockReason.CHAPTER_REMOVED
         coVerify {
-            fixture.stateStore.markFailure(
+            fixture.readingListRepository.markEntryReaderFailure(
                 entry.id,
                 ReadingListEntryResolutionState.CHAPTER_REMOVED,
             )
@@ -393,7 +393,7 @@ class ReadingListReaderNavigatorTest {
         blocked.entry.reason shouldBe ReadingListReaderBlockReason.SOURCE_REQUEST_FAILED
         blocked.entry.entryId shouldBe entry.id
         coVerify {
-            fixture.stateStore.markFailure(
+            fixture.readingListRepository.markEntryReaderFailure(
                 entry.id,
                 ReadingListEntryResolutionState.SOURCE_UNAVAILABLE,
             )
@@ -415,8 +415,8 @@ class ReadingListReaderNavigatorTest {
         blocked.entry.entryId shouldBe second.id
         blocked.entry.position shouldBe 1
         blocked.entry.reason shouldBe ReadingListReaderBlockReason.AMBIGUOUS
-        coVerify(exactly = 1) { fixture.stateStore.setSkipped(READING_LIST_ID, first.id, true) }
-        coVerify(exactly = 0) { fixture.stateStore.setSkipped(READING_LIST_ID, second.id, true) }
+        coVerify(exactly = 1) { fixture.readingListRepository.setEntrySkipped(READING_LIST_ID, first.id, true) }
+        coVerify(exactly = 0) { fixture.readingListRepository.setEntrySkipped(READING_LIST_ID, second.id, true) }
         coVerify { fixture.readingListRepository.updateProgress(READING_LIST_ID, 1, false) }
     }
 
@@ -428,7 +428,7 @@ class ReadingListReaderNavigatorTest {
         val result = fixture.navigator.skip(READING_LIST_ID, entry.id)
 
         result.shouldBeInstanceOf<ReadingListReaderResult.Completed>()
-        coVerify { fixture.stateStore.setSkipped(READING_LIST_ID, entry.id, true) }
+        coVerify { fixture.readingListRepository.setEntrySkipped(READING_LIST_ID, entry.id, true) }
         coVerify { fixture.readingListRepository.updateProgress(READING_LIST_ID, null, true) }
     }
 
@@ -443,13 +443,12 @@ class ReadingListReaderNavigatorTest {
         val readingListRepository = mockk<ReadingListRepository>()
         val mangaRepository = mockk<MangaRepository>()
         val chapterRepository = mockk<ChapterRepository>()
-        val stateStore = mockk<ReadingListReaderStateStore>()
 
         coEvery { readingListRepository.get(READING_LIST_ID) } returns readingList
         coEvery { readingListRepository.updateProgress(any(), any(), any()) } returns true
-        coEvery { stateStore.setSkipped(any(), any(), any()) } returns true
-        coEvery { stateStore.markFailure(any(), any()) } returns true
-        coEvery { stateStore.clearFailure(any()) } returns true
+        coEvery { readingListRepository.setEntrySkipped(any(), any(), any()) } returns true
+        coEvery { readingListRepository.markEntryReaderFailure(any(), any()) } returns true
+        coEvery { readingListRepository.clearEntryReaderFailure(any()) } returns true
 
         coEvery { mangaRepository.getMangaByUrlAndSourceId(any(), any()) } answers {
             val url = firstArg<String>()
@@ -478,13 +477,11 @@ class ReadingListReaderNavigatorTest {
                 mangaRepository = mangaRepository,
                 chapterRepository = chapterRepository,
                 sourceManager = FakeSourceManager(sources),
-                stateStore = stateStore,
                 requestTimeoutMillis = requestTimeoutMillis,
             ),
             readingListRepository = readingListRepository,
             mangaRepository = mangaRepository,
             chapterRepository = chapterRepository,
-            stateStore = stateStore,
         )
     }
 
@@ -585,7 +582,6 @@ class ReadingListReaderNavigatorTest {
         val readingListRepository: ReadingListRepository,
         val mangaRepository: MangaRepository,
         val chapterRepository: ChapterRepository,
-        val stateStore: ReadingListReaderStateStore,
     )
 
     private data class LocalRows(
