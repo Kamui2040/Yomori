@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="reading_list_read">Read list</string>
+    <string name="reading_list_resume">Resume list</string>
+    <string name="reading_list_read_again">Read again</string>
+    <string name="reading_list_completed">Completed</string>
+    <string name="reading_list_reader_loading">Preparing reading-list entry…</string>
+    <string name="reading_list_reader_failed">The reading-list entry could not be opened</string>
+    <string name="reading_list_reader_completed">Completed %1$s</string>
+    <string name="reading_list_reader_restart_title">Read this list again?</string>
+    <string name="reading_list_reader_restart_message">Restart “%1$s” from its first entry? Shared chapter read states will not be reset.</string>
+    <string name="reading_list_reader_restart">Restart</string>
+    <string name="reading_list_reader_blocked_title">Entry needs attention</string>
+    <string name="reading_list_reader_blocked_entry">%1$d of %2$d • %3$s #%4$s</string>
+    <string name="reading_list_reader_blocked_message">%1$s</string>
+    <string name="reading_list_reader_review">Review</string>
+    <string name="reading_list_reader_skip">Skip entry</string>
+    <string name="reading_list_reader_stop">Stop</string>
+    <string name="reading_list_reader_reason_unsearched">This entry has not been searched yet.</string>
+    <string name="reading_list_reader_reason_searching">Candidate search is still in progress for this entry.</string>
+    <string name="reading_list_reader_reason_ambiguous">This entry has multiple plausible matches and needs review.</string>
+    <string name="reading_list_reader_reason_unresolved">No candidate has been resolved for this entry.</string>
+    <string name="reading_list_reader_reason_source_unavailable">The selected source for this entry is unavailable.</string>
+    <string name="reading_list_reader_reason_chapter_removed">The matched issue is no longer returned by the source.</string>
+    <string name="reading_list_reader_reason_needs_rematch">This entry needs to be matched again.</string>
+    <string name="reading_list_reader_reason_skipped">This entry is explicitly skipped for this reading list.</string>
+    <string name="reading_list_reader_reason_missing_identity">The saved match is incomplete and cannot be opened safely.</string>
+    <string name="reading_list_reader_reason_source_not_selected">The saved source is no longer selected for this reading list.</string>
+    <string name="reading_list_reader_reason_source_failed">The selected extension could not load this entry.</string>
+    <string name="reading_list_reader_reason_materialization_failed">The exact matched entry could not be prepared for the reader.</string>
+    <string name="reading_list_reader_position">Reading list • %1$d of %2$d</string>
+</resources>
