@@ -82,6 +82,7 @@ class ReadingListRepositoryImpl(
             currentPosition = readingList.currentPosition?.toInt(),
             createdAt = readingList.createdAt,
             updatedAt = readingList.updatedAt,
+            completed = readingList.completed,
         )
     }
 
@@ -171,9 +172,16 @@ class ReadingListRepositoryImpl(
         }
     }
 
-    override suspend fun updateProgress(id: Long, currentPosition: Int?): Boolean {
+    override suspend fun updateProgress(
+        id: Long,
+        currentPosition: Int?,
+        completed: Boolean,
+    ): Boolean {
         require(currentPosition == null || currentPosition >= 0) {
             "Reading-list position cannot be negative"
+        }
+        require(!completed || currentPosition == null) {
+            "A completed reading list cannot point to a current entry"
         }
 
         return database.transactionWithResult {
@@ -189,6 +197,7 @@ class ReadingListRepositoryImpl(
 
             database.reading_listsQueries.updateProgress(
                 currentPosition = currentPosition?.toLong(),
+                completed = completed,
                 updatedAt = currentTimeMillis(),
                 id = id,
             )
@@ -219,6 +228,7 @@ class ReadingListRepositoryImpl(
         extraElements: String,
         warnings: String,
         currentPosition: Long?,
+        completed: Boolean,
         createdAt: Long,
         updatedAt: Long,
     ): ReadingListRow {
@@ -231,6 +241,7 @@ class ReadingListRepositoryImpl(
             extraElements = extraElements,
             warnings = warnings,
             currentPosition = currentPosition,
+            completed = completed,
             createdAt = createdAt,
             updatedAt = updatedAt,
         )
@@ -242,6 +253,7 @@ class ReadingListRepositoryImpl(
         entryCount: Long,
         sourceCount: Long,
         currentPosition: Long?,
+        completed: Boolean,
         createdAt: Long,
         updatedAt: Long,
     ): ReadingListSummary {
@@ -253,6 +265,7 @@ class ReadingListRepositoryImpl(
             currentPosition = currentPosition?.toInt(),
             createdAt = createdAt,
             updatedAt = updatedAt,
+            completed = completed,
         )
     }
 
@@ -325,6 +338,7 @@ class ReadingListRepositoryImpl(
         val extraElements: String,
         val warnings: String,
         val currentPosition: Long?,
+        val completed: Boolean,
         val createdAt: Long,
         val updatedAt: Long,
     )
@@ -358,4 +372,21 @@ class ReadingListRepositoryImpl(
         val extraAttributes: String,
         val extraElements: String,
     )
+}
+
+private fun CblReadingList.requireValidPersistenceOrder() {
+    books.forEachIndexed { index, book ->
+        require(book.position == index) {
+            "Reading-list entries must use contiguous CBL order"
+        }
+    }
+}
+
+private fun List<Long>.requireValidSourceSelection() {
+    require(isNotEmpty()) {
+        "At least one source must be selected for a reading list"
+    }
+    require(size == distinct().size) {
+        "Reading-list source selection cannot contain duplicates"
+    }
 }
