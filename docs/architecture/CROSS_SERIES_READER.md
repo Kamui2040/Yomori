@@ -96,5 +96,6 @@ SQLDelight stores list-specific completion separately from `current_position`. R
 - previous navigation and completion reset;
 - shared chapter read state with independent list position/completion;
 - process/activity recreation retains list identity;
+- compact portrait layout keeps Read, Review, Search, Edit, and Delete usable;
 - missing list, entry, source, manga, or chapter failure isolation;
 - no unselected-source fallback or automatic library/category insertion.
