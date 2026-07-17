@@ -26,7 +26,7 @@
     <string name="reading_list_reader_reason_skipped">This entry is explicitly skipped for this reading list.</string>
     <string name="reading_list_reader_reason_missing_identity">The saved match is incomplete and cannot be opened safely.</string>
     <string name="reading_list_reader_reason_source_not_selected">The saved source is no longer selected for this reading list.</string>
-    <string name="reading_list_reader_reason_source_failed">The selected extension could not load this entry.</string>
+    <string name="reading_list_reader_reason_source_failed">The selected extension failed while loading this entry.</string>
     <string name="reading_list_reader_reason_materialization_failed">The exact matched entry could not be prepared for the reader.</string>
     <string name="reading_list_reader_position">Reading list • %1$d of %2$d</string>
 </resources>
