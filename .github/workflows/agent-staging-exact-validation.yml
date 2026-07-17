@@ -1,0 +1,58 @@
+name: Agent exact staging validation
+
+on:
+  push:
+    branches:
+      - agent/cross-series-reader-navigation-staging
+
+permissions:
+  contents: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          ref: agent/cross-series-reader-navigation-staging
+          fetch-depth: 0
+      - uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a
+        with:
+          java-version-file: .github/.java-version
+          distribution: temurin
+      - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92
+      - name: Validate exact staging head
+        shell: bash
+        run: |
+          set +e
+          report="$RUNNER_TEMP/exact-staging-validation.md"
+          : > "$report"
+          printf '# Exact cross-series reader staging validation\n\n' >> "$report"
+          printf 'Commit before validation: `%s`\n\n' "$(git rev-parse HEAD)" >> "$report"
+          run_check() {
+            name="$1"
+            shift
+            log="$RUNNER_TEMP/${name}.log"
+            "$@" >"$log" 2>&1
+            code=$?
+            printf '## %s\n\nExit code: `%s`\n\n```text\n' "$name" "$code" >> "$report"
+            tail -n 600 "$log" >> "$report"
+            printf '\n```\n\n' >> "$report"
+            return 0
+          }
+          run_check spotlessApply ./gradlew spotlessApply
+          run_check spotlessCheck ./gradlew spotlessCheck
+          run_check dataCompile ./gradlew :data:compileDebugKotlin
+          run_check appCompile ./gradlew :app:compileDebugKotlin
+          run_check focusedNavigatorTests ./gradlew :app:testDebugUnitTest --tests eu.kanade.tachiyomi.ui.readinglist.ReadingListReaderNavigatorTest
+          run_check focusedRepositoryTests ./gradlew :data:testDebugUnitTest --tests tachiyomi.data.readinglist.ReadingListProgressRepositoryTest --tests tachiyomi.data.readinglist.ReadingListReaderStateRepositoryTest
+          run_check verifySqlDelightMigration ./gradlew verifySqlDelightMigration
+          run_check gitDiffCheck git diff --check
+          cp "$report" STAGING_EXACT_VALIDATION.md
+          rm -f .github/workflows/agent-staging-exact-validation.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Record exact cross-series reader validation" || true
+          git push origin HEAD:agent/cross-series-reader-navigation-staging
+          exit 0
