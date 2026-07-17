@@ -106,8 +106,8 @@ class ReadingListRepositoryImpl(
         readingList: CblReadingList,
         selectedSourceIds: List<Long>,
     ): Long {
-        readingList.requireValidPersistenceOrder()
-        selectedSourceIds.requireValidSourceSelection()
+        readingList.requireContiguousCblOrder()
+        selectedSourceIds.requireDistinctSourceSelection()
         val timestamp = currentTimeMillis()
 
         return database.transactionWithResult {
@@ -159,7 +159,7 @@ class ReadingListRepositoryImpl(
         id: Long,
         selectedSourceIds: List<Long>,
     ): Boolean {
-        selectedSourceIds.requireValidSourceSelection()
+        selectedSourceIds.requireDistinctSourceSelection()
 
         return database.transactionWithResult {
             if (!database.reading_listsQueries.readingListExists(id).awaitAsOne()) {
@@ -437,7 +437,7 @@ class ReadingListRepositoryImpl(
     )
 }
 
-private fun CblReadingList.requireValidPersistenceOrder() {
+private fun CblReadingList.requireContiguousCblOrder() {
     books.forEachIndexed { index, book ->
         require(book.position == index) {
             "Reading-list entries must use contiguous CBL order"
@@ -445,7 +445,7 @@ private fun CblReadingList.requireValidPersistenceOrder() {
     }
 }
 
-private fun List<Long>.requireValidSourceSelection() {
+private fun List<Long>.requireDistinctSourceSelection() {
     require(isNotEmpty()) {
         "At least one source must be selected for a reading list"
     }
