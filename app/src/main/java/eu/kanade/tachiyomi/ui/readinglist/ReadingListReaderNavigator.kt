@@ -197,7 +197,6 @@ class ReadingListReaderNavigator(
             )
         ) {
             is MaterializationResult.Ready -> {
-                readingListRepository.clearEntryReaderFailure(entry.id)
                 ReadingListReaderResult.Ready(
                     ReadingListReaderDestination(
                         readingListId = readingList.id,
@@ -265,7 +264,7 @@ class ReadingListReaderNavigator(
                             title = entry.series
                         },
                         chapters = emptyList(),
-                        fetchDetails = true,
+                        fetchDetails = false,
                         fetchChapters = true,
                     )
                 }
@@ -274,7 +273,7 @@ class ReadingListReaderNavigator(
             return MaterializationResult.SourceFailure
         } catch (error: CancellationException) {
             throw error
-        } catch (_: Exception) {
+        } catch (_: Throwable) {
             return MaterializationResult.SourceFailure
         }
 
