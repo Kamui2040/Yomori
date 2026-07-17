@@ -18,23 +18,27 @@ interface ReadingListRepository {
 
     suspend fun updateSources(id: Long, selectedSourceIds: List<Long>): Boolean
 
+    /** Persist list-specific position and completion without changing shared chapter read state. */
     suspend fun updateProgress(
         id: Long,
         currentPosition: Int?,
         completed: Boolean = false,
     ): Boolean
 
+    /** Persist an explicit list-entry skip while preserving its CBL and match metadata. */
     suspend fun setEntrySkipped(
         readingListId: Long,
         entryId: Long,
         skipped: Boolean,
     ): Boolean
 
+    /** Mark one entry with a repairable reader failure without deleting its saved identity. */
     suspend fun markEntryReaderFailure(
         entryId: Long,
         state: ReadingListEntryResolutionState,
     ): Boolean
 
+    /** Restore the protected resolved state after a reader failure has been repaired. */
     suspend fun clearEntryReaderFailure(entryId: Long): Boolean
 
     suspend fun delete(id: Long)
