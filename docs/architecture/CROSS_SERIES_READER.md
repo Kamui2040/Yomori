@@ -32,7 +32,7 @@ A readable entry must retain all three persisted identities:
 - remote manga URL;
 - remote chapter URL.
 
-The source must still be selected for the list and installed as a compatible online source. Yomori first reuses existing local manga/chapter rows by source and remote URLs. When they are absent, an explicit read action may fetch the selected remote series once and materialize only the exact matched manga/chapter as non-favorite local rows. Candidate search results are not bulk-added to the library.
+The source must still be selected for the list and installed as a compatible online source. Yomori first reuses existing local manga/chapter rows by source and remote URLs. When they are absent, an explicit read action fetches the selected series' chapter list without performing another broad search or requiring a full details refresh, then materializes only the exact matched manga/chapter as non-favorite local rows. Candidate search results are not bulk-added to the library.
 
 Materialization must never:
 
