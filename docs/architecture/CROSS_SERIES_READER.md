@@ -71,7 +71,7 @@ A skip is list-specific and does not alter global chapter state. Confirming an e
 
 ## Failure isolation
 
-A failure marks only the affected entry as source unavailable, chapter removed, or needing rematch as appropriate. Original CBL metadata, candidate history, rejections, overrides, series mappings, and other entries remain unchanged.
+A timeout or extension failure blocks and marks only the affected entry. Original CBL metadata, candidate history, rejections, overrides, series mappings, saved match identities, and other entries remain unchanged.
 
 ## Reader integration
 
