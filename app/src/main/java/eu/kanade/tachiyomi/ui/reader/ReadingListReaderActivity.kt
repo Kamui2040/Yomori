@@ -115,7 +115,7 @@ class ReadingListReaderActivity : ReaderActivity() {
                 throw error
             } catch (_: Exception) {
                 viewModel.closeDialog()
-                toast(R.string.reading_list_reader_failed)
+                toast(getString(R.string.reading_list_reader_failed))
             } finally {
                 isNavigating = false
             }
@@ -142,7 +142,7 @@ class ReadingListReaderActivity : ReaderActivity() {
                 throw error
             } catch (_: Exception) {
                 viewModel.closeDialog()
-                toast(R.string.reading_list_reader_failed)
+                toast(getString(R.string.reading_list_reader_failed))
             } finally {
                 isNavigating = false
             }
@@ -199,7 +199,7 @@ class ReadingListReaderActivity : ReaderActivity() {
             is ReadingListReaderResult.MissingEntryAtPosition,
             -> {
                 viewModel.closeDialog()
-                toast(R.string.reading_list_reader_failed)
+                toast(getString(R.string.reading_list_reader_failed))
             }
         }
     }
