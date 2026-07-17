@@ -17,7 +17,7 @@ Normal manga reader launches remain unchanged when no reading-list identity is s
 
 ## Start and resume
 
-- The Reading Lists screen exposes an explicit read/resume action for each list; review, search, source editing, and deletion remain separate.
+- The Reading Lists screen exposes Read/Resume as the leading action for each list; review, search, source editing, and deletion remain separate trailing actions.
 - Source or network activity for materialization begins only after that explicit read/resume action or a reading-list transition initiated by the user.
 - A list that has not started begins at position zero.
 - An in-progress list resumes at its persisted current position.
