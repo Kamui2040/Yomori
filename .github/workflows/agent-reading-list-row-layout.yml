@@ -1,0 +1,91 @@
+name: Agent reading-list row layout
+
+on:
+  push:
+    branches:
+      - agent/reading-list-row-layout-staging
+
+permissions:
+  contents: write
+
+jobs:
+  update-and-validate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          ref: agent/reading-list-row-layout-staging
+          fetch-depth: 0
+      - uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a
+        with:
+          java-version-file: .github/.java-version
+          distribution: temurin
+      - uses: gradle/actions/setup-gradle@3f131e8634966bd73d06cc69884922b02e6faf92
+      - name: Apply layout correction and validate
+        shell: bash
+        run: |
+          set +e
+          python3 <<'PY'
+          from pathlib import Path
+
+          source_path = Path("app/src/main/java/eu/kanade/tachiyomi/ui/readinglist/ReadingListsTab.kt")
+          text = source_path.read_text()
+
+          old_import = "import androidx.compose.material.icons.outlined.List\nimport androidx.compose.material.icons.outlined.PlayArrow"
+          new_import = "import androidx.compose.material.icons.outlined.List\nimport androidx.compose.material.icons.outlined.MoreVert\nimport androidx.compose.material.icons.outlined.PlayArrow"
+          assert text.count(old_import) == 1
+          text = text.replace(old_import, new_import)
+
+          old_start = '''    ListItem(\n        modifier = Modifier.clickable(enabled = !isSearching, onClick = onReview),'''
+          new_start = '''    var menuExpanded by remember { mutableStateOf(false) }\n\n    ListItem(\n        modifier = Modifier.clickable(enabled = !isSearching, onClick = onReview),'''
+          assert text.count(old_start) == 1
+          text = text.replace(old_start, new_start)
+
+          old_actions = '''        trailingContent = {\n            Row {\n                IconButton(\n                    onClick = onRead,\n                    enabled = !isSearching && !isPreparingReader,\n                ) {\n                    Icon(\n                        imageVector = Icons.Outlined.PlayArrow,\n                        contentDescription = stringResource(\n                            when {\n                                readingList.completed -> R.string.reading_list_read_again\n                                readingList.currentPosition != null -> R.string.reading_list_resume\n                                else -> R.string.reading_list_read\n                            },\n                        ),\n                    )\n                }\n                IconButton(\n                    onClick = onReview,\n                    enabled = !isSearching,\n                ) {\n                    Icon(\n                        imageVector = Icons.Outlined.List,\n                        contentDescription = stringResource(R.string.reading_list_review),\n                    )\n                }\n                IconButton(\n                    onClick = onSearch,\n                    enabled = !isSearching,\n                ) {\n                    if (isSearching) {\n                        CircularProgressIndicator(\n                            modifier = Modifier.size(20.dp),\n                            strokeWidth = 2.dp,\n                        )\n                    } else {\n                        Icon(\n                            imageVector = Icons.Outlined.Search,\n                            contentDescription = stringResource(R.string.reading_list_search_candidates),\n                        )\n                    }\n                }\n                IconButton(\n                    onClick = onEditSources,\n                    enabled = !isSearching,\n                ) {\n                    Icon(\n                        imageVector = Icons.Outlined.Edit,\n                        contentDescription = stringResource(R.string.reading_list_edit_sources),\n                    )\n                }\n                IconButton(\n                    onClick = onDelete,\n                    enabled = !isSearching,\n                ) {\n                    Icon(\n                        imageVector = Icons.Outlined.Delete,\n                        contentDescription = stringResource(R.string.reading_list_delete),\n                    )\n                }\n            }\n        },'''
+
+          new_actions = '''        leadingContent = {\n            IconButton(\n                onClick = onRead,\n                enabled = !isSearching && !isPreparingReader,\n            ) {\n                Icon(\n                    imageVector = Icons.Outlined.PlayArrow,\n                    contentDescription = stringResource(\n                        when {\n                            readingList.completed -> R.string.reading_list_read_again\n                            readingList.currentPosition != null -> R.string.reading_list_resume\n                            else -> R.string.reading_list_read\n                        },\n                    ),\n                )\n            }\n        },\n        trailingContent = {\n            Row(verticalAlignment = Alignment.CenterVertically) {\n                IconButton(\n                    onClick = onReview,\n                    enabled = !isSearching,\n                ) {\n                    Icon(\n                        imageVector = Icons.Outlined.List,\n                        contentDescription = stringResource(R.string.reading_list_review),\n                    )\n                }\n                Box {\n                    if (isSearching) {\n                        Box(\n                            modifier = Modifier.size(48.dp),\n                            contentAlignment = Alignment.Center,\n                        ) {\n                            CircularProgressIndicator(\n                                modifier = Modifier.size(20.dp),\n                                strokeWidth = 2.dp,\n                            )\n                        }\n                    } else {\n                        IconButton(onClick = { menuExpanded = true }) {\n                            Icon(\n                                imageVector = Icons.Outlined.MoreVert,\n                                contentDescription = stringResource(R.string.reading_list_more_actions),\n                            )\n                        }\n                        DropdownMenu(\n                            expanded = menuExpanded,\n                            onDismissRequest = { menuExpanded = false },\n                        ) {\n                            DropdownMenuItem(\n                                text = { Text(stringResource(R.string.reading_list_search_candidates)) },\n                                leadingIcon = {\n                                    Icon(\n                                        imageVector = Icons.Outlined.Search,\n                                        contentDescription = null,\n                                    )\n                                },\n                                onClick = {\n                                    menuExpanded = false\n                                    onSearch()\n                                },\n                            )\n                            DropdownMenuItem(\n                                text = { Text(stringResource(R.string.reading_list_edit_sources)) },\n                                leadingIcon = {\n                                    Icon(\n                                        imageVector = Icons.Outlined.Edit,\n                                        contentDescription = null,\n                                    )\n                                },\n                                onClick = {\n                                    menuExpanded = false\n                                    onEditSources()\n                                },\n                            )\n                            DropdownMenuItem(\n                                text = { Text(stringResource(R.string.reading_list_delete)) },\n                                leadingIcon = {\n                                    Icon(\n                                        imageVector = Icons.Outlined.Delete,\n                                        contentDescription = null,\n                                    )\n                                },\n                                onClick = {\n                                    menuExpanded = false\n                                    onDelete()\n                                },\n                            )\n                        }\n                    }\n                }\n            }\n        },'''
+          assert text.count(old_actions) == 1
+          text = text.replace(old_actions, new_actions)
+          source_path.write_text(text)
+
+          strings_path = Path("app/src/main/res/values/yomori_reading_list_strings.xml")
+          strings = strings_path.read_text()
+          anchor = '    <string name="reading_list_review">Review matches</string>\n'
+          replacement = anchor + '    <string name="reading_list_more_actions">More reading-list actions</string>\n'
+          assert strings.count(anchor) == 1
+          strings_path.write_text(strings.replace(anchor, replacement))
+          PY
+
+          apply_code=$?
+          ./gradlew spotlessApply
+          spotless_apply_code=$?
+          ./gradlew spotlessCheck
+          spotless_check_code=$?
+          ./gradlew :app:compileDebugKotlin
+          compile_code=$?
+          git diff --check
+          diff_code=$?
+
+          rm -f .github/workflows/agent-reading-list-row-layout.yml
+          if [ "$apply_code" -ne 0 ] || [ "$spotless_apply_code" -ne 0 ] || [ "$spotless_check_code" -ne 0 ] || [ "$compile_code" -ne 0 ] || [ "$diff_code" -ne 0 ]; then
+            cat > ROW_LAYOUT_VALIDATION.md <<EOF
+          # Reading-list row layout validation
+
+          - apply: $apply_code
+          - spotlessApply: $spotless_apply_code
+          - spotlessCheck: $spotless_check_code
+          - app compile: $compile_code
+          - git diff check: $diff_code
+          EOF
+            commit_message="Record reading-list row layout validation failure"
+          else
+            rm -f ROW_LAYOUT_VALIDATION.md
+            commit_message="Improve reading-list row action layout"
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "$commit_message" || true
+          git push origin HEAD:agent/reading-list-row-layout-staging
+          exit 0
