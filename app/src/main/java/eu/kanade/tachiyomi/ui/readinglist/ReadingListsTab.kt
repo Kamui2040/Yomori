@@ -29,6 +29,7 @@ import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.List
+import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.AlertDialog
@@ -410,6 +411,8 @@ private fun ReadingListItem(
     onEditSources: () -> Unit,
     onDelete: () -> Unit,
 ) {
+    var menuExpanded by remember { mutableStateOf(false) }
+
     ListItem(
         modifier = Modifier.clickable(enabled = !isSearching, onClick = onReview),
         headlineContent = {
@@ -443,23 +446,25 @@ private fun ReadingListItem(
                 }
             }
         },
+        leadingContent = {
+            IconButton(
+                onClick = onRead,
+                enabled = !isSearching && !isPreparingReader,
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.PlayArrow,
+                    contentDescription = stringResource(
+                        when {
+                            readingList.completed -> R.string.reading_list_read_again
+                            readingList.currentPosition != null -> R.string.reading_list_resume
+                            else -> R.string.reading_list_read
+                        },
+                    ),
+                )
+            }
+        },
         trailingContent = {
-            Row {
-                IconButton(
-                    onClick = onRead,
-                    enabled = !isSearching && !isPreparingReader,
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.PlayArrow,
-                        contentDescription = stringResource(
-                            when {
-                                readingList.completed -> R.string.reading_list_read_again
-                                readingList.currentPosition != null -> R.string.reading_list_resume
-                                else -> R.string.reading_list_read
-                            },
-                        ),
-                    )
-                }
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(
                     onClick = onReview,
                     enabled = !isSearching,
@@ -469,39 +474,69 @@ private fun ReadingListItem(
                         contentDescription = stringResource(R.string.reading_list_review),
                     )
                 }
-                IconButton(
-                    onClick = onSearch,
-                    enabled = !isSearching,
-                ) {
+                Box {
                     if (isSearching) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            strokeWidth = 2.dp,
-                        )
+                        Box(
+                            modifier = Modifier.size(48.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp,
+                            )
+                        }
                     } else {
-                        Icon(
-                            imageVector = Icons.Outlined.Search,
-                            contentDescription = stringResource(R.string.reading_list_search_candidates),
-                        )
+                        IconButton(onClick = { menuExpanded = true }) {
+                            Icon(
+                                imageVector = Icons.Outlined.MoreVert,
+                                contentDescription = stringResource(R.string.reading_list_more_actions),
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = menuExpanded,
+                            onDismissRequest = { menuExpanded = false },
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.reading_list_search_candidates)) },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Search,
+                                        contentDescription = null,
+                                    )
+                                },
+                                onClick = {
+                                    menuExpanded = false
+                                    onSearch()
+                                },
+                            )
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.reading_list_edit_sources)) },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Edit,
+                                        contentDescription = null,
+                                    )
+                                },
+                                onClick = {
+                                    menuExpanded = false
+                                    onEditSources()
+                                },
+                            )
+                            DropdownMenuItem(
+                                text = { Text(stringResource(R.string.reading_list_delete)) },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Delete,
+                                        contentDescription = null,
+                                    )
+                                },
+                                onClick = {
+                                    menuExpanded = false
+                                    onDelete()
+                                },
+                            )
+                        }
                     }
-                }
-                IconButton(
-                    onClick = onEditSources,
-                    enabled = !isSearching,
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Edit,
-                        contentDescription = stringResource(R.string.reading_list_edit_sources),
-                    )
-                }
-                IconButton(
-                    onClick = onDelete,
-                    enabled = !isSearching,
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Delete,
-                        contentDescription = stringResource(R.string.reading_list_delete),
-                    )
                 }
             }
         },
