@@ -29,6 +29,7 @@ import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.List
+import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.AlertDialog
@@ -410,6 +411,8 @@ private fun ReadingListItem(
     onEditSources: () -> Unit,
     onDelete: () -> Unit,
 ) {
+    var actionsExpanded by remember(readingList.id) { mutableStateOf(false) }
+
     ListItem(
         modifier = Modifier.clickable(enabled = !isSearching, onClick = onReview),
         headlineContent = {
@@ -444,7 +447,7 @@ private fun ReadingListItem(
             }
         },
         trailingContent = {
-            Row {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(
                     onClick = onRead,
                     enabled = !isSearching && !isPreparingReader,
@@ -469,39 +472,67 @@ private fun ReadingListItem(
                         contentDescription = stringResource(R.string.reading_list_review),
                     )
                 }
-                IconButton(
-                    onClick = onSearch,
-                    enabled = !isSearching,
-                ) {
-                    if (isSearching) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            strokeWidth = 2.dp,
+                Box {
+                    IconButton(
+                        onClick = { actionsExpanded = true },
+                        enabled = !isSearching,
+                    ) {
+                        if (isSearching) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp,
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Outlined.MoreVert,
+                                contentDescription = stringResource(R.string.reading_list_more_actions),
+                            )
+                        }
+                    }
+                    DropdownMenu(
+                        expanded = actionsExpanded,
+                        onDismissRequest = { actionsExpanded = false },
+                    ) {
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.reading_list_search_candidates)) },
+                            onClick = {
+                                actionsExpanded = false
+                                onSearch()
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Outlined.Search,
+                                    contentDescription = null,
+                                )
+                            },
                         )
-                    } else {
-                        Icon(
-                            imageVector = Icons.Outlined.Search,
-                            contentDescription = stringResource(R.string.reading_list_search_candidates),
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.reading_list_edit_sources)) },
+                            onClick = {
+                                actionsExpanded = false
+                                onEditSources()
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Outlined.Edit,
+                                    contentDescription = null,
+                                )
+                            },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.reading_list_delete)) },
+                            onClick = {
+                                actionsExpanded = false
+                                onDelete()
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Outlined.Delete,
+                                    contentDescription = null,
+                                )
+                            },
                         )
                     }
-                }
-                IconButton(
-                    onClick = onEditSources,
-                    enabled = !isSearching,
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Edit,
-                        contentDescription = stringResource(R.string.reading_list_edit_sources),
-                    )
-                }
-                IconButton(
-                    onClick = onDelete,
-                    enabled = !isSearching,
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Delete,
-                        contentDescription = stringResource(R.string.reading_list_delete),
-                    )
                 }
             }
         },
