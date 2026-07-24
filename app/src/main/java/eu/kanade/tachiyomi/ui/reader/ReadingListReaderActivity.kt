@@ -17,6 +17,7 @@ import eu.kanade.tachiyomi.ui.readinglist.ReadingListReaderDestination
 import eu.kanade.tachiyomi.ui.readinglist.ReadingListReaderDirection
 import eu.kanade.tachiyomi.ui.readinglist.ReadingListReaderNavigator
 import eu.kanade.tachiyomi.ui.readinglist.ReadingListReaderResult
+import eu.kanade.tachiyomi.ui.readinglist.resolveReadingListInitialPage
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
@@ -32,12 +33,14 @@ class ReadingListReaderActivity : ReaderActivity() {
 
     private var destination: ReadingListReaderDestination? = null
     private var openAtEndPending = false
+    private var resumePagePending: Int? = null
     private var blockedEntry by mutableStateOf<ReadingListReaderBlockedEntry?>(null)
     private var isNavigating by mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         destination = intent.toReadingListDestination()
         openAtEndPending = destination?.openAtEnd == true
+        resumePagePending = destination?.resumePage
         super.onCreate(savedInstanceState)
         if (destination == null) {
             finish()
@@ -46,13 +49,14 @@ class ReadingListReaderActivity : ReaderActivity() {
 
     override fun setChapters(viewerChapters: ViewerChapters) {
         val currentChapter = viewerChapters.currChapter
-        if (openAtEndPending) {
-            currentChapter.pages?.lastIndex
-                ?.takeIf { lastIndex -> lastIndex >= 0 }
-                ?.let { lastIndex ->
-                    currentChapter.requestedPage = lastIndex
-                    openAtEndPending = false
-                }
+        resolveReadingListInitialPage(
+            openAtEnd = openAtEndPending,
+            resumePage = resumePagePending,
+            lastPageIndex = currentChapter.pages?.lastIndex ?: -1,
+        )?.let { pageIndex ->
+            currentChapter.requestedPage = pageIndex
+            openAtEndPending = false
+            resumePagePending = null
         }
         super.setChapters(
             ViewerChapters(
@@ -244,6 +248,7 @@ class ReadingListReaderActivity : ReaderActivity() {
             hasPrevious = getBooleanExtra(EXTRA_HAS_PREVIOUS, false),
             hasNext = getBooleanExtra(EXTRA_HAS_NEXT, false),
             openAtEnd = getBooleanExtra(EXTRA_OPEN_AT_END, false),
+            resumePage = getIntExtra(EXTRA_RESUME_PAGE, -1).takeIf { page -> page >= 0 },
         )
     }
 
@@ -260,6 +265,7 @@ class ReadingListReaderActivity : ReaderActivity() {
         private const val EXTRA_HAS_PREVIOUS = "reading_list_has_previous"
         private const val EXTRA_HAS_NEXT = "reading_list_has_next"
         private const val EXTRA_OPEN_AT_END = "reading_list_open_at_end"
+        private const val EXTRA_RESUME_PAGE = "reading_list_resume_page"
 
         fun newIntent(
             context: Context,
@@ -276,6 +282,7 @@ class ReadingListReaderActivity : ReaderActivity() {
                 putExtra(EXTRA_HAS_PREVIOUS, destination.hasPrevious)
                 putExtra(EXTRA_HAS_NEXT, destination.hasNext)
                 putExtra(EXTRA_OPEN_AT_END, destination.openAtEnd)
+                putExtra(EXTRA_RESUME_PAGE, destination.resumePage ?: -1)
             }
         }
     }
