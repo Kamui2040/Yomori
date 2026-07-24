@@ -2,14 +2,14 @@
 
 ## Purpose
 
-This document defines the first implementation target for importing Comic Book Lover (`.cbl`) reading lists and resolving them through user-selected Mihon/Tachiyomi-compatible extensions.
+This document defines the implemented baseline and approved follow-up behavior for importing local Comic Book Lover (`.cbl`) reading lists and resolving them through user-selected Mihon/Tachiyomi-compatible extensions.
 
 The matcher must automate obvious results without hiding ambiguity or taking control away from the user.
 
 ## Import flow
 
 1. The user adds extension repositories and installs compatible extensions.
-2. The user imports a local CBL file or explicitly supplies a remote CBL URL.
+2. The user imports a local CBL file through Android's system document picker.
 3. Yomori parses and validates the list while preserving the original values.
 4. The user chooses the installed extensions that this reading list may query and orders them by preference.
 5. Yomori groups entries by normalized series, volume, and year.
@@ -17,7 +17,7 @@ The matcher must automate obvious results without hiding ambiguity or taking con
 7. The matched remote series chapter list is fetched once.
 8. Individual CBL issues are matched against the retrieved chapters.
 9. Results that satisfy both the confidence threshold and ambiguity margin are accepted automatically.
-10. Uncertain entries are shown in a candidate-review dialog.
+10. Uncertain entries remain visible in the persisted manual-review screen.
 11. Confirmed mappings and rejected candidates are stored for reuse.
 12. The reading list remains editable and repairable after import.
 

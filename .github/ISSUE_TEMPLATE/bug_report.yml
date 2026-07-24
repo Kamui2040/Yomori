@@ -3,6 +3,12 @@ description: Report reproducible Yomori behavior
 title: "[Bug] "
 labels: []
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Yomori does not provide or maintain content sources or extension repositories.
+        Remove credentials, cookies, tokens, private CBL data, and copyrighted pages from attachments.
+        Security vulnerabilities must use the private reporting route in SECURITY.md.
   - type: textarea
     id: description
     attributes:
@@ -24,6 +30,14 @@ body:
     id: version
     attributes:
       label: Yomori version or commit
+      description: Include the complete version shown in About or the tested commit SHA.
+    validations:
+      required: true
+  - type: input
+    id: package
+    attributes:
+      label: Package
+      description: State whether this is io.github.kamui2040.yomori or io.github.kamui2040.yomori.debug.
     validations:
       required: true
   - type: input
@@ -43,12 +57,30 @@ body:
         - Reader
         - Extensions
         - Library
+        - Backup or restore
+        - Accessibility or localization
         - Build or installation
         - Other
     validations:
       required: true
   - type: textarea
+    id: network
+    attributes:
+      label: Network and source scope
+      description: State whether the problem is offline, source-specific, or affects only a user-installed extension. Do not include credentials.
+  - type: textarea
     id: logs
     attributes:
       label: Relevant logs or screenshots
-      description: Remove account details, source credentials, tokens, and private content before attaching anything.
+      description: Remove account details, source credentials, tokens, private content, and copyrighted pages before attaching anything.
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: Confirmation
+      options:
+        - label: I searched existing issues and this is not a duplicate.
+          required: true
+        - label: I am reporting Yomori behavior, not requesting support for a third-party source or extension.
+          required: true
+        - label: I removed private and sensitive information from all attachments.
+          required: true

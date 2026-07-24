@@ -10,16 +10,17 @@ The Android application identity is `io.github.kamui2040.yomori`, with Yomori ve
 
 Device-test artifacts use the dedicated `io.github.kamui2040.yomori.debug` package and a reproducible public development certificate. Correctly signed local PC builds can update the installed development package in place without removing its local data.
 
-The first product milestone is CBL reading-list import and deterministic, user-correctable matching. The safe parser, transactional persistence, normalization, confidence scoring, visible import interface, per-list source-selection flow, candidate-resolution storage, rejection history, entry overrides, series mappings, confirmation-protected repository operations, explicit candidate-search orchestration, and persisted manual-review interface are implemented and covered by focused tests. Cross-series reader navigation and progress are the next product stage. No public Yomori release is ready yet.
+The first product milestone is CBL reading-list import and deterministic, user-correctable matching. The safe parser, transactional persistence, normalization, confidence scoring, visible import interface, per-list source-selection flow, candidate-resolution storage, rejection history, entry overrides, series mappings, confirmation-protected repository operations, explicit candidate-search orchestration, and persisted manual-review interface are implemented and covered by focused tests. Cross-series reader navigation and list-specific progress are implemented on draft PR #15 and have passed first-entry, next/previous, resume, and ordinary-reader device checks. No public Yomori release is ready.
 
 ## Current unmerged work and approved follow-ups
 
 - Draft PR #15 contains cross-series reader navigation and list-specific progress. Its current head includes merged PR #17 with the corrected Reading Lists layout, explicit candidate-search cancellation, and defensive search teardown.
-- Representative phone QA remains incomplete for exact-entry opening, cross-series previous/next navigation, list-specific resume/restart/completion, unresolved Review/Skip/Stop behavior, unavailable-source handling, and ordinary-reader regressions.
-- The Reading Lists overview uses a two-row structure: a full-width title and status row followed by a direct action row for Read or Resume, Review, Search for matches, Edit sources, and Delete. Candidate-search progress remains visible and can be cancelled explicitly.
+- Physical-device QA passed for exact first-entry opening, cross-series next and previous navigation, persisted resume on the second entry, selected-source preservation, ordinary page navigation, and ordinary-reader isolation.
+- Remaining PR #15 device QA covers completed-list restart, final-list completion, unresolved Review/Skip/Stop behavior, unavailable-source handling, and any final narrow-screen or accessibility observations.
+- The Reading Lists overview uses a two-row structure: a full-width title and status row followed by direct Read or Resume, Review, Search for matches, Edit sources, and Delete actions. Candidate-search progress remains visible and can be cancelled explicitly.
 - The local branch `agent/reading-list-settings-matching-preserved` contains separate settings and matching follow-up work. It must remain preserved and must not be folded into PR #15.
 - The current merged matching implementation still uses the documented confidence threshold and ambiguity margin. Approved follow-up behavior is to select the strongest candidate when every safety gate passes and resolve exact score ties through effective source priority followed by stable candidate identity or rank. This follow-up must not be described as implemented until its code and tests land.
-- Planned product follow-ups include reusable reading-source settings, ordered global and category source defaults, reading-list categories, explicit optional main-library integration, and repair and rematching tools.
+- Planned product follow-ups include reusable reading-source settings, ordered global and category source defaults, reading-list categories, explicit optional main-library integration, manual search, and repair and rematching tools.
 
 ## Product goal
 
@@ -76,12 +77,34 @@ Yomori does not provide, bundle, host, operate, or recommend content sources.
 - Scores from 65% through 87.99% require review; scores below 65% remain unresolved.
 - Missing optional metadata is neutral, conflicting metadata is penalized, and supporting evidence cannot bypass title or issue safety gates.
 - Equal high-scoring candidates remain ambiguous rather than being silently selected by source order.
+- F-Droid is the primary open-source publication target.
+- Accrescent's technical requirements are the security hardening overlay even while new-app onboarding is closed.
+- Store-specific work should use one common compliant release candidate with only minimal packaging or metadata adaptations.
+- Every release-readiness requirement is classified as PASS, PARTIAL, BLOCKED, or NOT APPLICABLE in `docs/RELEASE_READINESS.md`.
+- The optional developer-support URL is `https://ko-fi.com/k2040` and must not unlock features or create entitlements.
+- The approved K2040 wolf avatar is reserved for a future About section. It remains in shared Google Drive assets and is not yet bundled because a repository redistribution licence entry is still required.
 - Standard Yomori builds do not include telemetry.
 - PC development uses local Gradle wrapper validation, public-development signing, and certificate verification while GitHub Actions remains disabled.
 - Local Gradle outputs retain Android build-tool filenames until a dedicated local packaging helper is added.
 - Development APKs use a public test certificate that is never used for production releases.
 - Null-pointer failures returned by HTTP source extensions are shown as an actionable update-or-change-source message instead of a raw exception.
 - Inherited public release automation remains disabled until Yomori production signing and release readiness are established.
+
+## Publication and store-readiness status
+
+The governing shared standard is **Android App Store Release Readiness Standard** (`1LBaEQairLGcE6NpY4wv6hoFFiFVOfJbWadUabgCseHg`).
+
+Current baseline:
+
+- F-Droid: **BLOCKED** pending a clean source-build recipe, complete dependency and asset licence audit, Fastlane metadata, anti-feature decisions, and an F-Droid-safe answer for self-update and executable extension-package behavior.
+- Accrescent overlay: **BLOCKED** by global cleartext allowance, Shizuku integration, package-installation permissions, production signing, and missing `.apks` packaging.
+- Direct forge, Obtainium, OpenAPK, and Komi: **BLOCKED** until production signing, deterministic release assets, source tags, checksums, metadata, and public release approval exist.
+- IzzyOnDroid: **BLOCKED** by the general release blockers plus the need for direct clarification of its generative-AI eligibility policy.
+- Uptodown and APKPure: **BLOCKED** until a signed release, complete listing metadata, ownership verification, and post-download artifact checks are ready.
+- Huawei AppGallery and Xiaomi GetApps: **BLOCKED** pending production readiness, identity and seller-data review, live-console verification, and representative OEM-device QA.
+- Aptoide: **NOT APPLICABLE** while the shared standard excludes it because of the current paid-submission requirement.
+
+The detailed evidence and smallest compliant changes are maintained in `docs/RELEASE_READINESS.md`.
 
 ## Matching defaults
 
@@ -144,13 +167,20 @@ Persisted states:
 
 ## Release blockers
 
-Before the first public APK release:
+Before the first public APK or store submission:
 
+- Resolve every required `BLOCKED` item in `docs/RELEASE_READINESS.md`.
+- Complete the code, dependency, prebuilt-binary, translation, font, image, sound, and other asset licence audit.
 - Finalize original Yomori visual branding beyond the temporary launcher mark.
-- Remove or replace inherited Mihon-specific update, support, and download links.
-- Establish protected Yomori production signing and document key custody.
-- Validate extension loading against representative compatible extensions.
-- Add required attribution and modified-file notices.
+- Remove or replace inherited Mihon-specific update, support, download, and website endpoints.
+- Establish a clean F-Droid-compatible source build and decide the F-Droid treatment of executable extension installation, external repositories, self-update behavior, and anti-features.
+- Remove or isolate global cleartext, Shizuku, package-installation, and other Accrescent-incompatible behavior from any Accrescent-targeted production package.
+- Establish protected Yomori production signing, certificate continuity, key custody, release versioning, checksums, and source tags.
+- Validate extension loading against representative compatible extensions without bundling or recommending any source.
+- Complete backup/restore, permission, offline, accessibility, localization, supported-version, screen-size, and representative device QA.
+- Publish stable privacy, security, support, licence, attribution, changelog, donation, and store-metadata routes.
+- Prepare Fastlane-compatible metadata, licensed icons, screenshots, feature graphics where required, descriptions, content ratings, declarations, and release notes.
+- Recheck live official store requirements before registration or submission.
 
 ## Upstream baseline
 

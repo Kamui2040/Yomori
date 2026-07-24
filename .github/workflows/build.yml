@@ -1,19 +1,15 @@
-# Authoritative CI and development APK artifact workflow for Yomori.
-name: Yomori Build & Test
+# Dormant manual phone-workflow infrastructure.
+# Repository Actions permissions remain disabled. Do not enable or dispatch this
+# workflow for PC development, release publication, or ordinary pull requests.
+name: Yomori Manual Phone Build & Test
 
 on:
-  pull_request:
-    paths:
-      - '**'
-      - '!**.md'
-      - '!i18n/src/commonMain/moko-resources/**/strings.xml'
-      - '!i18n/src/commonMain/moko-resources/**/plurals.xml'
-      - 'i18n/src/commonMain/moko-resources/base/strings.xml'
-      - 'i18n/src/commonMain/moko-resources/base/plurals.xml'
-  push:
-    branches:
-      - main
   workflow_dispatch:
+    inputs:
+      confirm_phone_workflow:
+        description: Confirm that an explicitly active phone workflow requires this run
+        required: true
+        type: boolean
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -24,7 +20,8 @@ permissions:
 
 jobs:
   build:
-    name: Build & Test Yomori
+    if: ${{ inputs.confirm_phone_workflow == true }}
+    name: Build & Test Yomori for phone workflow
     runs-on: 'ubuntu-24.04'
 
     steps:

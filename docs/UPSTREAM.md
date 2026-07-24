@@ -1,52 +1,42 @@
 # Upstream Synchronization
 
-Yomori is based on `mihonapp/mihon` and should stay close enough to upstream that security fixes, Android compatibility changes, and extension-API updates can be adopted without large rewrites.
+Yomori is based on `mihonapp/mihon` and should remain close enough to adopt security fixes, Android compatibility changes, and extension-API updates without large rewrites.
 
-## Remotes for a local checkout
+## Remotes
 
-```sh
-git remote -v
-git remote add upstream https://github.com/mihonapp/mihon.git
-git fetch --all --prune
+A normal checkout uses:
+
+```text
+origin   https://github.com/Kamui2040/Yomori.git
+upstream https://github.com/mihonapp/mihon.git
 ```
 
-Expected remotes:
+Verify live remotes rather than assuming these values.
 
-- `origin`: `https://github.com/Kamui2040/Yomori.git`
-- `upstream`: `https://github.com/mihonapp/mihon.git`
+## Synchronization process
 
-## Synchronization workflow
+1. Fetch `origin` and `upstream`.
+2. Confirm the live `main` branch, open pull requests, repository Actions setting, and working-tree state.
+3. Review upstream changes affecting source APIs, extension loading, signature trust, Android compatibility, backup, reader behavior, permissions, privacy, or release automation.
+4. Create a focused synchronization branch.
+5. Resolve conflicts deliberately; never accept either side blindly.
+6. Preserve Yomori identity, application IDs, source neutrality, extension-facing namespaces, CBL invariants, telemetry-free behavior, signing separation, and disabled inherited release automation.
+7. Run local repository-wrapper checks and relevant physical-device QA.
+8. Update `PROJECT_CONTEXT.md` and architecture documents when merged behavior or the upstream baseline changes.
+9. Merge only under the higher-level project merge controls.
 
-1. Start from a clean, current Yomori `main`.
-2. Fetch `upstream/main`.
-3. Create `agent/sync-mihon-YYYY-MM-DD`.
-4. Merge upstream into the synchronization branch without discarding Yomori changes.
-5. Resolve conflicts using `AGENTS.md` and `PROJECT_CONTEXT.md` as product constraints.
-6. Review extension loader, source API, database migrations, build tooling, updater, telemetry, branding, and reader changes explicitly.
-7. Run the full CI baseline.
-8. Open a focused pull request that lists upstream commits, conflicts, and retained Yomori divergences.
+## Protected divergences
 
-## Protected Yomori decisions
+Upstream synchronization must not restore:
 
-An upstream sync must not silently restore:
+- Mihon public branding, support, update, download, website, or release endpoints;
+- bundled or recommended sources;
+- hidden source selection or fallback;
+- telemetry in standard builds;
+- production use of the public development certificate;
+- inherited release automation;
+- incompatible renaming of `eu.kanade.tachiyomi.source` contracts.
 
-- Mihon product name or release links
-- Mihon application identity once Yomori identity work lands
-- Telemetry in standard builds
-- Automatic source installation or trust
-- Bundled or recommended content sources
-- Replacement of user-confirmed CBL matches
+## Attribution
 
-## Compatibility review
-
-For each upstream update, inspect changes involving:
-
-- `source-api`
-- Extension loading and metadata versions
-- Extension signing and trust
-- Database schema and migrations
-- Reader chapter navigation
-- Backup and restore
-- Android SDK and Gradle requirements
-
-Record material divergence or new compatibility risks in `PROJECT_CONTEXT.md`.
+Preserve Apache-2.0 licensing, upstream copyright notices, modified-file notices where required, and accurate non-affiliation wording.

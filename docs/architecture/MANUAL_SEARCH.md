@@ -1,7 +1,16 @@
 # Manual Matching Search
 
-Every unresolved or ambiguous entry supports manual search across the installed extensions permitted for its reading list.
+Status: planned; not implemented in the current merged baseline or draft PR #15.
 
-The user may edit the query, choose a remote series, inspect its chapter list, and bind a specific chapter. The resulting entry-level selection is user-confirmed and overrides broader source preferences.
+The intended flow lets the user:
 
-Manual search does not expand the allowed extension set without an explicit user choice.
+1. open one unresolved, ambiguous, unavailable, or explicitly selected entry;
+2. edit the search query;
+3. search only installed sources already permitted for that reading list;
+4. choose a remote series;
+5. inspect its issue list;
+6. bind one exact issue as a user-confirmed entry match.
+
+Manual search must not expand the allowed source set, bypass an unavailable confirmed mapping, restore a rejected candidate implicitly, clear a skip silently, or add candidates to the normal library.
+
+Implementation requires bounded requests, cancellation, persisted evidence, focused tests, and documentation updates.

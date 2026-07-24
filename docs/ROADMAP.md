@@ -1,14 +1,15 @@
 # Roadmap
 
-This roadmap separates merged foundations from approved follow-up work. `PROJECT_CONTEXT.md` remains the canonical statement of current merged and explicitly recorded branch state.
+This roadmap separates merged foundations, current branch work, and approved follow-ups. `PROJECT_CONTEXT.md` is the canonical status and decision ledger.
 
 ## Milestone 0: Repository foundation
 
-- Yomori project identity and documentation
+- Yomori product identity and documentation
 - Telemetry-free development builds
 - Independent production and development application IDs
 - Reproducible public development signing for the `.debug` package
-- Local PC validation and an explicitly authorized phone-build workflow
+- Local PC validation
+- Dormant manual phone-build workflow while repository Actions are disabled
 - Upstream synchronization process
 
 ## Milestone 1: CBL core
@@ -32,79 +33,103 @@ Merged baseline:
 - Series-first bounded selected-source search
 - Confirmation-protected automatic resolution
 
-Approved follow-up, not yet merged:
+Approved follow-up:
 
-- Select the unique strongest candidate when all safety gates pass
+- Select the unique strongest candidate when every safety gate passes
 - Never use raw extension return order as the identity decision
 - Resolve exact score ties by effective source priority, then stable candidate identity or rank
 - Retain runner-up evidence
-- Preserve issue distinctions including annual, special, FCBD, one-shot, zero, negative, decimal, fraction, suffix, and opaque identifiers
-- Add cancellable, resumable, state-aware matching execution
+- Preserve annual, special, FCBD, one-shot, zero, negative, decimal, fraction, suffix, and opaque issue distinctions
+- Add resumable matching state where it can be implemented without silent partial completion
 
 ## Milestone 3: Import and review workflow
 
 Merged baseline:
 
-- CBL import flow
-- Per-list extension selection and ranking
-- Candidate review
-- Entry overrides and confirmed series mappings
-- Explicit confirmation, rejection, restoration, and skip handling
+- local CBL document-picker import
+- per-list extension selection and ranking
+- explicit candidate search
+- visible candidate-search progress and cancellation
+- candidate review
+- entry overrides and confirmed series mappings
+- explicit confirmation, rejection, restoration, and skip handling
+- defensive search cancellation before list deletion
 
 Approved follow-up:
 
 - Settings → Reading Sources
-- Ordered global default matching sources
-- Per-list global-default or custom mode
-- Source search and language filtering
-- Remembered language filter
-- Grouped or collapsible language variants
-- Visible progress, cancellation, and state-aware retry
+- ordered global default matching sources
+- per-list global-default or custom mode
+- source search and language filtering improvements
+- grouped or collapsible language variants
+- manual ad-hoc search for unresolved entries
+- state-aware retry and repair
 
 ## Milestone 4: Reading
 
-Immediate correction:
+Implemented on draft PR #15:
 
-- Restore a two-row Reading Lists overview item
-- Give the reading-list title the full available width
-- Place Read or Resume, Review, and labelled overflow actions on a separate row
-- Preserve visible search progress and existing stored list progress
+- exact persisted CBL order
+- cross-series next and previous navigation
+- list-specific position and completion
+- resume, restart, and completion behavior
+- explicit Review, Skip, or Stop handling
+- two-row Reading Lists layout with direct actions
+- ordinary-reader isolation
 
-Cross-series reader work:
+Device QA passed:
 
-- Exact persisted CBL order
-- Cross-series next and previous navigation
-- List-specific position and completion
-- Resume, restart, and completion behavior
-- Explicit Review, Skip, or Stop handling
-- Representative phone QA and ordinary-reader regression checks
+- exact first entry
+- next and previous CBL boundaries
+- resume on the persisted second entry
+- selected-source preservation
+- ordinary page navigation
+- ordinary-reader regression isolation
 
-Next stage:
+Remaining device QA:
 
-- Repair and rematching tools
-- Operate only on broken, unresolved, or explicitly selected entries
-- Preserve confirmed decisions, rejected candidates, skips, exceptions, and original metadata
-- No silent source fallback, removal, replacement, or skipped entry
+- completed-list restart
+- final-list completion
+- unresolved Review, Skip, and Stop
+- unavailable-source handling
+- final accessibility and narrow-screen observations
 
-## Milestone 5: Organization and optional integration
+## Milestone 5: Repair, organization, and optional integration
 
-- Reading-list categories
-- Create, rename, reorder, and safely delete categories
-- Category-level ordered default sources
-- Visible source inheritance with list-specific overrides
-- Optional explicit addition of resolved results to the normal library
-- Select or create a normal-library category before confirmation
-- Edit the reading-list title before confirmation
-- Keep candidate-search results out of the normal library
+- repair and rematching only for broken, unresolved, or explicitly selected entries
+- preserve confirmed decisions, rejected candidates, skips, exceptions, and original metadata
+- reading-list categories
+- category-level ordered default sources
+- visible source inheritance with list-specific overrides
+- optional explicit addition of resolved series to the normal library
+- explicit normal-library category choice
+- editable reading-list title
+- candidate-search results remain outside the normal library
 
 Reading-list categories and normal-library categories remain separate concepts.
 
-## Milestone 6: Release readiness
+## Milestone 6: Open-source release readiness
 
-- Final Yomori visual identity
-- Remove or replace inherited Mihon update, support, and download endpoints
-- Protected production signing and documented key custody
-- Backup and restore coverage
-- Accessibility and representative physical-device testing
-- Attribution and modified-file notices
-- Public release workflow and documentation
+Governing baseline:
+
+- F-Droid-compatible source, dependency, licence, build, metadata, and anti-feature state
+- Accrescent-compatible security posture
+- universal signing, privacy, legal, quality, metadata, identity, and artifact requirements
+- minimal store-specific adaptations
+
+Required work:
+
+- complete code, dependency, prebuilt-binary, translation, and asset licence audit
+- final Yomori visual identity and licensed store artwork
+- remove or replace inherited Mihon update, support, download, and website endpoints
+- F-Droid-safe treatment of self-update and executable extension-package behavior
+- cleartext, Shizuku, package-installation, and permission hardening or variant isolation
+- protected production signing and key custody
+- reproducible or independently rebuildable release path
+- deterministic release filenames, source tags, checksums, and certificate records
+- privacy, security, support, funding, attribution, and non-affiliation routes
+- Fastlane-compatible metadata, screenshots, descriptions, changelogs, and declarations
+- backup, migration, permission, offline, accessibility, localization, screen-size, Android-version, and representative device QA
+- live policy verification for each selected store
+
+See `RELEASE_READINESS.md`.
