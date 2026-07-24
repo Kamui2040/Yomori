@@ -1,5 +1,20 @@
-# Matching UI Accessibility
+# Matching and Reading-List Accessibility
 
-Confidence and state must not be conveyed by color alone. Candidate review exposes readable percentages, source names, score components, conflict explanations, and clear action labels.
+Status: durable requirement; comprehensive release QA remains partial.
 
-Dialogs support screen readers, logical focus order, large text, and touch targets. Long series and chapter names wrap rather than being silently truncated without an accessible full value.
+Confidence and state must not be conveyed by color alone. Review exposes readable percentages, source names, score components, conflict explanations, and clear action labels.
+
+Required behavior includes:
+
+- screen-reader descriptions for icon-only actions;
+- logical focus order;
+- minimum touch targets;
+- large text and display scaling;
+- dark mode;
+- narrow-screen layouts;
+- wrapped or otherwise accessible full titles and issue names;
+- visible progress and cancellation state;
+- no inaccessible gesture-only action for Review, Skip, Stop, Delete, or source editing;
+- localization and RTL review where applicable.
+
+Device QA evidence belongs in `PROJECT_CONTEXT.md` and `RELEASE_READINESS.md`.

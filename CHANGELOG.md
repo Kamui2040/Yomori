@@ -11,6 +11,25 @@ The format is a modified version of [Keep a Changelog](https://keepachangelog.co
 - `Other` - for technical stuff.
 
 ## [Unreleased]
+
+### Yomori development
+
+#### Added
+- Cross-series reading-list navigation, list-specific progress, resume, restart, completion, and explicit blocked-entry handling on the current development branch.
+- Direct Reading Lists actions with visible candidate-search cancellation.
+- F-Droid-first release-readiness documentation with the Accrescent security overlay.
+- Public privacy, security, support, contribution, funding, asset-attribution, and About plans.
+
+#### Changed
+- GitHub Actions remain disabled; the retained build workflow is manual phone-workflow infrastructure only.
+- Removed inherited Mihon issue templates, Patreon funding, website dispatch automation, and release-readiness workflow.
+- Documented the optional K2040 Ko-fi link and future developer-avatar use without bundling the unlicensed asset.
+
+#### Fixed
+- Candidate-search cancellation and deletion teardown no longer leave stale list-scoped work.
+- Inherited documentation no longer directs Yomori users to Mihon support or release channels.
+
+### Preserved upstream changes
 ### Added
 - Support resumable image downloads if supported by source ([@xMohnad](https://github.com/xMohnad)) ([#3167](https://github.com/mihonapp/mihon/pull/3167))
   - Fix HTTP Error 416 not being handled properly ([@AntsyLich](https://github.com/AntsyLich)) ([#3563](https://github.com/mihonapp/mihon/pull/3563))

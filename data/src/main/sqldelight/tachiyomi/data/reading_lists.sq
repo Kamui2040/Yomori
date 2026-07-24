@@ -9,6 +9,7 @@ CREATE TABLE reading_lists(
     extra_elements TEXT NOT NULL,
     warnings TEXT NOT NULL,
     current_position INTEGER,
+    completed INTEGER AS Boolean NOT NULL DEFAULT 0,
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL
 );

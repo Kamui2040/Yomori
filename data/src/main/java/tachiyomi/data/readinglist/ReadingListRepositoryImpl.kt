@@ -28,6 +28,10 @@ class ReadingListRepositoryImpl(
             .getReadingList(id, ::mapReadingListRow)
             .awaitAsOneOrNull()
             ?: return null
+        val completed = database.zz_reading_list_progressQueries
+            .getReadingListCompleted(id)
+            .awaitAsOneOrNull()
+            ?: false
 
         val entries = database.reading_listsQueries
             .getReadingListEntries(id, ::mapEntryRow)
@@ -82,18 +86,19 @@ class ReadingListRepositoryImpl(
             currentPosition = readingList.currentPosition?.toInt(),
             createdAt = readingList.createdAt,
             updatedAt = readingList.updatedAt,
+            completed = completed,
         )
     }
 
     override suspend fun getAll(): List<ReadingListSummary> {
-        return database.reading_listsQueries
-            .getReadingLists(::mapSummary)
+        return database.zz_reading_list_progressQueries
+            .getReadingListsWithProgress(::mapSummary)
             .awaitAsList()
     }
 
     override fun getAllAsFlow(): Flow<List<ReadingListSummary>> {
-        return database.reading_listsQueries
-            .getReadingLists(::mapSummary)
+        return database.zz_reading_list_progressQueries
+            .getReadingListsWithProgress(::mapSummary)
             .subscribeToList()
     }
 
@@ -101,8 +106,8 @@ class ReadingListRepositoryImpl(
         readingList: CblReadingList,
         selectedSourceIds: List<Long>,
     ): Long {
-        readingList.requireValidPersistenceOrder()
-        selectedSourceIds.requireValidSourceSelection()
+        readingList.requireContiguousCblOrder()
+        selectedSourceIds.requireDistinctSourceSelection()
         val timestamp = currentTimeMillis()
 
         return database.transactionWithResult {
@@ -154,7 +159,7 @@ class ReadingListRepositoryImpl(
         id: Long,
         selectedSourceIds: List<Long>,
     ): Boolean {
-        selectedSourceIds.requireValidSourceSelection()
+        selectedSourceIds.requireDistinctSourceSelection()
 
         return database.transactionWithResult {
             if (!database.reading_listsQueries.readingListExists(id).awaitAsOne()) {
@@ -171,9 +176,16 @@ class ReadingListRepositoryImpl(
         }
     }
 
-    override suspend fun updateProgress(id: Long, currentPosition: Int?): Boolean {
+    override suspend fun updateProgress(
+        id: Long,
+        currentPosition: Int?,
+        completed: Boolean,
+    ): Boolean {
         require(currentPosition == null || currentPosition >= 0) {
             "Reading-list position cannot be negative"
+        }
+        require(!completed || currentPosition == null) {
+            "A completed reading list cannot point to a current entry"
         }
 
         return database.transactionWithResult {
@@ -187,10 +199,73 @@ class ReadingListRepositoryImpl(
                 return@transactionWithResult false
             }
 
-            database.reading_listsQueries.updateProgress(
+            database.zz_reading_list_progressQueries.updateReadingListProgress(
                 currentPosition = currentPosition?.toLong(),
+                completed = completed,
                 updatedAt = currentTimeMillis(),
                 id = id,
+            )
+            true
+        }
+    }
+
+    override suspend fun setEntrySkipped(
+        readingListId: Long,
+        entryId: Long,
+        skipped: Boolean,
+    ): Boolean {
+        return database.transactionWithResult {
+            val guard = database.reading_listsQueries.getEntryResolutionGuard(entryId).awaitAsOneOrNull()
+                ?: return@transactionWithResult false
+            if (guard.readingListId != readingListId) return@transactionWithResult false
+
+            database.zz_reading_list_progressQueries.setReadingListEntrySkipped(
+                skipped = skipped,
+                entryId = entryId,
+            )
+            database.reading_listsQueries.touchReadingList(
+                updatedAt = currentTimeMillis(),
+                id = readingListId,
+            )
+            true
+        }
+    }
+
+    override suspend fun markEntryReaderFailure(
+        entryId: Long,
+        state: ReadingListEntryResolutionState,
+    ): Boolean {
+        require(
+            state == ReadingListEntryResolutionState.SOURCE_UNAVAILABLE ||
+                state == ReadingListEntryResolutionState.CHAPTER_REMOVED ||
+                state == ReadingListEntryResolutionState.NEEDS_REMATCH,
+        ) {
+            "Reader failures may only use a repairable resolution state"
+        }
+
+        return database.transactionWithResult {
+            val guard = database.reading_listsQueries.getEntryResolutionGuard(entryId).awaitAsOneOrNull()
+                ?: return@transactionWithResult false
+            database.zz_reading_list_progressQueries.markReadingListEntryReaderFailure(
+                resolutionState = state.name,
+                entryId = entryId,
+            )
+            database.reading_listsQueries.touchReadingList(
+                updatedAt = currentTimeMillis(),
+                id = guard.readingListId,
+            )
+            true
+        }
+    }
+
+    override suspend fun clearEntryReaderFailure(entryId: Long): Boolean {
+        return database.transactionWithResult {
+            val guard = database.reading_listsQueries.getEntryResolutionGuard(entryId).awaitAsOneOrNull()
+                ?: return@transactionWithResult false
+            database.zz_reading_list_progressQueries.clearReadingListEntryReaderFailure(entryId)
+            database.reading_listsQueries.touchReadingList(
+                updatedAt = currentTimeMillis(),
+                id = guard.readingListId,
             )
             true
         }
@@ -242,6 +317,7 @@ class ReadingListRepositoryImpl(
         entryCount: Long,
         sourceCount: Long,
         currentPosition: Long?,
+        completed: Boolean,
         createdAt: Long,
         updatedAt: Long,
     ): ReadingListSummary {
@@ -253,6 +329,7 @@ class ReadingListRepositoryImpl(
             currentPosition = currentPosition?.toInt(),
             createdAt = createdAt,
             updatedAt = updatedAt,
+            completed = completed,
         )
     }
 
@@ -358,4 +435,21 @@ class ReadingListRepositoryImpl(
         val extraAttributes: String,
         val extraElements: String,
     )
+}
+
+private fun CblReadingList.requireContiguousCblOrder() {
+    books.forEachIndexed { index, book ->
+        require(book.position == index) {
+            "Reading-list entries must use contiguous CBL order"
+        }
+    }
+}
+
+private fun List<Long>.requireDistinctSourceSelection() {
+    require(isNotEmpty()) {
+        "At least one source must be selected for a reading list"
+    }
+    require(size == distinct().size) {
+        "Reading-list source selection cannot contain duplicates"
+    }
 }

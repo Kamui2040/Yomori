@@ -107,7 +107,7 @@ import uy.kohesive.injekt.api.get
 import java.io.ByteArrayOutputStream
 import kotlin.time.Duration.Companion.seconds
 
-class ReaderActivity : BaseActivity() {
+open class ReaderActivity : BaseActivity() {
 
     companion object {
         fun newIntent(context: Context, mangaId: Long?, chapterId: Long?): Intent {
@@ -139,6 +139,20 @@ class ReaderActivity : BaseActivity() {
     private val windowInsetsController by lazy { WindowInsetsControllerCompat(window, window.decorView) }
 
     private var loadingIndicator: ReaderProgressIndicator? = null
+
+    @Composable
+    protected open fun AdditionalReaderContent() = Unit
+
+    protected open fun canLoadNextChapter(): Boolean =
+        viewModel.state.value.viewerChapters?.nextChapter != null
+
+    protected open fun canLoadPreviousChapter(): Boolean =
+        viewModel.state.value.viewerChapters?.prevChapter != null
+
+    protected open fun readerMangaTitle(): String? = viewModel.state.value.manga?.title
+
+    protected open fun readerChapterTitle(): String? =
+        viewModel.state.value.currentChapter?.chapter?.name
 
     var isScrollingThroughPages = false
         private set
@@ -333,6 +347,8 @@ class ReaderActivity : BaseActivity() {
             }
             null -> {}
         }
+
+        AdditionalReaderContent()
     }
 
     /**
@@ -471,8 +487,8 @@ class ReaderActivity : BaseActivity() {
         ReaderAppBars(
             visible = state.menuVisible,
 
-            mangaTitle = state.manga?.title,
-            chapterTitle = state.currentChapter?.chapter?.name,
+            mangaTitle = readerMangaTitle(),
+            chapterTitle = readerChapterTitle(),
             navigateUp = onBackPressedDispatcher::onBackPressed,
             onClickTopAppBar = ::openMangaScreen,
             bookmarked = state.bookmarked,
@@ -496,9 +512,9 @@ class ReaderActivity : BaseActivity() {
             },
             verticalNavigatorHeight = verticalNavigatorHeight / 100f,
             onNextChapter = ::loadNextChapter,
-            enabledNext = state.viewerChapters?.nextChapter != null,
+            enabledNext = canLoadNextChapter(),
             onPreviousChapter = ::loadPreviousChapter,
-            enabledPrevious = state.viewerChapters?.prevChapter != null,
+            enabledPrevious = canLoadPreviousChapter(),
             currentPage = state.currentPage,
             totalPages = state.totalPages,
             onPageIndexChange = {
@@ -623,7 +639,7 @@ class ReaderActivity : BaseActivity() {
      * hides or disables the reader prev/next buttons if there's a prev or next chapter
      */
     @SuppressLint("RestrictedApi")
-    private fun setChapters(viewerChapters: ViewerChapters) {
+    protected open fun setChapters(viewerChapters: ViewerChapters) {
         binding.readerContainer.removeView(loadingIndicator)
         viewModel.state.value.viewer?.setChapters(viewerChapters)
 
@@ -673,7 +689,7 @@ class ReaderActivity : BaseActivity() {
      * Tells the presenter to load the next chapter and mark it as active. The progress dialog
      * should be automatically shown.
      */
-    private fun loadNextChapter() {
+    protected open fun loadNextChapter() {
         lifecycleScope.launch {
             viewModel.loadNextChapter()
             moveToPageIndex(0)
@@ -684,7 +700,7 @@ class ReaderActivity : BaseActivity() {
      * Tells the presenter to load the previous chapter and mark it as active. The progress dialog
      * should be automatically shown.
      */
-    private fun loadPreviousChapter() {
+    protected open fun loadPreviousChapter() {
         lifecycleScope.launch {
             viewModel.loadPreviousChapter()
             moveToPageIndex(0)
@@ -729,6 +745,12 @@ class ReaderActivity : BaseActivity() {
     fun showMenu() {
         if (!viewModel.state.value.menuVisible) {
             setMenuVisibility(true)
+        }
+    }
+
+    open fun onChapterBoundary(boundary: ReaderChapterBoundary) {
+        if (boundary == ReaderChapterBoundary.NEXT) {
+            showMenu()
         }
     }
 

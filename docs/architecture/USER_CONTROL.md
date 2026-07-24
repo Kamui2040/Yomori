@@ -1,14 +1,26 @@
 # User Control and Source Overrides
 
-Yomori applies source decisions in this order:
+## Current implemented hierarchy
 
 1. Entry-specific confirmed match or source override
 2. Series-specific confirmed mapping or source preference
 3. Reading-list source order
-4. Global source preference
 
 A broader rule never overwrites a narrower confirmed rule without explicit user action.
 
-Changing a series source may update unresolved and automatically matched entries after preview. Entry-level confirmed exceptions remain unchanged.
+An unavailable confirmed or overridden source is surfaced visibly and is not silently bypassed.
 
-Every entry supports manual search and direct selection from the extensions permitted for its reading list.
+## Approved future hierarchy
+
+After global and category source settings are implemented and tested:
+
+4. Explicitly assigned reading-list category defaults
+5. Global source preferences
+
+Inherited defaults must be visible and editable before save or search. They must never become hidden recommendations, installation, trust, or query scope.
+
+## Entry actions
+
+Current review supports persisted candidate confirmation, rejection/restoration, series mapping, and skip protection.
+
+Manual ad-hoc search and normal-library integration remain planned. They must stay within the reading list's explicit source set.

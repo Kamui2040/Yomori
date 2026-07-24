@@ -1,37 +1,71 @@
 # Matching Examples
 
+These examples explain decisions; exact component weights remain in `SCORING.md` and code.
+
 ## Strong and unambiguous
 
-```text
-CBL: Batman (2011) #1
-Candidate A: Batman (2011), Chapter 1 — 93%
-Candidate B: Batman: The Dark Knight, Chapter 1 — 54%
-Margin: 39
-```
+CBL:
 
-With default settings, Candidate A may be accepted automatically.
+- Series: `Watchmen`
+- Number: `1`
+- Year: `1986`
 
-## Strong but ambiguous
+Candidate:
 
-```text
-CBL: Batman (2011) #1
-Candidate A: Batman, Chapter 1 — 92%
-Candidate B: Batman (2011), Issue 1 — 88%
-Margin: 4
-```
+- title similarity above the automatic title gate;
+- equivalent issue number;
+- compatible year;
+- final confidence at least 88%;
+- lead over the runner-up at least 10 points;
+- source is selected for the reading list;
+- no conflicting confirmed mapping.
 
-The best score exceeds the automatic threshold, but the result requires review because the margin is below the default 10 points.
+Result: eligible for automatic matching.
 
-## Sole weak candidate
+## High score with issue conflict
 
-```text
-CBL: 52 (2006) #1
-Candidate A: Fifty-Two, Chapter 1 — 67%
-No second candidate
-```
+CBL issue `1` and candidate issue `2` have excellent title and year evidence.
 
-A single candidate is not automatically correct. The score remains in the review range.
+Result: not eligible for automatic matching. Unrelated evidence cannot bypass the issue-safety gate.
 
-## User-confirmed mapping
+## Missing optional year
 
-After the user confirms that `Batman`, volume `2011`, maps to a specific remote series, later imports may reuse that mapping. Automatic rescans may report that the target is unavailable, but may not silently replace it.
+Titles and issue identity match, but the source does not provide a year.
+
+Result: missing optional evidence is neutral. The candidate may still qualify if every mandatory gate and confidence rule passes.
+
+## Conflicting year
+
+The title and issue match, but the source year conflicts with a known CBL year.
+
+Result: apply the documented penalty. The conflict remains visible in persisted evidence and may require review.
+
+## Two qualifying candidates
+
+Two candidates pass every mandatory gate. One has a higher final confidence.
+
+Result: choose the stronger candidate. The mere existence of another qualifying candidate does not force review.
+
+## Exact confidence tie
+
+Two candidates pass every mandatory gate with the same confidence.
+
+Result: use effective source priority, then stable candidate identity or persisted rank. Never use raw extension return order as the primary identity rule.
+
+## Confirmed mapping unavailable
+
+A user-confirmed series mapping points to an unavailable selected source.
+
+Result: show the source as unavailable. Do not silently search or fall back to another source.
+
+## Rejected candidate returned again
+
+A later search returns a previously rejected candidate with unchanged identity.
+
+Result: retain it for review history but exclude it from automatic selection until explicitly restored or confirmed.
+
+## Skipped entry
+
+An entry is explicitly skipped.
+
+Result: automatic search and resolution do not clear the skip. Only an explicit user action may select a match and clear it.

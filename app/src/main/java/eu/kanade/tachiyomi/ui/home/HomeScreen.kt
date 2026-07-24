@@ -42,6 +42,7 @@ import eu.kanade.tachiyomi.ui.history.HistoryTab
 import eu.kanade.tachiyomi.ui.library.LibraryTab
 import eu.kanade.tachiyomi.ui.manga.MangaScreen
 import eu.kanade.tachiyomi.ui.more.MoreTab
+import eu.kanade.tachiyomi.ui.readinglist.ReadingListReviewScreen
 import eu.kanade.tachiyomi.ui.readinglist.ReadingListsTab
 import eu.kanade.tachiyomi.ui.updates.UpdatesTab
 import kotlinx.coroutines.channels.Channel
@@ -63,6 +64,7 @@ import uy.kohesive.injekt.api.get
 object HomeScreen : Screen() {
 
     private val librarySearchEvent = Channel<String>()
+    private val openReadingListReviewEvent = Channel<Long>()
     private val openTabEvent = Channel<Tab>()
     private val showBottomNavEvent = Channel<Boolean>()
 
@@ -150,6 +152,12 @@ object HomeScreen : Screen() {
                     librarySearchEvent.receiveAsFlow().collectLatest {
                         goToLibraryTab()
                         LibraryTab.search(it)
+                    }
+                }
+                launch {
+                    openReadingListReviewEvent.receiveAsFlow().collectLatest { readingListId ->
+                        tabNavigator.current = ReadingListsTab
+                        navigator.push(ReadingListReviewScreen(readingListId))
                     }
                 }
                 launch {
@@ -299,6 +307,10 @@ object HomeScreen : Screen() {
 
     suspend fun openTab(tab: Tab) {
         openTabEvent.send(tab)
+    }
+
+    suspend fun openReadingListReview(readingListId: Long) {
+        openReadingListReviewEvent.send(readingListId)
     }
 
     suspend fun showBottomNav(show: Boolean) {

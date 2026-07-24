@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.WebtoonLayoutManager
 import eu.kanade.tachiyomi.data.download.DownloadManager
 import eu.kanade.tachiyomi.ui.reader.ReaderActivity
+import eu.kanade.tachiyomi.ui.reader.ReaderChapterBoundary
 import eu.kanade.tachiyomi.ui.reader.model.ChapterTransition
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
 import eu.kanade.tachiyomi.ui.reader.model.ViewerChapters
@@ -101,12 +102,6 @@ class WebtoonViewer(val activity: ReaderActivity, val isContinuous: Boolean = tr
                         if (firstItem is ChapterTransition.Prev && firstItem.to != null) {
                             activity.requestPreloadChapter(firstItem.to)
                         }
-                    }
-
-                    val lastIndex = layoutManager.findLastEndVisibleItemPosition()
-                    val lastItem = adapter.items.getOrNull(lastIndex)
-                    if (lastItem is ChapterTransition.Next && lastItem.to == null) {
-                        activity.showMenu()
                     }
                 }
             },
@@ -233,6 +228,14 @@ class WebtoonViewer(val activity: ReaderActivity, val isContinuous: Boolean = tr
         if (toChapter != null) {
             logcat { "Request preload destination chapter because we're on the transition" }
             activity.requestPreloadChapter(toChapter)
+        } else {
+            activity.onChapterBoundary(
+                if (transition is ChapterTransition.Prev) {
+                    ReaderChapterBoundary.PREVIOUS
+                } else {
+                    ReaderChapterBoundary.NEXT
+                },
+            )
         }
     }
 

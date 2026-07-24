@@ -1,32 +1,46 @@
 # Development APKs
 
-Yomori development APKs are built by GitHub Actions and can be downloaded directly on a phone.
+Yomori development APKs use the dedicated `io.github.kamui2040.yomori.debug` package and the reproducible public development certificate.
+
+GitHub Actions is disabled. PC mode builds, validates, signs, and verifies locally. The retained workflow is dormant manual phone-workflow infrastructure only and must not be enabled for ordinary PC development or release publication.
 
 ## Package and signing
 
 - Package: `io.github.kamui2040.yomori.debug`
-- Signing: dedicated public development certificate
+- Key alias: `yomori-development`
+- Public test keystore password: `android`
+- Public test key password: `android`
+- Required certificate SHA-256: `08db929c3863a587963a3d72668622c9f464cbb3612cc2f4df29cdcb63750625`
 - Telemetry: disabled
-- Purpose: testing only
+- Purpose: development and testing only
 
-The public development certificate allows every Yomori development APK to update an earlier development APK. It is intentionally unsuitable for a production release because anyone can reproduce the public test key. A future production build will use a different package/signing plan and a protected key.
+The repository source of truth is `.github/scripts/create-public-dev-keystore.sh`. It contains an intentionally public test key that is valid only for the `.debug` application ID.
 
-## Filename format
+## Local generation
 
-```text
-Yomori-v<version>-build<workflow-run>-<short-sha>-<abi>.apk
+Use Git Bash or WSL:
+
+```sh
+.github/scripts/create-public-dev-keystore.sh "$HOME/.yomori/signing/yomori-public-development.p12"
 ```
 
-Example:
+Create an ignored `keystore.properties` that points to that file, then build with the repository wrapper.
 
-```text
-Yomori-v0.1.0-alpha01-build12-a1b2c3d-arm64-v8a.apk
+## Local validation
+
+```powershell
+.\gradlew.bat spotlessCheck
+.\gradlew.bat testDebugUnitTest
+.\gradlew.bat verifySqlDelightMigration
+.\gradlew.bat assemblePreview
+git diff --check
 ```
 
-For most current Android phones, use the `arm64-v8a` APK. The `universal` APK is larger but works across supported architectures.
+Verify every preview APK with the Android SDK `apksigner` and confirm the required SHA-256 certificate.
 
-## First installation
+## Restrictions
 
-Earlier Yomori CI artifacts used the base package `io.github.kamui2040.yomori` and a temporary GitHub-runner signature. The new development APK uses the separate `.debug` package, so it installs beside the earlier build instead of replacing it.
-
-After the first `.debug` APK is installed, later development APKs can be installed over it directly without uninstalling. Transfer any wanted data from the earlier build using backup and restore before removing that older installation.
+- Never use this certificate for `io.github.kamui2040.yomori`.
+- Never describe a preview APK as a production or store release.
+- Never upload private signing keys or replace the public-development identity with a production identity.
+- Production signing, release packaging, source tags, checksums, and store submissions require the separate release-readiness process.

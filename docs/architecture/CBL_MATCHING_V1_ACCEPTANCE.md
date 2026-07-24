@@ -1,16 +1,22 @@
 # CBL Matching V1 Acceptance Criteria
 
-The first matching milestone is complete when:
+Status: the core milestone is implemented; manual ad-hoc search and broader repair tooling remain planned.
 
-- A valid local CBL file can be parsed without changing entry order.
-- Original series, number, volume, year, and external database identifiers are retained.
-- Malformed XML fails safely with a user-readable error.
-- The user can select and rank installed compatible extensions for a reading list.
-- Series groups are searched once per source during an import session.
-- Issue candidates receive a deterministic 0–100 confidence score and visible breakdown.
-- Automatic acceptance requires both the configured score threshold and ambiguity margin.
-- Ambiguous results can be confirmed, rejected, manually searched, or left unresolved.
-- Source choices can be set for a list, a series, or an individual entry.
-- User-confirmed matches survive automatic rescans.
-- Rejected candidates are not immediately offered again without changed evidence.
-- Unit tests cover representative CBL and issue-number edge cases.
+| Criterion | Status |
+|---|---|
+| Parse a valid local CBL without changing entry order | Implemented |
+| Preserve original metadata and external identifiers | Implemented |
+| Reject unsafe or malformed XML with typed failures | Implemented |
+| Select and rank installed compatible sources per list | Implemented |
+| Group equivalent series work and avoid duplicate fetches | Implemented |
+| Deterministic 0–100 evidence and persisted breakdown | Implemented |
+| Automatic acceptance with mandatory safety gates | Implemented |
+| Persist ambiguous, unresolved, confirmed, and rejected state | Implemented |
+| List, series, and entry-level source decisions | Partly implemented; global/category defaults are planned |
+| Protect confirmed mappings during later searches | Implemented |
+| Keep rejected candidates excluded until explicit action | Implemented |
+| Focused unit and migration tests | Implemented |
+| Manual ad-hoc query editing and remote-series browsing | Planned |
+| Representative real-list release QA | Partial; current branch device checks are documented in `PROJECT_CONTEXT.md` |
+
+The milestone is not a release-readiness claim. F-Droid, security, signing, metadata, and full device requirements remain in `../RELEASE_READINESS.md`.

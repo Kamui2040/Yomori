@@ -13,6 +13,7 @@ import androidx.viewpager.widget.ViewPager
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.download.DownloadManager
 import eu.kanade.tachiyomi.ui.reader.ReaderActivity
+import eu.kanade.tachiyomi.ui.reader.ReaderChapterBoundary
 import eu.kanade.tachiyomi.ui.reader.model.ChapterTransition
 import eu.kanade.tachiyomi.ui.reader.model.InsertPage
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
@@ -253,9 +254,14 @@ abstract class PagerViewer(val activity: ReaderActivity) : Viewer {
         if (toChapter != null) {
             logcat { "Request preload destination chapter because we're on the transition" }
             activity.requestPreloadChapter(toChapter)
-        } else if (transition is ChapterTransition.Next) {
-            // No more chapters, show menu because the user is probably going to close the reader
-            activity.showMenu()
+        } else {
+            activity.onChapterBoundary(
+                if (transition is ChapterTransition.Prev) {
+                    ReaderChapterBoundary.PREVIOUS
+                } else {
+                    ReaderChapterBoundary.NEXT
+                },
+            )
         }
     }
 
