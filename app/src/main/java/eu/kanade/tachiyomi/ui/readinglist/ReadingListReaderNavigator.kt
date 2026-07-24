@@ -56,7 +56,11 @@ class ReadingListReaderNavigator(
         } else {
             readingList.currentPosition ?: 0
         }
-        return openPosition(readingList, position)
+        return openPosition(
+            readingList = readingList,
+            index = position,
+            persistBlockedPosition = restartCompleted || readingList.currentPosition == null,
+        )
     }
 
     suspend fun move(
@@ -94,7 +98,11 @@ class ReadingListReaderNavigator(
                 ReadingListReaderResult.MissingReadingList(readingList.id)
             }
         }
-        return openPosition(readingList, targetIndex)
+        return openPosition(
+            readingList = readingList,
+            index = targetIndex,
+            persistBlockedPosition = false,
+        )
     }
 
     suspend fun skip(
@@ -127,12 +135,17 @@ class ReadingListReaderNavigator(
         }
         val refreshed = readingListRepository.get(readingList.id)
             ?: return ReadingListReaderResult.MissingReadingList(readingList.id)
-        return openPosition(refreshed, targetIndex)
+        return openPosition(
+            readingList = refreshed,
+            index = targetIndex,
+            persistBlockedPosition = true,
+        )
     }
 
     private suspend fun openPosition(
         readingList: ReadingList,
         index: Int,
+        persistBlockedPosition: Boolean,
     ): ReadingListReaderResult {
         val orderedEntries = readingList.entries.sortedBy(ReadingListEntry::position)
         val entry = orderedEntries.getOrNull(index)
@@ -140,39 +153,42 @@ class ReadingListReaderNavigator(
         if (entry.position != index) {
             return ReadingListReaderResult.MissingEntryAtPosition(readingList.id, index)
         }
-        if (
-            !readingListRepository.updateProgress(
-                id = readingList.id,
-                currentPosition = entry.position,
-                completed = false,
-            )
-        ) {
-            return ReadingListReaderResult.MissingReadingList(readingList.id)
-        }
 
         entry.blockingReason()?.let { reason ->
-            return ReadingListReaderResult.Blocked(entry.toBlocked(readingList, reason))
+            return blockedResult(readingList, entry, reason, persistBlockedPosition)
         }
 
         val sourceId = entry.matchedSourceId
-            ?: return ReadingListReaderResult.Blocked(
-                entry.toBlocked(readingList, ReadingListReaderBlockReason.MISSING_MATCH_IDENTITY),
+            ?: return blockedResult(
+                readingList,
+                entry,
+                ReadingListReaderBlockReason.MISSING_MATCH_IDENTITY,
+                persistBlockedPosition,
             )
         val mangaUrl = entry.matchedMangaUrl
-            ?: return ReadingListReaderResult.Blocked(
-                entry.toBlocked(readingList, ReadingListReaderBlockReason.MISSING_MATCH_IDENTITY),
+            ?: return blockedResult(
+                readingList,
+                entry,
+                ReadingListReaderBlockReason.MISSING_MATCH_IDENTITY,
+                persistBlockedPosition,
             )
         val chapterUrl = entry.matchedChapterUrl
-            ?: return ReadingListReaderResult.Blocked(
-                entry.toBlocked(readingList, ReadingListReaderBlockReason.MISSING_MATCH_IDENTITY),
+            ?: return blockedResult(
+                readingList,
+                entry,
+                ReadingListReaderBlockReason.MISSING_MATCH_IDENTITY,
+                persistBlockedPosition,
             )
         if (sourceId !in readingList.selectedSourceIds) {
             readingListRepository.markEntryReaderFailure(
                 entry.id,
                 ReadingListEntryResolutionState.NEEDS_REMATCH,
             )
-            return ReadingListReaderResult.Blocked(
-                entry.toBlocked(readingList, ReadingListReaderBlockReason.SOURCE_NOT_SELECTED),
+            return blockedResult(
+                readingList,
+                entry,
+                ReadingListReaderBlockReason.SOURCE_NOT_SELECTED,
+                persistBlockedPosition,
             )
         }
 
@@ -183,8 +199,11 @@ class ReadingListReaderNavigator(
                 entry.id,
                 ReadingListEntryResolutionState.SOURCE_UNAVAILABLE,
             )
-            return ReadingListReaderResult.Blocked(
-                entry.toBlocked(readingList, ReadingListReaderBlockReason.SOURCE_UNAVAILABLE),
+            return blockedResult(
+                readingList,
+                entry,
+                ReadingListReaderBlockReason.SOURCE_UNAVAILABLE,
+                persistBlockedPosition,
             )
         }
 
@@ -197,6 +216,15 @@ class ReadingListReaderNavigator(
             )
         ) {
             is MaterializationResult.Ready -> {
+                if (
+                    !readingListRepository.updateProgress(
+                        id = readingList.id,
+                        currentPosition = entry.position,
+                        completed = false,
+                    )
+                ) {
+                    return ReadingListReaderResult.MissingReadingList(readingList.id)
+                }
                 ReadingListReaderResult.Ready(
                     ReadingListReaderDestination(
                         readingListId = readingList.id,
@@ -216,8 +244,11 @@ class ReadingListReaderNavigator(
                     entry.id,
                     ReadingListEntryResolutionState.CHAPTER_REMOVED,
                 )
-                ReadingListReaderResult.Blocked(
-                    entry.toBlocked(readingList, ReadingListReaderBlockReason.CHAPTER_REMOVED),
+                blockedResult(
+                    readingList,
+                    entry,
+                    ReadingListReaderBlockReason.CHAPTER_REMOVED,
+                    persistBlockedPosition,
                 )
             }
             MaterializationResult.SourceFailure -> {
@@ -225,8 +256,11 @@ class ReadingListReaderNavigator(
                     entry.id,
                     ReadingListEntryResolutionState.SOURCE_UNAVAILABLE,
                 )
-                ReadingListReaderResult.Blocked(
-                    entry.toBlocked(readingList, ReadingListReaderBlockReason.SOURCE_REQUEST_FAILED),
+                blockedResult(
+                    readingList,
+                    entry,
+                    ReadingListReaderBlockReason.SOURCE_REQUEST_FAILED,
+                    persistBlockedPosition,
                 )
             }
             MaterializationResult.PersistenceFailure -> {
@@ -234,11 +268,33 @@ class ReadingListReaderNavigator(
                     entry.id,
                     ReadingListEntryResolutionState.NEEDS_REMATCH,
                 )
-                ReadingListReaderResult.Blocked(
-                    entry.toBlocked(readingList, ReadingListReaderBlockReason.MATERIALIZATION_FAILED),
+                blockedResult(
+                    readingList,
+                    entry,
+                    ReadingListReaderBlockReason.MATERIALIZATION_FAILED,
+                    persistBlockedPosition,
                 )
             }
         }
+    }
+
+    private suspend fun blockedResult(
+        readingList: ReadingList,
+        entry: ReadingListEntry,
+        reason: ReadingListReaderBlockReason,
+        persistPosition: Boolean,
+    ): ReadingListReaderResult {
+        if (
+            persistPosition &&
+            !readingListRepository.updateProgress(
+                id = readingList.id,
+                currentPosition = entry.position,
+                completed = false,
+            )
+        ) {
+            return ReadingListReaderResult.MissingReadingList(readingList.id)
+        }
+        return ReadingListReaderResult.Blocked(entry.toBlocked(readingList, reason))
     }
 
     private suspend fun materialize(

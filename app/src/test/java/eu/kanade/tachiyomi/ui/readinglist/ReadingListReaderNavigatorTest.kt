@@ -401,6 +401,44 @@ class ReadingListReaderNavigatorTest {
     }
 
     @Test
+    fun `rejected next candidate blocks without advancing and resume reopens last readable entry`() = runTest {
+        val source = FakeHttpSource()
+        val first = readableEntry(10, 0, source.id, "/series/first", "/chapter/first")
+        val rejected = entry(11, 1, ReadingListEntryResolutionState.UNRESOLVED)
+        val list = readingList(
+            entries = listOf(first, rejected),
+            sourceIds = listOf(source.id),
+            currentPosition = 0,
+        )
+        val fixture = fixture(
+            readingList = list,
+            sources = listOf(source),
+            localRows = mapOf(first to localRows(first, mangaId = 100, chapterId = 200)),
+        )
+
+        val blocked = fixture.navigator.move(
+            readingListId = READING_LIST_ID,
+            currentEntryId = first.id,
+            direction = ReadingListReaderDirection.NEXT,
+        ).shouldBeInstanceOf<ReadingListReaderResult.Blocked>()
+
+        blocked.entry.entryId shouldBe rejected.id
+        blocked.entry.position shouldBe 1
+        blocked.entry.reason shouldBe ReadingListReaderBlockReason.UNRESOLVED
+        coVerify(exactly = 0) {
+            fixture.readingListRepository.updateProgress(READING_LIST_ID, 1, false)
+        }
+
+        val resumed = fixture.navigator.start(READING_LIST_ID)
+            .shouldBeInstanceOf<ReadingListReaderResult.Ready>()
+
+        resumed.destination.entryId shouldBe first.id
+        resumed.destination.position shouldBe 0
+        coVerify { fixture.readingListRepository.updateProgress(READING_LIST_ID, 0, false) }
+        source.updateCalls shouldBe 0
+    }
+
+    @Test
     fun `explicit skip advances exactly one position and stops again when the following entry is blocked`() = runTest {
         val first = entry(10, 0, ReadingListEntryResolutionState.UNRESOLVED)
         val second = entry(11, 1, ReadingListEntryResolutionState.AMBIGUOUS)

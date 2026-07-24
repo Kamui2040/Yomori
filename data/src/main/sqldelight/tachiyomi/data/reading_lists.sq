@@ -479,6 +479,20 @@ VALUES (
     :rejectedAt
 );
 
+invalidateRejectedCurrentResolution:
+UPDATE reading_list_entries
+SET resolution_state = 'UNRESOLVED',
+    matched_source_id = NULL,
+    matched_manga_url = NULL,
+    matched_chapter_url = NULL,
+    confidence = NULL,
+    matcher_version = NULL,
+    user_confirmed = 0
+WHERE _id = :entryId
+  AND matched_source_id = :sourceId
+  AND matched_manga_url = :mangaUrl
+  AND matched_chapter_url = :chapterUrl;
+
 deleteCandidateRejection:
 DELETE FROM reading_list_candidate_rejections
 WHERE entry_id = :entryId

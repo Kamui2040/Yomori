@@ -65,7 +65,10 @@ Rejection:
 - calls `rejectCandidate` with the exact persisted snapshot;
 - remains stored independently from candidate refreshes;
 - keeps the candidate visible for review;
-- excludes the candidate from later automatic decisions.
+- excludes the candidate from later automatic decisions;
+- atomically invalidates the entry's active resolution only when the rejected source, manga URL, and chapter URL exactly match the currently active identity;
+- clears that exact active match's saved identity, confidence, matcher version, and user-confirmed flag while preserving original CBL metadata, skip state, other candidates, overrides, series mappings, and rejection history;
+- leaves an unrelated current match unchanged when a different candidate is rejected.
 
 ### Restore rejected candidate
 
@@ -165,6 +168,6 @@ Repository and scorer tests continue to cover protected confirmed/skipped writes
 
 ## Validation and QA
 
-Before merge, run focused tests plus `spotlessCheck`, `testDebugUnitTest`, `verifySqlDelightMigration`, development assembly, and `git diff --check`. Inspect the complete diff and changed-file scope, then require authoritative GitHub Actions success.
+Before merge, run focused tests plus `spotlessCheck`, `testDebugUnitTest`, `verifySqlDelightMigration`, development assembly, certificate verification, and `git diff --check`. Inspect the complete diff and changed-file scope. GitHub Actions remains disabled; current PC validation is local and must be followed by representative physical-device QA.
 
 Device QA should use a development APK and representative imported lists covering ambiguous candidates, low confidence, no candidates, missing extensions, rejected-candidate restoration, entry confirmation, explicit series confirmation, app restart, later candidate refresh, and the supported issue-number distinctions.

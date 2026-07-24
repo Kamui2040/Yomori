@@ -61,13 +61,17 @@ An entry is not silently bypassed when it is:
 - missing a persisted source, manga URL, or chapter URL;
 - no longer materializable from the selected installed source.
 
-At a blocking entry, the user must explicitly choose one of:
+At an automatic reader boundary, Yomori evaluates the target before changing list progress. A blocked target does not replace the last successfully opened Resume position.
 
-- **Review** — leave the reader and open that list's review screen;
+The user must explicitly choose one of:
+
+- **Review** — leave the reader and open that list's review screen without silently changing the active match;
 - **Skip** — persist the skip for that entry and continue to the immediately following position;
-- **Stop** — leave progress on the blocking position and close the session.
+- **Stop** — close the session without advancing automatic boundary progress.
 
-A skip is list-specific and does not alter global chapter state. Confirming an exact candidate later clears that entry's skip through the existing confirmation path.
+An explicit initial start, completed-list restart, or Skip may persist the position it deliberately selected even when that position is blocked. A skip is list-specific and does not alter global chapter state. Confirming an exact candidate later clears that entry's skip through the existing confirmation path.
+
+Rejecting the exact candidate that currently supplies an entry's active match records the rejection and invalidates only that entry resolution. It clears the saved remote match identity and confidence so the rejected candidate cannot remain readable or resumable. Original CBL metadata, other candidates, other entries, overrides, series mappings, and rejection history remain intact.
 
 ## Failure isolation
 
@@ -92,6 +96,9 @@ SQLDelight stores list-specific completion separately from `current_position`. R
 - existing local row reuse and exact non-favorite materialization;
 - source-selection and installed-source enforcement;
 - unresolved, ambiguous, unavailable, removed, rematch, and skipped gates;
+- reject → boundary → Review, Skip, and Stop behavior;
+- rejected-target Back/Resume retaining the last successfully opened entry;
+- repeated forward input while a blocked decision is visible;
 - explicit skip advances by exactly one position and never silently skips additional entries;
 - previous navigation and completion reset;
 - shared chapter read state with independent list position/completion;

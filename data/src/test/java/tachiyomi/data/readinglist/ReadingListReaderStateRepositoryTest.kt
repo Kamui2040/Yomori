@@ -145,6 +145,93 @@ class ReadingListReaderStateRepositoryTest {
         }
     }
 
+    @Test
+    fun `rejecting the exact current candidate invalidates only its active resolution`() = runTest {
+        withRepository { _, queries, fixture ->
+            queries.confirmResolution(
+                matchedSourceId = 9,
+                matchedMangaUrl = "/series/current",
+                matchedChapterUrl = "/chapter/current",
+                confidence = 100.0,
+                matcherVersion = 2,
+                entryId = fixture.firstEntryId,
+            )
+            queries.insertCandidateRejection(
+                entryId = fixture.firstEntryId,
+                sourceId = 9,
+                candidateId = "current",
+                mangaUrl = "/series/current",
+                chapterUrl = "/chapter/current",
+                rejectedAt = 3,
+            )
+            queries.invalidateRejectedCurrentResolution(
+                entryId = fixture.firstEntryId,
+                sourceId = 9,
+                mangaUrl = "/series/current",
+                chapterUrl = "/chapter/current",
+            )
+
+            val entries = queries.getReadingListEntries(fixture.readingListId).awaitAsList()
+            entries.first().let { entry ->
+                entry.resolutionState shouldBe ReadingListEntryResolutionState.UNRESOLVED.name
+                entry.matchedSourceId shouldBe null
+                entry.matchedMangaUrl shouldBe null
+                entry.matchedChapterUrl shouldBe null
+                entry.confidence shouldBe null
+                entry.matcherVersion shouldBe null
+                entry.userConfirmed shouldBe false
+                entry.skipped shouldBe false
+            }
+            entries.last().resolutionState shouldBe ReadingListEntryResolutionState.UNSEARCHED.name
+            queries.getCandidateRejectionsByReadingListId(fixture.readingListId)
+                .awaitAsList()
+                .single()
+                .candidateId shouldBe "current"
+        }
+    }
+
+    @Test
+    fun `rejecting a different candidate preserves the current confirmed resolution`() = runTest {
+        withRepository { _, queries, fixture ->
+            queries.confirmResolution(
+                matchedSourceId = 9,
+                matchedMangaUrl = "/series/current",
+                matchedChapterUrl = "/chapter/current",
+                confidence = 100.0,
+                matcherVersion = 2,
+                entryId = fixture.firstEntryId,
+            )
+            queries.insertCandidateRejection(
+                entryId = fixture.firstEntryId,
+                sourceId = 10,
+                candidateId = "different",
+                mangaUrl = "/series/different",
+                chapterUrl = "/chapter/different",
+                rejectedAt = 3,
+            )
+            queries.invalidateRejectedCurrentResolution(
+                entryId = fixture.firstEntryId,
+                sourceId = 10,
+                mangaUrl = "/series/different",
+                chapterUrl = "/chapter/different",
+            )
+
+            queries.getReadingListEntries(fixture.readingListId).awaitAsList().first().let { entry ->
+                entry.resolutionState shouldBe ReadingListEntryResolutionState.USER_CONFIRMED.name
+                entry.matchedSourceId shouldBe 9
+                entry.matchedMangaUrl shouldBe "/series/current"
+                entry.matchedChapterUrl shouldBe "/chapter/current"
+                entry.confidence shouldBe 100.0
+                entry.matcherVersion shouldBe 2
+                entry.userConfirmed shouldBe true
+            }
+            queries.getCandidateRejectionsByReadingListId(fixture.readingListId)
+                .awaitAsList()
+                .single()
+                .candidateId shouldBe "different"
+        }
+    }
+
     private suspend fun withRepository(
         block: suspend (
             ReadingListRepositoryImpl,

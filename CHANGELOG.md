@@ -26,6 +26,8 @@ The format is a modified version of [Keep a Changelog](https://keepachangelog.co
 - Documented the optional K2040 Ko-fi link and future developer-avatar use without bundling the unlicensed asset.
 
 #### Fixed
+- Rejecting the active candidate invalidates only that exact entry resolution while preserving rejection history and original CBL metadata.
+- Automatic reader boundaries no longer overwrite Resume progress before a target entry passes blocked-state, source, identity, and materialization gates.
 - Candidate-search cancellation and deletion teardown no longer leave stale list-scoped work.
 - Inherited documentation no longer directs Yomori users to Mihon support or release channels.
 

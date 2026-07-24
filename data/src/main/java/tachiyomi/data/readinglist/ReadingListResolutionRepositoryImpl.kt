@@ -309,6 +309,12 @@ class ReadingListResolutionRepositoryImpl(
                 chapterUrl = candidate.chapterUrl,
                 rejectedAt = timestamp,
             )
+            queries.invalidateRejectedCurrentResolution(
+                entryId = entryId,
+                sourceId = candidate.identity.sourceId,
+                mangaUrl = candidate.mangaUrl,
+                chapterUrl = candidate.chapterUrl,
+            )
             queries.touchReadingList(
                 updatedAt = timestamp,
                 id = guard.readingListId,
