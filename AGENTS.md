@@ -36,7 +36,7 @@ Before changing the repository, read:
 - Use focused branches named `agent/<description>`.
 - Open a pull request for implementation work; do not commit feature work directly to `main`.
 - Keep pull requests narrow enough to review and revert independently.
-- Run the relevant Gradle checks before merging. GitHub Actions is the authoritative build environment.
+- Run the relevant Gradle wrapper checks locally before merging. In PC mode, local validation is authoritative and GitHub Actions must not be triggered, monitored, or relied on. GitHub Actions are reserved for an explicitly authorized phone workflow where local execution is unavailable.
 - Do not merge when required checks are failing.
 - Prefer deterministic scripts and tests over manual instructions.
 
@@ -50,6 +50,8 @@ For Android or shared-code changes, run the relevant subset of:
 ./gradlew verifySqlDelightMigration
 ./gradlew assembleRelease
 ```
+
+On Windows, use `.\gradlew.bat` with the same task names.
 
 Add focused unit tests for parsers, normalization, confidence scoring, matching thresholds, persistence rules, and migration behavior.
 
@@ -71,6 +73,6 @@ Add focused unit tests for parsers, normalization, confidence scoring, matching 
 
 ## Release policy
 
-- Pull requests and development branches produce unsigned/development artifacts through GitHub Actions.
+- Development APKs use the `.debug` identity and reproducible public development certificate. Build and validate locally in PC mode; GitHub Actions artifacts are limited to an explicitly authorized phone workflow.
 - Public releases require a Yomori application ID, Yomori branding, release signing configuration, and release notes.
 - Do not publish a release using Mihon branding, Mihon signing identity, or Mihon update endpoints.

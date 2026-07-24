@@ -41,7 +41,6 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -129,6 +128,7 @@ data object ReadingListsTab : Tab {
             onRead = readerLaunchScreenModel::start,
             onReview = { readingListId -> navigator.push(ReadingListReviewScreen(readingListId)) },
             onSearch = screenModel::searchCandidates,
+            onCancelSearch = screenModel::cancelCandidateSearch,
             onEditSources = screenModel::editSources,
             onDelete = screenModel::requestDelete,
         )
@@ -266,6 +266,7 @@ private fun ReadingListsScreen(
     onRead: (ReadingListSummary) -> Unit,
     onReview: (Long) -> Unit,
     onSearch: (Long) -> Unit,
+    onCancelSearch: (Long) -> Unit,
     onEditSources: (Long) -> Unit,
     onDelete: (ReadingListSummary) -> Unit,
 ) {
@@ -324,6 +325,7 @@ private fun ReadingListsScreen(
                 onRead = onRead,
                 onReview = onReview,
                 onSearch = onSearch,
+                onCancelSearch = onCancelSearch,
                 onEditSources = onEditSources,
                 onDelete = onDelete,
             )
@@ -374,6 +376,7 @@ private fun ReadingListsContent(
     onRead: (ReadingListSummary) -> Unit,
     onReview: (Long) -> Unit,
     onSearch: (Long) -> Unit,
+    onCancelSearch: (Long) -> Unit,
     onEditSources: (Long) -> Unit,
     onDelete: (ReadingListSummary) -> Unit,
 ) {
@@ -392,6 +395,7 @@ private fun ReadingListsContent(
                 onRead = { onRead(readingList) },
                 onReview = { onReview(readingList.id) },
                 onSearch = { onSearch(readingList.id) },
+                onCancelSearch = { onCancelSearch(readingList.id) },
                 onEditSources = { onEditSources(readingList.id) },
                 onDelete = { onDelete(readingList) },
             )
@@ -408,135 +412,133 @@ private fun ReadingListItem(
     onRead: () -> Unit,
     onReview: () -> Unit,
     onSearch: () -> Unit,
+    onCancelSearch: () -> Unit,
     onEditSources: () -> Unit,
     onDelete: () -> Unit,
 ) {
-    var actionsExpanded by remember(readingList.id) { mutableStateOf(false) }
+    val readLabel = stringResource(
+        when {
+            readingList.completed -> R.string.reading_list_read_again
+            readingList.currentPosition != null -> R.string.reading_list_resume
+            else -> R.string.reading_list_read
+        },
+    )
 
-    ListItem(
-        modifier = Modifier.clickable(enabled = !isSearching, onClick = onReview),
-        headlineContent = {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(enabled = !isSearching, onClick = onReview)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
             Text(
                 text = readingList.name ?: stringResource(R.string.reading_list_untitled),
+                style = MaterialTheme.typography.titleMedium,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
-        },
-        supportingContent = {
-            Column {
+            Text(
+                text = stringResource(
+                    R.string.reading_list_entries_and_sources,
+                    readingList.entryCount,
+                    readingList.sourceCount,
+                ),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            if (readingList.completed) {
                 Text(
-                    text = stringResource(
-                        R.string.reading_list_entries_and_sources,
-                        readingList.entryCount,
-                        readingList.sourceCount,
-                    ),
+                    text = stringResource(R.string.reading_list_completed),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-                if (readingList.completed) {
-                    Text(stringResource(R.string.reading_list_completed))
-                } else {
-                    readingList.currentPosition?.let { position ->
-                        Text(
-                            text = stringResource(
-                                R.string.reading_list_progress,
-                                (position + 1).coerceAtMost(readingList.entryCount),
-                                readingList.entryCount,
-                            ),
+            } else {
+                readingList.currentPosition?.let { position ->
+                    Text(
+                        text = stringResource(
+                            R.string.reading_list_progress,
+                            (position + 1).coerceAtMost(readingList.entryCount),
+                            readingList.entryCount,
+                        ),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            IconButton(
+                onClick = onRead,
+                enabled = !isSearching && !isPreparingReader,
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.PlayArrow,
+                    contentDescription = readLabel,
+                )
+            }
+            IconButton(
+                onClick = onReview,
+                enabled = !isSearching,
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.List,
+                    contentDescription = stringResource(R.string.reading_list_review),
+                )
+            }
+            if (isSearching) {
+                IconButton(onClick = onCancelSearch) {
+                    Box(contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(32.dp),
+                            strokeWidth = 2.dp,
+                        )
+                        Icon(
+                            imageVector = Icons.Outlined.Close,
+                            contentDescription = stringResource(R.string.reading_list_cancel_action),
+                            modifier = Modifier.size(18.dp),
                         )
                     }
                 }
-            }
-        },
-        trailingContent = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            } else {
                 IconButton(
-                    onClick = onRead,
-                    enabled = !isSearching && !isPreparingReader,
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.PlayArrow,
-                        contentDescription = stringResource(
-                            when {
-                                readingList.completed -> R.string.reading_list_read_again
-                                readingList.currentPosition != null -> R.string.reading_list_resume
-                                else -> R.string.reading_list_read
-                            },
-                        ),
-                    )
-                }
-                IconButton(
-                    onClick = onReview,
+                    onClick = onSearch,
                     enabled = !isSearching,
                 ) {
                     Icon(
-                        imageVector = Icons.Outlined.List,
-                        contentDescription = stringResource(R.string.reading_list_review),
+                        imageVector = Icons.Outlined.Search,
+                        contentDescription = stringResource(R.string.reading_list_search_candidates),
                     )
                 }
-                Box {
-                    IconButton(
-                        onClick = { actionsExpanded = true },
-                        enabled = !isSearching,
-                    ) {
-                        if (isSearching) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(20.dp),
-                                strokeWidth = 2.dp,
-                            )
-                        } else {
-                            Icon(
-                                imageVector = Icons.Outlined.MoreVert,
-                                contentDescription = stringResource(R.string.reading_list_more_actions),
-                            )
-                        }
-                    }
-                    DropdownMenu(
-                        expanded = actionsExpanded,
-                        onDismissRequest = { actionsExpanded = false },
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.reading_list_search_candidates)) },
-                            onClick = {
-                                actionsExpanded = false
-                                onSearch()
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Outlined.Search,
-                                    contentDescription = null,
-                                )
-                            },
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.reading_list_edit_sources)) },
-                            onClick = {
-                                actionsExpanded = false
-                                onEditSources()
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Outlined.Edit,
-                                    contentDescription = null,
-                                )
-                            },
-                        )
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.reading_list_delete)) },
-                            onClick = {
-                                actionsExpanded = false
-                                onDelete()
-                            },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Outlined.Delete,
-                                    contentDescription = null,
-                                )
-                            },
-                        )
-                    }
-                }
             }
-        },
-    )
+            IconButton(
+                onClick = onEditSources,
+                enabled = !isSearching,
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Edit,
+                    contentDescription = stringResource(R.string.reading_list_edit_sources),
+                )
+            }
+            IconButton(
+                onClick = onDelete,
+                enabled = !isSearching,
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Delete,
+                    contentDescription = stringResource(R.string.reading_list_delete),
+                )
+            }
+        }
+    }
 }
 
 @Composable
