@@ -61,6 +61,7 @@ class ReadingListReaderNavigator(
             index = position,
             persistBlockedPosition = restartCompleted || readingList.currentPosition == null,
             openAtEnd = false,
+            resumeFromSharedPage = !restartCompleted && readingList.currentPosition != null,
         )
     }
 
@@ -104,6 +105,7 @@ class ReadingListReaderNavigator(
             index = targetIndex,
             persistBlockedPosition = false,
             openAtEnd = direction == ReadingListReaderDirection.PREVIOUS,
+            resumeFromSharedPage = false,
         )
     }
 
@@ -142,6 +144,7 @@ class ReadingListReaderNavigator(
             index = targetIndex,
             persistBlockedPosition = true,
             openAtEnd = false,
+            resumeFromSharedPage = false,
         )
     }
 
@@ -150,6 +153,7 @@ class ReadingListReaderNavigator(
         index: Int,
         persistBlockedPosition: Boolean,
         openAtEnd: Boolean,
+        resumeFromSharedPage: Boolean,
     ): ReadingListReaderResult {
         val orderedEntries = readingList.entries.sortedBy(ReadingListEntry::position)
         val entry = orderedEntries.getOrNull(index)
@@ -241,6 +245,10 @@ class ReadingListReaderNavigator(
                         hasPrevious = entry.position > 0,
                         hasNext = entry.position < orderedEntries.lastIndex,
                         openAtEnd = openAtEnd,
+                        resumePage = readingListResumePage(
+                            enabled = resumeFromSharedPage,
+                            lastPageRead = materialized.chapter.lastPageRead,
+                        ),
                     ),
                 )
             }
@@ -445,6 +453,27 @@ class ReadingListReaderNavigator(
     }
 }
 
+internal fun readingListResumePage(
+    enabled: Boolean,
+    lastPageRead: Long,
+): Int? {
+    if (!enabled) return null
+    return lastPageRead.coerceIn(0L, Int.MAX_VALUE.toLong()).toInt()
+}
+
+internal fun resolveReadingListInitialPage(
+    openAtEnd: Boolean,
+    resumePage: Int?,
+    lastPageIndex: Int,
+): Int? {
+    if (lastPageIndex < 0) return null
+    return when {
+        openAtEnd -> lastPageIndex
+        resumePage != null -> resumePage.coerceIn(0, lastPageIndex)
+        else -> null
+    }
+}
+
 enum class ReadingListReaderDirection {
     PREVIOUS,
     NEXT,
@@ -476,6 +505,7 @@ data class ReadingListReaderDestination(
     val hasPrevious: Boolean,
     val hasNext: Boolean,
     val openAtEnd: Boolean,
+    val resumePage: Int?,
 )
 
 data class ReadingListReaderBlockedEntry(
