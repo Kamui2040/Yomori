@@ -64,6 +64,7 @@ class ReadingListReaderNavigatorTest {
         ready.destination.chapterId shouldBe 200
         ready.destination.hasPrevious shouldBe false
         ready.destination.hasNext shouldBe true
+        ready.destination.openAtEnd shouldBe false
         coVerify { fixture.readingListRepository.updateProgress(READING_LIST_ID, 0, false) }
         source.updateCalls shouldBe 0
     }
@@ -157,6 +158,7 @@ class ReadingListReaderNavigatorTest {
         ).shouldBeInstanceOf<ReadingListReaderResult.Ready>()
         next.destination.entryId shouldBe second.id
         next.destination.mangaId shouldBe 101
+        next.destination.openAtEnd shouldBe false
 
         val previous = fixture.navigator.move(
             readingListId = READING_LIST_ID,
@@ -164,6 +166,7 @@ class ReadingListReaderNavigatorTest {
             direction = ReadingListReaderDirection.PREVIOUS,
         ).shouldBeInstanceOf<ReadingListReaderResult.Ready>()
         previous.destination.entryId shouldBe second.id
+        previous.destination.openAtEnd shouldBe true
     }
 
     @Test

@@ -31,11 +31,13 @@ class ReadingListReaderActivity : ReaderActivity() {
     private val readingListNavigator by lazy { ReadingListReaderNavigator() }
 
     private var destination: ReadingListReaderDestination? = null
+    private var openAtEndPending = false
     private var blockedEntry by mutableStateOf<ReadingListReaderBlockedEntry?>(null)
     private var isNavigating by mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         destination = intent.toReadingListDestination()
+        openAtEndPending = destination?.openAtEnd == true
         super.onCreate(savedInstanceState)
         if (destination == null) {
             finish()
@@ -43,9 +45,18 @@ class ReadingListReaderActivity : ReaderActivity() {
     }
 
     override fun setChapters(viewerChapters: ViewerChapters) {
+        val currentChapter = viewerChapters.currChapter
+        if (openAtEndPending) {
+            currentChapter.pages?.lastIndex
+                ?.takeIf { lastIndex -> lastIndex >= 0 }
+                ?.let { lastIndex ->
+                    currentChapter.requestedPage = lastIndex
+                    openAtEndPending = false
+                }
+        }
         super.setChapters(
             ViewerChapters(
-                currChapter = viewerChapters.currChapter,
+                currChapter = currentChapter,
                 prevChapter = null,
                 nextChapter = null,
             ),
@@ -232,6 +243,7 @@ class ReadingListReaderActivity : ReaderActivity() {
             chapterId = chapterId,
             hasPrevious = getBooleanExtra(EXTRA_HAS_PREVIOUS, false),
             hasNext = getBooleanExtra(EXTRA_HAS_NEXT, false),
+            openAtEnd = getBooleanExtra(EXTRA_OPEN_AT_END, false),
         )
     }
 
@@ -247,6 +259,7 @@ class ReadingListReaderActivity : ReaderActivity() {
         private const val EXTRA_CHAPTER_ID = "chapter"
         private const val EXTRA_HAS_PREVIOUS = "reading_list_has_previous"
         private const val EXTRA_HAS_NEXT = "reading_list_has_next"
+        private const val EXTRA_OPEN_AT_END = "reading_list_open_at_end"
 
         fun newIntent(
             context: Context,
@@ -262,6 +275,7 @@ class ReadingListReaderActivity : ReaderActivity() {
                 putExtra(EXTRA_CHAPTER_ID, destination.chapterId)
                 putExtra(EXTRA_HAS_PREVIOUS, destination.hasPrevious)
                 putExtra(EXTRA_HAS_NEXT, destination.hasNext)
+                putExtra(EXTRA_OPEN_AT_END, destination.openAtEnd)
             }
         }
     }

@@ -60,6 +60,7 @@ class ReadingListReaderNavigator(
             readingList = readingList,
             index = position,
             persistBlockedPosition = restartCompleted || readingList.currentPosition == null,
+            openAtEnd = false,
         )
     }
 
@@ -102,6 +103,7 @@ class ReadingListReaderNavigator(
             readingList = readingList,
             index = targetIndex,
             persistBlockedPosition = false,
+            openAtEnd = direction == ReadingListReaderDirection.PREVIOUS,
         )
     }
 
@@ -139,6 +141,7 @@ class ReadingListReaderNavigator(
             readingList = refreshed,
             index = targetIndex,
             persistBlockedPosition = true,
+            openAtEnd = false,
         )
     }
 
@@ -146,6 +149,7 @@ class ReadingListReaderNavigator(
         readingList: ReadingList,
         index: Int,
         persistBlockedPosition: Boolean,
+        openAtEnd: Boolean,
     ): ReadingListReaderResult {
         val orderedEntries = readingList.entries.sortedBy(ReadingListEntry::position)
         val entry = orderedEntries.getOrNull(index)
@@ -236,6 +240,7 @@ class ReadingListReaderNavigator(
                         chapterId = materialized.chapter.id,
                         hasPrevious = entry.position > 0,
                         hasNext = entry.position < orderedEntries.lastIndex,
+                        openAtEnd = openAtEnd,
                     ),
                 )
             }
@@ -470,6 +475,7 @@ data class ReadingListReaderDestination(
     val chapterId: Long,
     val hasPrevious: Boolean,
     val hasNext: Boolean,
+    val openAtEnd: Boolean,
 )
 
 data class ReadingListReaderBlockedEntry(
