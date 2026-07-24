@@ -4,20 +4,21 @@
 
 Yomori is in early implementation. It is based on the current `main` branch of `mihonapp/mihon` and will remain compatible with the existing user-installed Mihon/Tachiyomi extension ecosystem.
 
-GitHub Actions remains configured for explicitly authorized phone workflows. PC work uses local Gradle wrapper builds, tests, signing, and validation and must not trigger, monitor, or rely on GitHub Actions.
+GitHub Actions is disabled for the repository as of 2026-07-24. PC work uses local Gradle wrapper builds, tests, public-development signing, certificate verification, and documented physical-device QA. Do not re-enable or rely on GitHub Actions unless a future task explicitly authorizes it.
 
 The Android application identity is `io.github.kamui2040.yomori`, with Yomori version line `0.1.0-alpha01`. The Kotlin namespace and extension-facing API packages remain unchanged for compatibility.
 
-Device-test artifacts use the dedicated `io.github.kamui2040.yomori.debug` package and a reproducible public development certificate. Correctly signed local PC builds and explicitly authorized phone-workflow builds can update the installed development package in place without removing its local data.
+Device-test artifacts use the dedicated `io.github.kamui2040.yomori.debug` package and a reproducible public development certificate. Correctly signed local PC builds can update the installed development package in place without removing its local data.
 
 The first product milestone is CBL reading-list import and deterministic, user-correctable matching. The safe parser, transactional persistence, normalization, confidence scoring, visible import interface, per-list source-selection flow, candidate-resolution storage, rejection history, entry overrides, series mappings, confirmation-protected repository operations, explicit candidate-search orchestration, and persisted manual-review interface are implemented and covered by focused tests. Cross-series reader navigation and progress are the next product stage. No public Yomori release is ready yet.
 
 ## Current unmerged work and approved follow-ups
 
-- Draft PR #15 contains cross-series reader navigation and list-specific progress. It remains unmerged and representative phone QA is incomplete.
-- The focused Reading Lists correction replaces the compact one-row item with a two-row structure: a full-width title and status row followed by a separate actions row. Read or Resume and Review remain directly accessible; Search for matches, Edit sources, and Delete remain labelled overflow actions. Candidate-search progress must remain visible.
-- The local branch `agent/reading-list-settings-matching-preserved` contains separate settings and matching follow-up work. It must remain preserved and must not be folded into the focused layout correction.
-- The merged matching implementation still uses the documented confidence threshold and ambiguity margin. Approved follow-up behavior is to select the unique strongest candidate when every safety gate passes and resolve exact score ties through effective source priority followed by stable candidate identity or rank. This follow-up must not be described as merged until its implementation and tests land.
+- Draft PR #15 contains cross-series reader navigation and list-specific progress. Its current head includes merged PR #17 with the corrected Reading Lists layout, explicit candidate-search cancellation, and defensive search teardown.
+- Representative phone QA remains incomplete for exact-entry opening, cross-series previous/next navigation, list-specific resume/restart/completion, unresolved Review/Skip/Stop behavior, unavailable-source handling, and ordinary-reader regressions.
+- The Reading Lists overview uses a two-row structure: a full-width title and status row followed by a direct action row for Read or Resume, Review, Search for matches, Edit sources, and Delete. Candidate-search progress remains visible and can be cancelled explicitly.
+- The local branch `agent/reading-list-settings-matching-preserved` contains separate settings and matching follow-up work. It must remain preserved and must not be folded into PR #15.
+- The current merged matching implementation still uses the documented confidence threshold and ambiguity margin. Approved follow-up behavior is to select the strongest candidate when every safety gate passes and resolve exact score ties through effective source priority followed by stable candidate identity or rank. This follow-up must not be described as implemented until its code and tests land.
 - Planned product follow-ups include reusable reading-source settings, ordered global and category source defaults, reading-list categories, explicit optional main-library integration, and repair and rematching tools.
 
 ## Product goal
@@ -76,8 +77,8 @@ Yomori does not provide, bundle, host, operate, or recommend content sources.
 - Missing optional metadata is neutral, conflicting metadata is penalized, and supporting evidence cannot bypass title or issue safety gates.
 - Equal high-scoring candidates remain ambiguous rather than being silently selected by source order.
 - Standard Yomori builds do not include telemetry.
-- PC development uses local Gradle wrapper validation and public-development signing. GitHub Actions are reserved for an explicitly authorized phone workflow.
-- Authorized phone-workflow APK filenames include the Yomori version, workflow build number, short commit SHA, and ABI. Local Gradle outputs retain Android build-tool filenames until a dedicated local packaging helper is added.
+- PC development uses local Gradle wrapper validation, public-development signing, and certificate verification while GitHub Actions remains disabled.
+- Local Gradle outputs retain Android build-tool filenames until a dedicated local packaging helper is added.
 - Development APKs use a public test certificate that is never used for production releases.
 - Null-pointer failures returned by HTTP source extensions are shown as an actionable update-or-change-source message instead of a raw exception.
 - Inherited public release automation remains disabled until Yomori production signing and release readiness are established.
@@ -131,7 +132,7 @@ Persisted states:
 8. Candidate persistence, rejection history, and protected manual overrides. **Complete.**
 9. Candidate search orchestration. **Complete.**
 10. Manual-review UI. **Complete.**
-11. Cross-series reader navigation and progress.
+11. Cross-series reader navigation and progress. **Implemented on draft PR #15; not merged to `main`.**
 12. Repair and rematching tools.
 
 ## Compatibility invariants
