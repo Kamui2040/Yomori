@@ -21,13 +21,13 @@ import tachiyomi.domain.source.service.SourceManager
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
-class ReadingListReaderNavigator private constructor(
+class ReadingListReaderNavigator internal constructor(
     private val readingListRepository: ReadingListRepository,
     private val mangaRepository: MangaRepository,
     private val chapterRepository: ChapterRepository,
     private val sourceManager: SourceManager,
-    private val sourceAvailability: ReadingListSourceAvailability,
-    private val requestTimeoutMillis: Long,
+    private val sourceAvailability: ReadingListSourceAvailability = ReadingListSourceAvailability { true },
+    private val requestTimeoutMillis: Long = DEFAULT_REQUEST_TIMEOUT_MILLIS,
 ) {
 
     constructor() : this(
@@ -37,37 +37,6 @@ class ReadingListReaderNavigator private constructor(
         sourceManager = Injekt.get(),
         sourceAvailability = InstalledExtensionSourceAvailability(),
         requestTimeoutMillis = DEFAULT_REQUEST_TIMEOUT_MILLIS,
-    )
-
-    internal constructor(
-        readingListRepository: ReadingListRepository,
-        mangaRepository: MangaRepository,
-        chapterRepository: ChapterRepository,
-        sourceManager: SourceManager,
-        requestTimeoutMillis: Long = DEFAULT_REQUEST_TIMEOUT_MILLIS,
-    ) : this(
-        readingListRepository = readingListRepository,
-        mangaRepository = mangaRepository,
-        chapterRepository = chapterRepository,
-        sourceManager = sourceManager,
-        sourceAvailability = ReadingListSourceAvailability { true },
-        requestTimeoutMillis = requestTimeoutMillis,
-    )
-
-    internal constructor(
-        readingListRepository: ReadingListRepository,
-        mangaRepository: MangaRepository,
-        chapterRepository: ChapterRepository,
-        sourceManager: SourceManager,
-        sourceAvailability: ReadingListSourceAvailability,
-        requestTimeoutMillis: Long = DEFAULT_REQUEST_TIMEOUT_MILLIS,
-    ) : this(
-        readingListRepository = readingListRepository,
-        mangaRepository = mangaRepository,
-        chapterRepository = chapterRepository,
-        sourceManager = sourceManager,
-        sourceAvailability = sourceAvailability,
-        requestTimeoutMillis = requestTimeoutMillis,
     )
 
     suspend fun start(
