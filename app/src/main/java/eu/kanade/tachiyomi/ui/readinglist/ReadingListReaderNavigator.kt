@@ -21,13 +21,54 @@ import tachiyomi.domain.source.service.SourceManager
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
-class ReadingListReaderNavigator(
-    private val readingListRepository: ReadingListRepository = Injekt.get(),
-    private val mangaRepository: MangaRepository = Injekt.get(),
-    private val chapterRepository: ChapterRepository = Injekt.get(),
-    private val sourceManager: SourceManager = Injekt.get(),
-    private val requestTimeoutMillis: Long = DEFAULT_REQUEST_TIMEOUT_MILLIS,
+class ReadingListReaderNavigator private constructor(
+    private val readingListRepository: ReadingListRepository,
+    private val mangaRepository: MangaRepository,
+    private val chapterRepository: ChapterRepository,
+    private val sourceManager: SourceManager,
+    private val sourceAvailability: ReadingListSourceAvailability,
+    private val requestTimeoutMillis: Long,
 ) {
+
+    constructor() : this(
+        readingListRepository = Injekt.get(),
+        mangaRepository = Injekt.get(),
+        chapterRepository = Injekt.get(),
+        sourceManager = Injekt.get(),
+        sourceAvailability = InstalledExtensionSourceAvailability(),
+        requestTimeoutMillis = DEFAULT_REQUEST_TIMEOUT_MILLIS,
+    )
+
+    internal constructor(
+        readingListRepository: ReadingListRepository,
+        mangaRepository: MangaRepository,
+        chapterRepository: ChapterRepository,
+        sourceManager: SourceManager,
+        requestTimeoutMillis: Long = DEFAULT_REQUEST_TIMEOUT_MILLIS,
+    ) : this(
+        readingListRepository = readingListRepository,
+        mangaRepository = mangaRepository,
+        chapterRepository = chapterRepository,
+        sourceManager = sourceManager,
+        sourceAvailability = ReadingListSourceAvailability { true },
+        requestTimeoutMillis = requestTimeoutMillis,
+    )
+
+    internal constructor(
+        readingListRepository: ReadingListRepository,
+        mangaRepository: MangaRepository,
+        chapterRepository: ChapterRepository,
+        sourceManager: SourceManager,
+        sourceAvailability: ReadingListSourceAvailability,
+        requestTimeoutMillis: Long = DEFAULT_REQUEST_TIMEOUT_MILLIS,
+    ) : this(
+        readingListRepository = readingListRepository,
+        mangaRepository = mangaRepository,
+        chapterRepository = chapterRepository,
+        sourceManager = sourceManager,
+        sourceAvailability = sourceAvailability,
+        requestTimeoutMillis = requestTimeoutMillis,
+    )
 
     suspend fun start(
         readingListId: Long,
@@ -162,8 +203,12 @@ class ReadingListReaderNavigator(
             return ReadingListReaderResult.MissingEntryAtPosition(readingList.id, index)
         }
 
-        entry.blockingReason()?.let { reason ->
-            return blockedResult(readingList, entry, reason, persistBlockedPosition)
+        val recoveringUnavailableSource = entry.resolutionState == ReadingListEntryResolutionState.SOURCE_UNAVAILABLE &&
+            entry.hasCompleteMatchIdentity()
+        if (!recoveringUnavailableSource) {
+            entry.blockingReason()?.let { reason ->
+                return blockedResult(readingList, entry, reason, persistBlockedPosition)
+            }
         }
 
         val sourceId = entry.matchedSourceId
@@ -202,7 +247,7 @@ class ReadingListReaderNavigator(
 
         sourceManager.isInitialized.first { initialized -> initialized }
         val source = sourceManager.get(sourceId) as? HttpSource
-        if (source == null) {
+        if (source == null || !sourceAvailability.isAvailable(sourceId)) {
             readingListRepository.markEntryReaderFailure(
                 entry.id,
                 ReadingListEntryResolutionState.SOURCE_UNAVAILABLE,
@@ -224,6 +269,12 @@ class ReadingListReaderNavigator(
             )
         ) {
             is MaterializationResult.Ready -> {
+                if (
+                    recoveringUnavailableSource &&
+                    !readingListRepository.clearEntryReaderFailure(entry.id)
+                ) {
+                    return ReadingListReaderResult.MissingEntry(readingList.id, entry.id)
+                }
                 if (
                     !readingListRepository.updateProgress(
                         id = readingList.id,
@@ -402,6 +453,10 @@ class ReadingListReaderNavigator(
             memo = remote.memo,
         )
         return chapterRepository.addAll(listOf(chapter)).firstOrNull()
+    }
+
+    private fun ReadingListEntry.hasCompleteMatchIdentity(): Boolean {
+        return matchedSourceId != null && matchedMangaUrl != null && matchedChapterUrl != null
     }
 
     private fun ReadingListEntry.blockingReason(): ReadingListReaderBlockReason? {
