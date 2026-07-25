@@ -66,7 +66,7 @@ At an automatic reader boundary, Yomori evaluates the target before changing lis
 The user must explicitly choose one of:
 
 - **Review** — leave the reader and open that list's review screen without silently changing the active match;
-- **Skip** — persist the skip for that entry and continue to the immediately following position;
+- **Skip** — persist the skip for that entry and continue one CBL position in the direction that reached it. Forward skips open the following entry normally; backward skips open the preceding readable entry on its final page. Another blocked entry produces another stable decision instead of being silently bypassed;
 - **Stop** — close the session without advancing automatic boundary progress.
 
 An explicit initial start, completed-list restart, or Skip may persist the position it deliberately selected even when that position is blocked. A skip is list-specific and does not alter global chapter state. Confirming an exact candidate later clears that entry's skip through the existing confirmation path.
@@ -99,7 +99,7 @@ SQLDelight stores list-specific completion separately from `current_position`. R
 - reject → boundary → Review, Skip, and Stop behavior;
 - rejected-target Back/Resume retaining the last successfully opened entry;
 - repeated forward input while a blocked decision is visible;
-- explicit skip advances by exactly one position and never silently skips additional entries;
+- explicit forward and backward skips advance exactly one position in their current direction and never silently bypass an additional blocked entry;
 - previous navigation and completion reset;
 - shared chapter read state with independent list position/completion;
 - process/activity recreation retains list identity;
