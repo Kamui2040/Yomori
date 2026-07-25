@@ -15,6 +15,7 @@ import eu.kanade.tachiyomi.ui.readinglist.ReadingListReaderBlockedDialog
 import eu.kanade.tachiyomi.ui.readinglist.ReadingListReaderBlockedEntry
 import eu.kanade.tachiyomi.ui.readinglist.ReadingListReaderDestination
 import eu.kanade.tachiyomi.ui.readinglist.ReadingListReaderDirection
+import eu.kanade.tachiyomi.ui.readinglist.ReadingListReaderDirectionalSkipNavigator
 import eu.kanade.tachiyomi.ui.readinglist.ReadingListReaderNavigator
 import eu.kanade.tachiyomi.ui.readinglist.ReadingListReaderResult
 import eu.kanade.tachiyomi.ui.readinglist.resolveReadingListInitialPage
@@ -30,11 +31,13 @@ import tachiyomi.core.common.util.lang.withIOContext
 class ReadingListReaderActivity : ReaderActivity() {
 
     private val readingListNavigator by lazy { ReadingListReaderNavigator() }
+    private val directionalSkipNavigator by lazy { ReadingListReaderDirectionalSkipNavigator() }
 
     private var destination: ReadingListReaderDestination? = null
     private var openAtEndPending = false
     private var resumePagePending: Int? = null
     private var blockedEntry by mutableStateOf<ReadingListReaderBlockedEntry?>(null)
+    private var blockedDirection = ReadingListReaderDirection.NEXT
     private var isNavigating by mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -118,13 +121,14 @@ class ReadingListReaderActivity : ReaderActivity() {
         lifecycleScope.launch {
             try {
                 handleResult(
-                    withIOContext {
+                    result = withIOContext {
                         readingListNavigator.move(
                             readingListId = current.readingListId,
                             currentEntryId = current.entryId,
                             direction = direction,
                         )
                     },
+                    direction = direction,
                 )
             } catch (error: CancellationException) {
                 throw error
@@ -140,18 +144,21 @@ class ReadingListReaderActivity : ReaderActivity() {
     private fun skipBlockedEntry() {
         val blocked = blockedEntry ?: return
         if (isNavigating) return
+        val direction = blockedDirection
         isNavigating = true
         blockedEntry = null
         viewModel.showLoadingDialog()
         lifecycleScope.launch {
             try {
                 handleResult(
-                    withIOContext {
-                        readingListNavigator.skip(
+                    result = withIOContext {
+                        directionalSkipNavigator.skip(
                             readingListId = blocked.readingListId,
                             blockedEntryId = blocked.entryId,
+                            direction = direction,
                         )
                     },
+                    direction = direction,
                 )
             } catch (error: CancellationException) {
                 throw error
@@ -182,7 +189,10 @@ class ReadingListReaderActivity : ReaderActivity() {
         finish()
     }
 
-    private fun handleResult(result: ReadingListReaderResult) {
+    private fun handleResult(
+        result: ReadingListReaderResult,
+        direction: ReadingListReaderDirection = ReadingListReaderDirection.NEXT,
+    ) {
         when (result) {
             is ReadingListReaderResult.Ready -> {
                 viewModel.closeDialog()
@@ -191,6 +201,7 @@ class ReadingListReaderActivity : ReaderActivity() {
             }
             is ReadingListReaderResult.Blocked -> {
                 viewModel.closeDialog()
+                blockedDirection = direction
                 blockedEntry = result.entry
             }
             is ReadingListReaderResult.Completed -> {
