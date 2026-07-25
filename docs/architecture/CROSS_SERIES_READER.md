@@ -32,7 +32,11 @@ A readable entry must retain all three persisted identities:
 - remote manga URL;
 - remote chapter URL.
 
-The source must still be selected for the list and installed as a compatible online source. Yomori first reuses existing local manga/chapter rows by source and remote URLs. When they are absent, an explicit read action fetches the selected series' chapter list without performing another broad search or requiring a full details refresh, then materializes only the exact matched manga/chapter as non-favorite local rows. Candidate search results are not bulk-added to the library.
+The source must still be selected for the list, installed as a compatible online source, and enabled at the Android package level. A disabled extension is unavailable even when its source remains registered in memory or exact manga, chapter, or page data is cached locally.
+
+Yomori first reuses existing local manga/chapter rows by source and remote URLs. When they are absent, an explicit read action fetches the selected series' chapter list without performing another broad search or requiring a full details refresh, then materializes only the exact matched manga/chapter as non-favorite local rows. Candidate search results are not bulk-added to the library.
+
+When an entry is marked `SOURCE_UNAVAILABLE` and the same exact extension later becomes installed and enabled again, the next explicit read or transition retries only the preserved source, manga URL, and chapter URL. A successful exact recovery restores the protected automatic or user-confirmed state. It does not rerun candidate search, choose another source, replace the saved mapping, or clear unrelated failure states.
 
 Materialization must never:
 
@@ -55,7 +59,7 @@ Materialization must never:
 An entry is not silently bypassed when it is:
 
 - unsearched, ambiguous, or unresolved;
-- source unavailable;
+- source unavailable, uninstalled, or disabled;
 - chapter removed or marked for rematch;
 - explicitly skipped;
 - missing a persisted source, manga URL, or chapter URL;
@@ -94,7 +98,8 @@ SQLDelight stores list-specific completion separately from `current_position`. R
 - exact CBL ordering across different manga and sources;
 - same-manga entries still follow list order rather than manga chapter order;
 - existing local row reuse and exact non-favorite materialization;
-- source-selection and installed-source enforcement;
+- selected, installed, and Android-enabled source enforcement before cached-row reuse;
+- exact `SOURCE_UNAVAILABLE` recovery after reinstall or re-enable without candidate search or source fallback;
 - unresolved, ambiguous, unavailable, removed, rematch, and skipped gates;
 - reject → boundary → Review, Skip, and Stop behavior;
 - rejected-target Back/Resume retaining the last successfully opened entry;
