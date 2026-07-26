@@ -23,13 +23,28 @@ internal class InstalledExtensionSourceAvailability(
 
     override fun isAvailable(sourceId: Long): Boolean {
         val packageName = extensionManager.getExtensionPackage(sourceId) ?: return false
-        return try {
+        val packageManager = application.packageManager
+        val applicationInfo = try {
             @Suppress("DEPRECATION")
-            application.packageManager
-                .getApplicationInfo(packageName, PackageManager.MATCH_DISABLED_COMPONENTS)
-                .enabled
+            packageManager.getApplicationInfo(packageName, PackageManager.MATCH_DISABLED_COMPONENTS)
         } catch (_: PackageManager.NameNotFoundException) {
-            false
+            return false
+        }
+
+        return when (
+            try {
+                packageManager.getApplicationEnabledSetting(packageName)
+            } catch (_: IllegalArgumentException) {
+                return false
+            }
+        ) {
+            PackageManager.COMPONENT_ENABLED_STATE_DEFAULT -> applicationInfo.enabled
+            PackageManager.COMPONENT_ENABLED_STATE_ENABLED -> true
+            PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+            PackageManager.COMPONENT_ENABLED_STATE_DISABLED_USER,
+            PackageManager.COMPONENT_ENABLED_STATE_DISABLED_UNTIL_USED,
+            -> false
+            else -> false
         }
     }
 }
