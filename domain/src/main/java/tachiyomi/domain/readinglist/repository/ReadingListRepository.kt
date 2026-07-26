@@ -25,6 +25,9 @@ interface ReadingListRepository {
         completed: Boolean = false,
     ): Boolean
 
+    /** Persist a list-specific reader mode without rewriting any manga's viewer flags. */
+    suspend fun updateReadingMode(id: Long, readingMode: Int): Boolean
+
     /** Persist an explicit list-entry skip while preserving its CBL and match metadata. */
     suspend fun setEntrySkipped(
         readingListId: Long,
