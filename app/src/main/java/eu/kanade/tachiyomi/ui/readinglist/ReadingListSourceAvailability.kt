@@ -1,6 +1,6 @@
 package eu.kanade.tachiyomi.ui.readinglist
 
-import android.content.Context
+import android.app.Application
 import android.content.pm.PackageManager
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import uy.kohesive.injekt.Injekt
@@ -17,7 +17,7 @@ internal fun interface ReadingListSourceAvailability {
 }
 
 internal class InstalledExtensionSourceAvailability(
-    private val context: Context = Injekt.get(),
+    private val application: Application = Injekt.get(),
     private val extensionManager: ExtensionManager = Injekt.get(),
 ) : ReadingListSourceAvailability {
 
@@ -25,7 +25,7 @@ internal class InstalledExtensionSourceAvailability(
         val packageName = extensionManager.getExtensionPackage(sourceId) ?: return false
         return try {
             @Suppress("DEPRECATION")
-            context.packageManager
+            application.packageManager
                 .getApplicationInfo(packageName, PackageManager.MATCH_DISABLED_COMPONENTS)
                 .enabled
         } catch (_: PackageManager.NameNotFoundException) {
