@@ -11,6 +11,7 @@ import androidx.lifecycle.lifecycleScope
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.main.MainActivity
 import eu.kanade.tachiyomi.ui.reader.model.ViewerChapters
+import eu.kanade.tachiyomi.ui.reader.setting.ReadingMode
 import eu.kanade.tachiyomi.ui.readinglist.ReadingListReaderBlockedDialog
 import eu.kanade.tachiyomi.ui.readinglist.ReadingListReaderBlockedEntry
 import eu.kanade.tachiyomi.ui.readinglist.ReadingListReaderDestination
@@ -21,8 +22,14 @@ import eu.kanade.tachiyomi.ui.readinglist.ReadingListReaderResult
 import eu.kanade.tachiyomi.ui.readinglist.resolveReadingListInitialPage
 import eu.kanade.tachiyomi.util.system.toast
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import tachiyomi.core.common.preference.toggle
 import tachiyomi.core.common.util.lang.withIOContext
+import tachiyomi.domain.readinglist.repository.ReadingListRepository
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 
 /**
  * Runs one exact reading-list entry in the normal reader while keeping list navigation separate from
@@ -32,8 +39,10 @@ class ReadingListReaderActivity : ReaderActivity() {
 
     private val readingListNavigator by lazy { ReadingListReaderNavigator() }
     private val directionalSkipNavigator by lazy { ReadingListReaderDirectionalSkipNavigator() }
+    private val readingListRepository by lazy { Injekt.get<ReadingListRepository>() }
 
     private var destination: ReadingListReaderDestination? = null
+    private var listReadingMode: Int? = null
     private var openAtEndPending = false
     private var resumePagePending: Int? = null
     private var blockedEntry by mutableStateOf<ReadingListReaderBlockedEntry?>(null)
@@ -42,6 +51,11 @@ class ReadingListReaderActivity : ReaderActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         destination = intent.toReadingListDestination()
+        listReadingMode = destination?.let { current ->
+            runBlocking(Dispatchers.IO) {
+                readingListRepository.get(current.readingListId)?.readingMode
+            }
+        }
         openAtEndPending = destination?.openAtEnd == true
         resumePagePending = destination?.resumePage
         super.onCreate(savedInstanceState)
@@ -82,6 +96,40 @@ class ReadingListReaderActivity : ReaderActivity() {
             current.entryCount,
         )
         return super.readerChapterTitle()?.let { chapterTitle -> "$position • $chapterTitle" } ?: position
+    }
+
+    protected override fun readerReadingMode(resolveDefault: Boolean): Int {
+        val storedMode = listReadingMode ?: return super.readerReadingMode(resolveDefault)
+        val mode = ReadingMode.fromPreference(storedMode)
+        return if (resolveDefault && mode == ReadingMode.DEFAULT) {
+            readerPreferences.defaultReadingMode.get()
+        } else {
+            storedMode
+        }
+    }
+
+    protected override fun changeReaderReadingMode(readingMode: ReadingMode) {
+        val current = destination ?: return
+        val saved = runBlocking(Dispatchers.IO) {
+            readingListRepository.updateReadingMode(
+                id = current.readingListId,
+                readingMode = readingMode.flagValue,
+            )
+        }
+        if (!saved) {
+            toast(getString(R.string.reading_list_reader_failed))
+            return
+        }
+        listReadingMode = readingMode.flagValue
+        reloadReaderViewerForReadingMode()
+    }
+
+    protected override fun toggleReaderCropBorders(): Boolean {
+        return if (ReadingMode.isPagerType(readerReadingMode())) {
+            readerPreferences.cropBorders.toggle()
+        } else {
+            readerPreferences.cropBordersWebtoon.toggle()
+        }
     }
 
     override fun loadNextChapter() {
