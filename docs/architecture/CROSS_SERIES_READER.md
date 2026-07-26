@@ -54,6 +54,15 @@ Materialization must never:
 - Completing the final entry records list-specific completion without pointing progress at a nonexistent entry.
 - Returning to an earlier entry clears list completion and persists that entry as current.
 
+## List-specific reading mode
+
+- A reading-mode choice made inside a reading-list session is stored for that reading list.
+- The stored mode applies across series, source changes, reader activity transitions, app restarts, Resume, and Read Again.
+- Choosing **Default** stores a list-level instruction to follow the current global default reader mode.
+- Until the user selects a mode for a list, the current manga/default behavior remains unchanged.
+- List-scoped mode changes rebuild the active viewer at the same page and choose the correct crop-border preference for the effective pager or webtoon mode.
+- Ordinary manga viewer flags are not rewritten, so the same manga may use a different mode in normal reading or another reading list.
+
 ## Blocking entries
 
 An entry is not silently bypassed when it is:
@@ -90,7 +99,7 @@ A timeout or extension failure blocks and marks only the affected entry. Origina
 
 ## Persistence
 
-SQLDelight stores list-specific completion separately from `current_position`. Repository updates validate that any non-null current position belongs to the list. Progress, completion, explicit skips, and repairable reader failures are written through `ReadingListRepository`; the app layer does not issue direct SQLDelight writes. Entry-state writes preserve the persisted source/manga/chapter identity and user-confirmation flag.
+SQLDelight stores list-specific completion separately from `current_position` and stores list reader settings in a list-owned table that cascades on list deletion. Repository updates validate that any non-null current position belongs to the list and that reading modes use a supported reader value. Progress, completion, reading mode, explicit skips, and repairable reader failures are written through `ReadingListRepository`; the app layer does not issue direct SQLDelight writes. Entry-state writes preserve the persisted source/manga/chapter identity and user-confirmation flag.
 
 ## Required tests
 
@@ -100,6 +109,7 @@ SQLDelight stores list-specific completion separately from `current_position`. R
 - existing local row reuse and exact non-favorite materialization;
 - selected, installed, and Android-enabled source enforcement before cached-row reuse;
 - exact `SOURCE_UNAVAILABLE` recovery after reinstall or re-enable without candidate search or source fallback;
+- list-specific reading-mode persistence, default resolution, activity transition, same-page viewer rebuild, and ordinary-reader isolation;
 - unresolved, ambiguous, unavailable, removed, rematch, and skipped gates;
 - reject → boundary → Review, Skip, and Stop behavior;
 - rejected-target Back/Resume retaining the last successfully opened entry;
