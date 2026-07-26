@@ -119,7 +119,7 @@ open class ReaderActivity : BaseActivity() {
         }
     }
 
-    private val readerPreferences = Injekt.get<ReaderPreferences>()
+    protected val readerPreferences = Injekt.get<ReaderPreferences>()
     private val preferences = Injekt.get<BasePreferences>()
 
     lateinit var binding: ReaderActivityBinding
@@ -153,6 +153,25 @@ open class ReaderActivity : BaseActivity() {
 
     protected open fun readerChapterTitle(): String? =
         viewModel.state.value.currentChapter?.chapter?.name
+
+    protected open fun readerReadingMode(resolveDefault: Boolean = true): Int =
+        viewModel.getMangaReadingMode(resolveDefault)
+
+    protected open fun changeReaderReadingMode(readingMode: ReadingMode) {
+        viewModel.setMangaReadingMode(readingMode)
+    }
+
+    protected open fun toggleReaderCropBorders(): Boolean = viewModel.toggleCropBorders()
+
+    protected fun reloadReaderViewerForReadingMode() {
+        val state = viewModel.state.value
+        val chapters = state.viewerChapters ?: return
+        chapters.currChapter.requestedPage = (state.currentPage - 1)
+            .takeIf { pageIndex -> pageIndex >= 0 }
+            ?: chapters.currChapter.chapter.last_page_read
+        updateViewer()
+        setChapters(chapters)
+    }
 
     var isScrollingThroughPages = false
         private set
@@ -269,7 +288,7 @@ open class ReaderActivity : BaseActivity() {
         val settingsScreenModel = remember {
             ReaderSettingsScreenModel(
                 readerState = viewModel.state,
-                onChangeReadingMode = viewModel::setMangaReadingMode,
+                onChangeReadingMode = ::changeReaderReadingMode,
                 onChangeOrientation = viewModel::setMangaOrientationType,
             )
         }
@@ -474,12 +493,13 @@ open class ReaderActivity : BaseActivity() {
 
         val cropBorderPaged by readerPreferences.cropBorders.collectAsState()
         val cropBorderWebtoon by readerPreferences.cropBordersWebtoon.collectAsState()
-        val isPagerType = ReadingMode.isPagerType(viewModel.getMangaReadingMode())
+        val readingMode = readerReadingMode()
+        val isPagerType = ReadingMode.isPagerType(readingMode)
         val cropEnabled = if (isPagerType) cropBorderPaged else cropBorderWebtoon
 
         val verticalNavigatorModes by readerPreferences.verticalNavigator.collectAsState()
         val verticalNavigator = verticalNavigatorModes.contains(
-            ReadingMode.fromPreference(viewModel.getMangaReadingMode()),
+            ReadingMode.fromPreference(readingMode),
         )
         val verticalNavigatorOnLeft by readerPreferences.verticalNavigatorOnLeft.collectAsState()
         val verticalNavigatorHeight by readerPreferences.verticalNavigatorHeight.collectAsState()
@@ -526,7 +546,7 @@ open class ReaderActivity : BaseActivity() {
             },
 
             readingMode = ReadingMode.fromPreference(
-                viewModel.getMangaReadingMode(resolveDefault = false),
+                readerReadingMode(resolveDefault = false),
             ),
             onClickReadingMode = viewModel::openReadingModeSelectDialog,
             orientation = ReaderOrientation.fromPreference(
@@ -535,7 +555,7 @@ open class ReaderActivity : BaseActivity() {
             onClickOrientation = viewModel::openOrientationModeSelectDialog,
             cropEnabled = cropEnabled,
             onClickCropBorder = {
-                val enabled = viewModel.toggleCropBorders()
+                val enabled = toggleReaderCropBorders()
                 menuToggleToast?.cancel()
                 menuToggleToast = toast(if (enabled) MR.strings.on else MR.strings.off)
             },
@@ -558,9 +578,9 @@ open class ReaderActivity : BaseActivity() {
     /**
      * Called from the presenter when a manga is ready. Used to instantiate the appropriate viewer.
      */
-    private fun updateViewer() {
+    protected fun updateViewer() {
         val prevViewer = viewModel.state.value.viewer
-        val newViewer = ReadingMode.toViewer(viewModel.getMangaReadingMode(), this)
+        val newViewer = ReadingMode.toViewer(readerReadingMode(), this)
 
         if (window.sharedElementEnterTransition is MaterialContainerTransform) {
             // Wait until transition is complete to avoid crash on API 26
@@ -581,7 +601,7 @@ open class ReaderActivity : BaseActivity() {
         binding.viewerContainer.addView(newViewer.getView())
 
         if (readerPreferences.showReadingMode.get()) {
-            showReadingModeToast(viewModel.getMangaReadingMode())
+            showReadingModeToast(readerReadingMode())
         }
 
         loadingIndicator = ReaderProgressIndicator(this)
