@@ -1,0 +1,23 @@
+CREATE TABLE reading_list_reader_settings(
+    reading_list_id INTEGER NOT NULL PRIMARY KEY,
+    reading_mode INTEGER NOT NULL,
+    FOREIGN KEY(reading_list_id) REFERENCES reading_lists(_id) ON DELETE CASCADE
+);
+
+getReadingListReadingMode:
+SELECT reading_mode
+FROM reading_list_reader_settings
+WHERE reading_list_id = :readingListId
+LIMIT 1;
+
+upsertReadingListReadingMode:
+INSERT INTO reading_list_reader_settings(
+    reading_list_id,
+    reading_mode
+)
+VALUES (
+    :readingListId,
+    :readingMode
+)
+ON CONFLICT(reading_list_id) DO UPDATE
+SET reading_mode = excluded.reading_mode;
