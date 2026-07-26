@@ -32,6 +32,10 @@ class ReadingListRepositoryImpl(
             .getReadingListCompleted(id)
             .awaitAsOneOrNull()
             ?: false
+        val readingMode = database.reading_list_reader_settingsQueries
+            .getReadingListReadingMode(id)
+            .awaitAsOneOrNull()
+            ?.toInt()
 
         val entries = database.reading_listsQueries
             .getReadingListEntries(id, ::mapEntryRow)
@@ -87,6 +91,7 @@ class ReadingListRepositoryImpl(
             createdAt = readingList.createdAt,
             updatedAt = readingList.updatedAt,
             completed = completed,
+            readingMode = readingMode,
         )
     }
 
@@ -202,6 +207,27 @@ class ReadingListRepositoryImpl(
             database.zz_reading_list_progressQueries.updateReadingListProgress(
                 currentPosition = currentPosition?.toLong(),
                 completed = completed,
+                updatedAt = currentTimeMillis(),
+                id = id,
+            )
+            true
+        }
+    }
+
+    override suspend fun updateReadingMode(id: Long, readingMode: Int): Boolean {
+        require(readingMode in 0..5) {
+            "Reading-list mode must use a supported reader mode"
+        }
+
+        return database.transactionWithResult {
+            if (!database.reading_listsQueries.readingListExists(id).awaitAsOne()) {
+                return@transactionWithResult false
+            }
+            database.reading_list_reader_settingsQueries.upsertReadingListReadingMode(
+                readingListId = id,
+                readingMode = readingMode.toLong(),
+            )
+            database.reading_listsQueries.touchReadingList(
                 updatedAt = currentTimeMillis(),
                 id = id,
             )
