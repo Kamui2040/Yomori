@@ -1,0 +1,5 @@
+CREATE TABLE reading_list_reader_settings(
+    reading_list_id INTEGER NOT NULL PRIMARY KEY,
+    reading_mode INTEGER NOT NULL,
+    FOREIGN KEY(reading_list_id) REFERENCES reading_lists(_id) ON DELETE CASCADE
+);
