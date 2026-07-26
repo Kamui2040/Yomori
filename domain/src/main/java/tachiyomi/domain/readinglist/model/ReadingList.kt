@@ -19,6 +19,7 @@ data class ReadingList(
     val createdAt: Long,
     val updatedAt: Long,
     val completed: Boolean = false,
+    val readingMode: Int? = null,
 ) {
     fun toCblReadingList(): CblReadingList {
         return CblReadingList(
