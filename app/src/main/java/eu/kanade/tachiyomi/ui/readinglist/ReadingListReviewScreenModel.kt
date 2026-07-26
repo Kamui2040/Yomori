@@ -239,7 +239,10 @@ internal fun buildReadingListReviewData(
                 volume = entry.volume,
                 year = entry.year,
             )
-            val candidates = candidatesByEntry[entry.id].orEmpty()
+            val candidates = orderReadingListReviewCandidates(
+                entry = entry,
+                candidates = candidatesByEntry[entry.id].orEmpty(),
+            )
             val candidateIdentities = candidates
                 .mapTo(mutableSetOf()) { candidate -> candidate.snapshot.identity }
             ReadingListReviewEntry(
@@ -258,6 +261,17 @@ internal fun buildReadingListReviewData(
         readingList = readingList,
         entries = entries,
     )
+}
+
+internal fun orderReadingListReviewCandidates(
+    entry: ReadingListEntry,
+    candidates: List<ReadingListStoredMatchCandidate>,
+): List<ReadingListStoredMatchCandidate> {
+    return candidates.sortedByDescending { candidate ->
+        entry.matchedSourceId == candidate.snapshot.identity.sourceId &&
+            entry.matchedMangaUrl == candidate.snapshot.mangaUrl &&
+            entry.matchedChapterUrl == candidate.snapshot.chapterUrl
+    }
 }
 
 private fun ReadingListReviewData.findCandidate(
