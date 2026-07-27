@@ -1,6 +1,6 @@
 # Roadmap
 
-This roadmap separates merged foundations, current branch work, and approved follow-ups. `PROJECT_CONTEXT.md` is the canonical status and decision ledger.
+This public roadmap records stable milestones and approved product direction. `PROJECT_CONTEXT.md` contains public merged-state context; private status, blockers, and active work remain outside the repository.
 
 ## Milestone 0: Repository foundation
 
@@ -8,8 +8,8 @@ This roadmap separates merged foundations, current branch work, and approved fol
 - Telemetry-free development builds
 - Independent production and development application IDs
 - Reproducible public development signing for the `.debug` package
-- Local PC validation
-- Dormant manual phone-build workflow while repository Actions are disabled
+- Local repository validation
+- Inherited repository automation remains disabled
 - Upstream synchronization process
 
 ## Milestone 1: CBL core

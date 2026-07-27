@@ -4,7 +4,7 @@ Yomori development APKs use the dedicated `io.github.kamui2040.yomori.debug` pac
 
 Everything required to generate and validate the public development identity is contained in the repository. Development builds must not require a private drive, private credential, production signing key, or developer-specific machine path.
 
-GitHub Actions is disabled. PC mode builds, validates, signs, and verifies locally. The retained workflow is dormant manual phone-workflow infrastructure only and must not be enabled for ordinary PC development or release publication.
+GitHub Actions is disabled. Generate, validate, sign, and verify development APKs locally with the public repository tools. Inherited workflow files remain disabled and are not ordinary development or release infrastructure.
 
 ## Package and signing
 

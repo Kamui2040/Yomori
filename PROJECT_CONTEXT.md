@@ -84,9 +84,9 @@ Yomori does not provide, bundle, host, operate, or recommend content sources.
 - Store-specific work should use one common compliant release candidate with only minimal packaging or metadata adaptations.
 - Every release-readiness requirement is classified as PASS, PARTIAL, BLOCKED, or NOT APPLICABLE in `docs/RELEASE_READINESS.md`.
 - The optional developer-support URL is `https://ko-fi.com/k2040` and must not unlock features or create entitlements.
-- The approved K2040 wolf avatar is reserved for a future About section. It remains in shared Google Drive assets and is not yet bundled because a repository redistribution licence entry is still required.
+- The approved K2040 wolf avatar is reserved for a future About section. It remains a private development asset and is not bundled because a repository redistribution licence entry is still required.
 - Standard Yomori builds do not include telemetry.
-- PC development uses local Gradle wrapper validation, public-development signing, and certificate verification while GitHub Actions remains disabled.
+- Repository validation uses the local Gradle wrapper, public-development signing, and certificate verification while GitHub Actions remains disabled.
 - Local Gradle outputs retain Android build-tool filenames until a dedicated local packaging helper is added.
 - Development APKs use a public test certificate that is never used for production releases.
 - Null-pointer failures returned by HTTP source extensions are shown as an actionable update-or-change-source message instead of a raw exception.

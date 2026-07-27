@@ -16,7 +16,7 @@ Before planning or changing the repository, read:
 4. The affected source, tests, database schema, build configuration, and workflows.
 5. Current Git and GitHub evidence relevant to the task.
 
-`PROJECT_CONTEXT.md` is the canonical status and decision ledger for merged repository state.
+`PROJECT_CONTEXT.md` contains public merged-state context and stable repository decisions only. Private status, blockers, active work, workflow records, and next actions belong in the private development ledger and are not public build inputs.
 
 An open branch or pull request may contain newer work. Distinguish between:
 
@@ -24,12 +24,11 @@ An open branch or pull request may contain newer work. Distinguish between:
 * implemented locally;
 * pushed;
 * validated locally;
-* validated by GitHub Actions when enabled;
 * physically device-tested;
 * merged into `main`;
 * publicly released.
 
-Update `PROJECT_CONTEXT.md` in the same change when merged implementation changes a documented decision, milestone, migration, invariant, or release blocker.
+Update `PROJECT_CONTEXT.md` only when merged implementation changes public stable context, a documented invariant, a migration, or a public release blocker. Do not record active branches, pull requests, local build state, machine setup, private workflow, or private-storage references there.
 
 ## Repository identity
 

@@ -47,4 +47,4 @@
 - [`SECURITY.md`](./SECURITY.md)
 - [`ACCESSIBILITY.md`](./ACCESSIBILITY.md)
 
-Architecture documents distinguish implemented behavior from planned behavior. Current repository status remains canonical in `../../PROJECT_CONTEXT.md`.
+Architecture documents distinguish implemented behavior from planned behavior. Public merged-state context is summarized in `../../PROJECT_CONTEXT.md`; private status and active work remain outside the repository.

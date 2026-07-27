@@ -8,28 +8,10 @@ The format is a modified version of [Keep a Changelog](https://keepachangelog.co
 - `Improved` - for enhancement or optimization in existing functionality.
 - `Removed` - for now removed features.
 - `Fixed` - for any bug fixes.
-- `Other` - for technical stuff.
 
 ## [Unreleased]
 
-### Yomori development
-
-#### Added
-- Cross-series reading-list navigation, list-specific progress, resume, restart, completion, and explicit blocked-entry handling on the current development branch.
-- Direct Reading Lists actions with visible candidate-search cancellation.
-- F-Droid-first release-readiness documentation with the Accrescent security overlay.
-- Public privacy, security, support, contribution, funding, asset-attribution, and About plans.
-
-#### Changed
-- GitHub Actions remain disabled; the retained build workflow is manual phone-workflow infrastructure only.
-- Removed inherited Mihon issue templates, Patreon funding, website dispatch automation, and release-readiness workflow.
-- Documented the optional K2040 Ko-fi link and future developer-avatar use without bundling the unlicensed asset.
-
-#### Fixed
-- Rejecting the active candidate invalidates only that exact entry resolution while preserving rejection history and original CBL metadata.
-- Automatic reader boundaries no longer overwrite Resume progress before a target entry passes blocked-state, source, identity, and materialization gates.
-- Candidate-search cancellation and deletion teardown no longer leave stale list-scoped work.
-- Inherited documentation no longer directs Yomori users to Mihon support or release channels.
+No public Yomori release has been published. Future entries will list only validated, user-visible changes included in a release candidate.
 
 ### Preserved upstream changes
 ### Added

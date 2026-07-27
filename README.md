@@ -54,7 +54,7 @@ Current readiness and blockers are tracked in [docs/RELEASE_READINESS.md](./docs
 
 ## Documentation
 
-- [PROJECT_CONTEXT.md](./PROJECT_CONTEXT.md) — canonical repository status and decisions.
+- [PROJECT_CONTEXT.md](./PROJECT_CONTEXT.md) — public merged-state context and stable repository decisions.
 - [docs/README.md](./docs/README.md) — documentation index.
 - [SECURITY.md](./SECURITY.md) — private vulnerability reporting.
 - [SUPPORT.md](./SUPPORT.md) — issue scope and support routes.

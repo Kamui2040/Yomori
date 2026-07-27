@@ -5,12 +5,10 @@ This file tracks release-relevant visual, font, audio, translation, and other bu
 ## K2040 developer avatar
 
 - Name: `K2040-wolf-avatar.png`
-- Canonical location: shared Google Drive Brand Assets folder
-- Drive file ID: `1kyRwAwS6fBICvpbqCDac4vRnwxaKljxc`
-- Metadata file ID: `1bq3N6Cprn074X8GpyrzWubwPb00I0O-z`
+- Source asset status: private development asset; not present in the public repository
 - Intended use: future About section and cross-project developer identity
 - Current repository status: not bundled
-- Redistribution licence: **BLOCKED — explicit compatible licence not yet recorded**
+- Redistribution licence: **BLOCKED — explicit compatible licence and public provenance record not yet established**
 
 The user approved cross-project use, but F-Droid and public-source distribution require a clear redistribution licence entry before repository, APK, or store inclusion.
 
