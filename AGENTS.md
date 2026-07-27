@@ -358,11 +358,10 @@ When code and documentation disagree, determine whether the code is incomplete, 
 
 ## Open-source publication and store readiness
 
-The shared Google Drive document **Android App Store Release Readiness Standard**
-is a governing release-readiness input for Yomori.
+The public repository and documented build process are the complete source basis for Yomori. Building, auditing, translating, testing, or preparing a public release must not require access to private drives, private project records, developer credentials, production signing keys, or machine-specific configuration.
 
-* Document ID: `1LBaEQairLGcE6NpY4wv6hoFFiFVOfJbWadUabgCseHg`
-* Document URL: https://docs.google.com/document/d/1LBaEQairLGcE6NpY4wv6hoFFiFVOfJbWadUabgCseHg/edit
+Internal project documentation, QA reports, workflow records, and error dictionaries may be maintained outside the repository. Highly sensitive material, including production signing keys and recovery material, must remain outside routine project storage and use separately encrypted backup custody. Tracked public files must not contain private storage URLs, private document IDs, credentials, local paths, or instructions that depend on a particular developer environment.
+
 * Primary distribution target: F-Droid source-built publication.
 * Security hardening baseline: Accrescent technical requirements.
 * Secondary stores receive only the minimum necessary packaging, metadata, identity, or compatibility adaptations.

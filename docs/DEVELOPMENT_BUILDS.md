@@ -2,6 +2,8 @@
 
 Yomori development APKs use the dedicated `io.github.kamui2040.yomori.debug` package and the reproducible public development certificate.
 
+Everything required to generate and validate the public development identity is contained in the repository. Development builds must not require a private drive, private credential, production signing key, or developer-specific machine path.
+
 GitHub Actions is disabled. PC mode builds, validates, signs, and verifies locally. The retained workflow is dormant manual phone-workflow infrastructure only and must not be enabled for ordinary PC development or release publication.
 
 ## Package and signing
@@ -43,4 +45,5 @@ Verify every preview APK with the Android SDK `apksigner` and confirm the requir
 - Never use this certificate for `io.github.kamui2040.yomori`.
 - Never describe a preview APK as a production or store release.
 - Never upload private signing keys or replace the public-development identity with a production identity.
+- Production signing material and its encrypted backups must remain outside the repository and public development workflow.
 - Production signing, release packaging, source tags, checksums, and store submissions require the separate release-readiness process.

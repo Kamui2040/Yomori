@@ -1,9 +1,7 @@
 # Yomori Release Readiness
 
-Audit basis: shared Google Drive document **Android App Store Release Readiness Standard**.
+Audit basis: the self-contained public requirements in this file, with every selected store's live official policy rechecked before submission. Private working documents may inform development, but they are not public build inputs and must not be linked from tracked public files.
 
-- Standard ID: `1LBaEQairLGcE6NpY4wv6hoFFiFVOfJbWadUabgCseHg`
-- Standard URL: https://docs.google.com/document/d/1LBaEQairLGcE6NpY4wv6hoFFiFVOfJbWadUabgCseHg/edit
 - Primary target: F-Droid
 - Security overlay: Accrescent
 - Application ID: `io.github.kamui2040.yomori`
@@ -12,8 +10,6 @@ Audit basis: shared Google Drive document **Android App Store Release Readiness 
 - Current versionCode: `1`
 - Minimum SDK: `26`
 - Target SDK: `36`
-- Audit source branch before this documentation update: `agent/cross-series-reader-navigation`
-- Audit source commit: `f66c57c25787c4ff358d1101e8068524e8dcf196`
 - Public release tag: none
 - Production certificate: not established
 
@@ -23,12 +19,12 @@ Statuses are `PASS`, `PARTIAL`, `BLOCKED`, or `NOT APPLICABLE`. A required block
 
 | Requirement | Status | Evidence or missing work |
 |---|---|---|
-| Complete preferred source is public | PASS | `Kamui2040/Yomori` is public and canonical. |
+| Complete preferred source is public | PARTIAL | The current development repository is public, but the sanitized canonical public repository and clean publication boundary are not yet established. |
 | Compatible software licence | PASS | Root `LICENSE` is Apache-2.0. |
 | Upstream attribution | PASS | `README.md`, `UPSTREAM.md`, and preserved upstream history identify Mihon/Tachiyomi derivation and non-affiliation. |
 | Distinct public identity | PARTIAL | Yomori name, launcher mark, and package IDs exist; inherited internal names, themes, links, and release-facing resources still need audit. |
 | Code and asset licence inventory | BLOCKED | Dependency, prebuilt binary, translation, font, image, sound, and store-artwork audit is incomplete. See `ASSET_ATTRIBUTION.md`. |
-| Public history secret review | PARTIAL | No secret was identified in this documentation audit; complete history scanning and release review remain required. |
+| Public history secret review | PARTIAL | Refined scanning found no credential, local-path, personal-hardware, or operator-workflow matches, but private document links and the complete Git history still require release review. |
 | Matching source tag for every release | NOT APPLICABLE | No public Yomori release exists. |
 | Maintained end-user functionality | PARTIAL | Core import/matching/review exists and reader work is on PR #15; first production release remains incomplete. |
 | Public purpose, limitations, build, privacy, support | PASS | `README.md`, `PRIVACY.md`, `SUPPORT.md`, and `CONTRIBUTING.md`. |
@@ -37,10 +33,11 @@ Statuses are `PASS`, `PARTIAL`, `BLOCKED`, or `NOT APPLICABLE`. A required block
 
 | Requirement | Status | Evidence or missing work |
 |---|---|---|
-| Clean checkout without private services | PARTIAL | Local branch builds passed; a clean tagged release/F-Droid build has not been reproduced. |
+| Clean checkout without private services | PARTIAL | Local branch builds passed; a clean tagged build from the sanitized public repository has not been reproduced. |
+| Public build independent of private storage | PARTIAL | Source builds are intended to use only tracked source and public dependencies; verify that build, audit, translation, metadata, and release preparation require no private drive or private project record. |
 | Documented and pinned toolchain | PASS | `gradle/mihon.versions.toml`, `.github/.java-version`, Gradle wrapper, and version catalog pin the primary toolchain. |
 | Unsigned or store-signable production build | BLOCKED | Release build currently inherits debug signing behavior; production/store-signable path is not established. |
-| Signing separation and key custody | BLOCKED | Public development signing is separated by package, but production identity and custody do not exist. |
+| Signing separation and key custody | BLOCKED | Public development signing is separated by package, but production identity and custody do not exist. Future production keys and recovery material must remain outside the repository and use separately encrypted backup custody. |
 | Dependency and licence audit | BLOCKED | Version catalog exists; licence, provenance, prebuilt, JitPack, and transitive dependency audit is incomplete. |
 | No proprietary runtime SDK in F-Droid variant | PARTIAL | Standard builds are telemetry-free; exact F-Droid dependency graph and variant behavior require proof. |
 | No Firebase/Play/Crashlytics in F-Droid variant | PARTIAL | Telemetry configuration is disabled for standard builds; inspect the final F-Droid dependency graph and APK. |
@@ -108,7 +105,7 @@ Statuses are `PASS`, `PARTIAL`, `BLOCKED`, or `NOT APPLICABLE`. A required block
 | High-resolution store icon | PARTIAL | Temporary Yomori launcher mark exists; final licensed store icon is not approved. |
 | Screenshots | BLOCKED | Current release screenshots are absent. |
 | Feature graphic or banner | BLOCKED | Not prepared. |
-| Release notes and changelog | PARTIAL | `CHANGELOG.md` exists; first-release notes are absent. |
+| Release notes and changelog | PARTIAL | `CHANGELOG.md` exists, but public and in-app notes must be reduced to compact, released, user-visible changes only. |
 | Languages, countries, age, rating, accessibility | BLOCKED | Store declarations are not prepared. |
 | Stable privacy/source/licence/support/security/donation URLs | PARTIAL | Repository documents and Ko-fi exist; public release URLs and long-term hosting must be verified. |
 | Advertising, analytics, accounts, purchases, data, Internet declarations | BLOCKED | Store-specific declarations are not prepared. |
@@ -121,6 +118,8 @@ Statuses are `PASS`, `PARTIAL`, `BLOCKED`, or `NOT APPLICABLE`. A required block
 ## 7. Canonical release layout
 
 All items are currently **BLOCKED** or **NOT APPLICABLE** because Yomori has no production signer, release tag, signed public APK, deterministic release asset set, published checksums, certificate record, or release history.
+
+Private QA evidence and encrypted backups may be retained outside the repository, but every public source build and release claim must remain independently reproducible from public source, public dependencies, and explicitly supplied signing input.
 
 ## 8. F-Droid baseline
 
@@ -176,13 +175,14 @@ All items are currently **BLOCKED** or **NOT APPLICABLE** because Yomori has no 
 
 ## Smallest compliant next changes
 
-1. Complete dependency, prebuilt binary, translation, and asset licence inventories.
-2. Define and verify a clean F-Droid build variant and recipe.
-3. Remove or isolate self-update, executable extension installation, and non-compliant external-download behavior per target store.
-4. Design an Accrescent-compatible production variant without global cleartext, Shizuku, or unreviewed package permissions.
-5. Establish protected production signing and deterministic release records.
-6. Prepare Fastlane metadata, licensed final artwork, screenshots, descriptions, declarations, and release notes.
-7. Complete the release QA matrix.
-8. Recheck each selected store's live official policy before any account or submission action.
+1. Complete the private-development/public-repository split and verify the sanitized public history and documentation.
+2. Complete dependency, prebuilt binary, translation, and asset licence inventories.
+3. Define and verify a clean F-Droid build variant and recipe from the public repository without private storage.
+4. Remove or isolate self-update, executable extension installation, and non-compliant external-download behavior per target store.
+5. Design an Accrescent-compatible production variant without global cleartext, Shizuku, or unreviewed package permissions.
+6. Establish protected production signing, separately encrypted key backups, and deterministic release records.
+7. Prepare Fastlane metadata, licensed final artwork, screenshots, descriptions, declarations, and compact user-facing release notes.
+8. Complete the release QA matrix.
+9. Recheck each selected store's live official policy before any account or submission action.
 
 No publication, store registration, identity upload, or production signing was performed by this documentation update.

@@ -94,7 +94,7 @@ Yomori does not provide, bundle, host, operate, or recommend content sources.
 
 ## Publication and store-readiness status
 
-The governing shared standard is **Android App Store Release Readiness Standard** (`1LBaEQairLGcE6NpY4wv6hoFFiFVOfJbWadUabgCseHg`).
+The public release-readiness baseline is defined in `docs/RELEASE_READINESS.md`; private working documents may inform development but are not public build inputs.
 
 Current baseline:
 
@@ -183,6 +183,15 @@ Before the first public APK or store submission:
 - Publish stable privacy, security, support, licence, attribution, changelog, donation, and store-metadata routes.
 - Prepare Fastlane-compatible metadata, licensed icons, screenshots, feature graphics where required, descriptions, content ratings, declarations, and release notes.
 - Recheck live official store requirements before registration or submission.
+
+## Repository publication and private-data boundary
+
+- Retain the current development repository privately so committed history, branches, pull requests, tags, and development continuity are preserved.
+- Publish a separate sanitized canonical `Kamui2040/Yomori` repository containing only reviewed source, required licences and attribution, public-safe documentation, compact user-facing changelogs, and approved release assets.
+- Keep internal project documentation, QA evidence, workflow records, error dictionaries, and private reports outside the public repository.
+- Keep production signing keys, recovery material, credentials, and other highly sensitive data outside routine project storage with separately encrypted secondary backups.
+- The public repository must remain fully buildable, auditable, translatable, and releasable without access to any private drive or private project record.
+- Before changing repository visibility or reusing the canonical repository name, inventory and preserve existing releases, assets, tags, branches, pull requests, forks, and public links.
 
 ## Upstream baseline
 

@@ -5,15 +5,12 @@ Status: planned; not implemented in the application.
 ## Developer identity
 
 - Display name: K2040
-- Approved avatar: `K2040-wolf-avatar.png`
-- Shared Drive asset ID: `1kyRwAwS6fBICvpbqCDac4vRnwxaKljxc`
-- Asset URL: https://drive.google.com/file/d/1kyRwAwS6fBICvpbqCDac4vRnwxaKljxc/view
-- Metadata ID: `1bq3N6Cprn074X8GpyrzWubwPb00I0O-z`
-- Metadata URL: https://drive.google.com/file/d/1bq3N6Cprn074X8GpyrzWubwPb00I0O-z/view
+- Approved avatar: `K2040-wolf-avatar.png` (private development asset; not present in the public repository)
+- Public-use requirement: add the asset only after its redistribution-compatible licence, provenance, and repository-hosted attribution record are complete.
 
 The avatar represents the developer, not the Yomori application icon.
 
-The canonical image remains in the shared Google Drive **Brand Assets** folder. Do not bundle or copy it into the public repository, APK, F-Droid metadata, or store listing until `ASSET_ATTRIBUTION.md` records a redistribution-compatible licence.
+The canonical private asset remains outside the public repository. Do not bundle or copy it into the public repository, APK, F-Droid metadata, or store listing until `ASSET_ATTRIBUTION.md` records a redistribution-compatible licence and the approved public asset is added through the normal repository review process.
 
 ## Optional support
 
