@@ -1,49 +1,69 @@
-Looking to report an issue/bug or make a feature request? Please refer to the [README file](https://github.com/mihonapp/mihon#issues-feature-requests-and-contributing).
+# Contributing to Yomori
 
----
+Contributions are welcome when they preserve Yomori's source-neutral, local-first, extension-compatible product boundaries.
 
-Thanks for your interest in contributing to Mihon!
+Read, in order:
 
+1. `AGENTS.md`
+2. `PROJECT_CONTEXT.md`
+3. the relevant documents under `docs/`
+4. the affected source, tests, database schema, and build configuration
 
-# Code contributions
+## Before opening an issue
 
-Pull requests are welcome!
+Use the Yomori issue templates. Do not use Yomori issues to request, recommend, distribute, or troubleshoot a particular content source or extension repository.
 
-If you're interested in taking on [an open issue](https://github.com/mihonapp/mihon/issues), please comment on it so others are aware.
-You do not need to ask for permission nor an assignment.
+Security vulnerabilities must be reported privately through `SECURITY.md`.
 
-## Prerequisites
+## Development requirements
 
-Before you start, please note that the ability to use following technologies is **required** and that existing contributors will not actively teach them to you.
+- Android Studio and the repository's documented JDK/Android SDK versions
+- Kotlin and Android development experience
+- the repository Gradle wrapper
+- a representative Android emulator or physical device where the change affects UI, reader behavior, permissions, storage, or extensions
 
-- Basic [Android development](https://developer.android.com/)
-- [Kotlin](https://kotlinlang.org/)
+On Windows, common checks are:
 
-### Tools
+```powershell
+.\gradlew.bat spotlessCheck
+.\gradlew.bat testDebugUnitTest
+.\gradlew.bat verifySqlDelightMigration
+.\gradlew.bat assemblePreview
+git diff --check
+```
 
-- [Android Studio](https://developer.android.com/studio)
-- Emulator or phone with developer options enabled to test changes.
+Run the relevant subset and document anything not run.
 
-## Getting help
+## Product and compatibility rules
 
-- Join [the Discord server](https://discord.gg/mihon) for online help and to ask questions while developing.
+A contribution must not:
 
-# Translations
+- bundle, recommend, preselect, install, or auto-trust a source, extension, or extension repository;
+- rename or break extension-facing `eu.kanade.tachiyomi.source` contracts;
+- query a source outside the reading list's visible user-selected source set;
+- silently replace confirmed mappings, restore rejected candidates, clear skips, or fall back from an unavailable confirmed source;
+- weaken XML parsing limits, request bounds, signature checks, privacy, or telemetry-free behavior;
+- add production signing material or private test data;
+- re-enable inherited Mihon release, update, support, or website automation.
 
-Translations are done externally via Weblate. See [our website](https://mihon.app/docs/contribute#translation) for more details.
+## Documentation and release impact
 
+Update `PROJECT_CONTEXT.md` when a merged decision, migration, invariant, blocker, or milestone changes.
 
-# Forks
+Release-affecting work must review `docs/RELEASE_READINESS.md`, with F-Droid as the primary FOSS target and the Accrescent security overlay used as the stricter security benchmark.
 
-Forks are allowed so long as they abide by [the project's LICENSE](https://github.com/mihonapp/mihon/blob/main/LICENSE).
+Store submissions, production signing, identity verification, and publication are separate release operations.
 
-When creating a fork, remember to:
+## Pull requests
 
-- To avoid confusion with the main app:
-    - Change the app name
-    - Change the app icon
-    - Change or disable the [app update checker](https://github.com/mihonapp/mihon/blob/main/app/src/main/java/eu/kanade/tachiyomi/data/updater/AppUpdateChecker.kt)
-- To avoid installation conflicts:
-    - Change the `applicationId` in [`build.gradle.kts`](https://github.com/mihonapp/mihon/blob/main/app/build.gradle.kts)
-- To avoid having your data polluting the main app's analytics and crash report services:
-    - If you want to use Firebase analytics, replace [`google-services.json`](https://github.com/mihonapp/mihon/blob/main/app/src/standard/google-services.json) with your own
+Keep pull requests focused and independently reviewable. Include:
+
+- the user-visible reason for the change;
+- affected compatibility or privacy boundaries;
+- tests and local commands run;
+- device QA performed or still required;
+- migration and backup implications;
+- release-readiness impact;
+- screenshots for material UI changes.
+
+Yomori is independently maintained and is not a Mihon support channel.

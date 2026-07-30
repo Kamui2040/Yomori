@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
-  - name: ❌ Help with Extensions
-    url: https://mihon.app/docs/faq/browse/extensions
-    about: For extension-related questions/issues
-  - name: 🖥️ Mihon website
-    url: https://mihon.app/
-    about: Guides, troubleshooting, and answers to common questions
+  - name: Yomori support and scope
+    url: https://github.com/Kamui2040/Yomori/blob/main/SUPPORT.md
+    about: Read the supported issue scope before opening a ticket.
+  - name: Private security report
+    url: https://github.com/Kamui2040/Yomori/security/advisories/new
+    about: Report vulnerabilities privately. Do not include sensitive details in public issues.

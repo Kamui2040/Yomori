@@ -2,151 +2,132 @@
 
 ## Status
 
-Yomori is in early implementation. It is based on the current `main` branch of `mihonapp/mihon` and will remain compatible with the existing user-installed Mihon/Tachiyomi extension ecosystem.
+Yomori is an early-development, source-agnostic Android comic reader based on Mihon. The canonical merged state is the public `main` branch of `Kamui2040/Yomori`.
 
-GitHub Actions was enabled for the fork on 2026-07-10. Pull requests and `main` builds use GitHub Actions as the authoritative validation and APK artifact environment.
+GitHub Actions is disabled for the repository as of 2026-07-24. PC development uses local Gradle-wrapper checks, local preview assembly, the reproducible public development certificate, certificate verification, and documented physical-device QA. Do not re-enable, trigger, monitor, or rely on Actions unless a future phone-only workflow is explicitly authorized.
 
-The Android application identity is `io.github.kamui2040.yomori`, with Yomori version line `0.1.0-alpha01`. The Kotlin namespace and extension-facing API packages remain unchanged for compatibility.
+The production application ID is `io.github.kamui2040.yomori`; development-device artifacts use `io.github.kamui2040.yomori.debug`. The Yomori version line is `0.1.0-alpha01`. Extension-facing Mihon/Tachiyomi namespaces remain unchanged where compatibility requires them.
 
-Device-test artifacts use the dedicated `io.github.kamui2040.yomori.debug` package and a reproducible public development certificate. This permits direct in-place updates between development APKs downloaded on a phone without requiring local signing setup.
+Merged `main` implements safe CBL parsing, transactional persistence, normalization and scoring, visible source selection, bounded candidate search, protected automatic resolution, persisted rejection/override/mapping state, and manual review.
 
-The first product milestone is CBL reading-list import and deterministic, user-correctable matching. The safe parser, transactional persistence, normalization, confidence scoring, visible import interface, per-list source-selection flow, candidate-resolution storage, rejection history, entry overrides, series mappings, confirmation-protected repository operations, explicit candidate-search orchestration, and persisted manual-review interface are implemented and covered by focused tests. Cross-series reader navigation and progress are the next product stage. No public Yomori release is ready yet.
+Draft PR #15 (`agent/cross-series-reader-navigation`) implements cross-series navigation and list-specific reading progress. It is open, draft, unmerged, and not release-ready. Its current head is `e496094ba7560095bc9c06c1e8b75be0a58ce8fc`; PR #17 is incorporated only into that branch. Physical-device QA still proves a blocker: an already matched entry can remain readable after its exact extension is disabled in Android settings, including after force-stop and cold restart. Do not merge PR #15 or describe the disabled-source requirement as passed until that behavior is corrected and retested. Do not clear confirmed mappings or cached rows merely to conceal the defect.
+
+No public production release, production signing identity, store submission, accepted F-Droid build, or reproducibility result exists.
 
 ## Product goal
 
-Yomori is a source-agnostic Android comic reader that imports Comic Book Lover (`.cbl`) reading lists, resolves their entries through user-selected compatible extensions, and reads the resulting cross-series order as one continuous list.
+Yomori imports Comic Book Lover (`.cbl`) reading lists, resolves entries through explicitly selected compatible extensions, and reads the resulting order continuously across series and selected sources.
 
-Yomori does not provide, bundle, host, operate, or recommend content sources.
+Yomori does not provide, bundle, host, operate, recommend, preselect, install, or trust content sources or extension repositories. It is independently maintained and must not imply Mihon endorsement.
 
-## Confirmed decisions
+## Authority and evidence
 
-- App and repository name: **Yomori**.
-- Canonical repository: `Kamui2040/Yomori`.
-- Android application ID: `io.github.kamui2040.yomori`.
-- Development application ID: `io.github.kamui2040.yomori.debug`.
-- Base project: Mihon under Apache-2.0.
-- Extensions remain separate user-installed APKs.
-- Users add extension repositories and choose which installed extensions a CBL may search.
-- Matching is series-first, then issue/chapter matching.
-- Matching uses a configurable confidence percentage plus an ambiguity margin between the best and second-best candidates.
-- Low-confidence or ambiguous results require user review.
-- Users may set source preferences globally, per reading list, per series, and per individual entry.
-- User-confirmed mappings override automatic matches and are never silently replaced.
-- Original CBL data is retained even after successful matching.
-- CBL parsing preserves `<Book>` order and rejects DTD/entity declarations, oversized documents, excessive entry counts, malformed structure, and entries without required `Series` or `Number` attributes.
-- Imported lists, entries, ordered database references, unknown metadata, warnings, matching state, and reading-list progress are stored in SQLDelight.
-- SQLDelight migration 15 adds ordered per-list source selections without changing extension-facing APIs.
-- SQLDelight migration 16 adds ranked candidate snapshots, rejection history, entry overrides, and list-local series mappings without changing extension-facing APIs.
-- Candidate refresh and automatic resolution are transactional and refuse to modify user-confirmed entry mappings.
-- Candidate refresh and automatic resolution refuse skipped entries; only explicit confirmation may clear a skip when the user selects a match.
-- Automatic series mapping cannot replace a user-confirmed series mapping; only an explicit confirmation or removal may change it.
-- Candidate rejections persist independently from candidate refreshes and are excluded from later automatic matching until explicitly cleared or confirmed.
-- Candidate searches run only after an explicit user action and query only the installed online sources selected for that reading list.
-- Search work is grouped by normalized title plus known year and volume, uses one first-page series search per selected source and series, fetches each source/series issue list at most once per operation, shares a three-request concurrency limit across simultaneous list searches, and applies a 30-second timeout to each extension request.
-- Entry overrides constrain candidate search before lower-priority series and reading-list preferences; unavailable override sources are not silently bypassed.
-- Search results are bounded before persistence, are never added to the normal library, and are saved with the existing score breakdown and confirmation protection. Rejected candidates remain persisted for review but do not participate in automatic decisions.
-- Confirmed and skipped entries are not searched automatically; missing selected sources are reported without blocking available selected sources.
-- A user-confirmed series mapping is never bypassed by replacement searches when its selected source is unavailable.
-- Each reading list exposes a dedicated manual-review screen that reads only persisted list and resolution data. Opening or browsing it performs no source search or extension network request.
-- Manual review preserves original CBL order and keeps ambiguous, unresolved, unavailable, automatically matched, user-confirmed, skipped, and removed-candidate states visible.
-- Candidate review shows confidence, lead, decision reason, source and language, remote identities, complete score evidence, conflicts, rejection state, overrides, and series mappings.
-- Entry confirmation, candidate rejection or restoration, and series-mapping confirmation or removal are separate explicit actions. Each successful action is persisted immediately and the screen reloads repository data.
-- Rejected candidates that are no longer returned by a source remain visible through their persisted rejection record and can be restored explicitly.
-- Reading-list insertion is transactional, deletion cascades to owned records, and progress cannot point to a missing entry.
-- The primary Reading Lists tab imports local `.cbl` documents through Android's system document picker.
-- Imported files are read with a 16 MiB boundary and support UTF-8, UTF-16 little-endian, and UTF-16 big-endian XML.
-- At least one currently installed online source must be selected before a reading list can be saved.
-- Selected source order is persisted as the list's search-priority order and can be edited later.
-- Missing extension IDs remain visible as unavailable source choices for later repair rather than being silently discarded.
-- No source is bundled, recommended, or selected automatically.
-- Title normalization produces locale-independent full and edition-free comparison keys while retaining extracted year and volume as separate scoring evidence.
-- Issue-number normalization preserves annual, special, Free Comic Book Day, one-shot, suffix, decimal, fraction, and opaque identifier distinctions.
-- Normalization never replaces the original CBL metadata stored for repair and rematching.
-- Confidence scoring exposes a complete component breakdown for title, issue, year, volume, external identifiers, source preferences, and confirmed history.
-- Automatic matching requires at least 88%, an equivalent issue number, at least 85% title similarity, and a lead of at least 10 percentage points over the runner-up.
-- Scores from 65% through 87.99% require review; scores below 65% remain unresolved.
-- Missing optional metadata is neutral, conflicting metadata is penalized, and supporting evidence cannot bypass title or issue safety gates.
-- Equal high-scoring candidates remain ambiguous rather than being silently selected by source order.
-- Standard Yomori builds do not include telemetry.
-- GitHub Actions is the authoritative APK build environment.
-- Development APK filenames include the Yomori version, workflow build number, short commit SHA, and ABI.
-- Development APKs use a public test certificate that is never used for production releases.
-- Null-pointer failures returned by HTTP source extensions are shown as an actionable update-or-change-source message instead of a raw exception.
-- Inherited public release automation remains disabled until Yomori production signing and release readiness are established.
+- `AGENTS.md` owns stable repository policy.
+- This file owns mutable merged status, decisions, thresholds, blockers, active pull requests, validation state, and release readiness.
+- Focused documents under `docs/` own detailed architecture and release evidence.
+- Open branches and Drive records are evidence, not merged truth.
+- Source, tests, build configuration, package metadata, APK inspection, and physical-device evidence own their specific facts.
+
+## Confirmed merged decisions
+
+- Canonical repository: `Kamui2040/Yomori`; stable branch: `main`; upstream: `mihonapp/mihon`; licence: Apache-2.0.
+- Extensions remain separate user-installed APKs and are treated as untrusted executable code.
+- Users explicitly choose the installed online sources that each reading list may query.
+- CBL parsing preserves exact `<Book>` order, original known and unknown metadata, and later repair evidence.
+- DTDs/entities, malformed structure, missing required attributes, oversized inputs, and excessive entry counts are rejected.
+- Imported lists and owned records are persisted transactionally; deletion cascades and progress integrity are enforced.
+- Original imported data remains separate from normalized comparison values.
+- Matching resolves series first, then issue/chapter identity.
+- Automatic operations never silently replace confirmed mappings, overrides, rejections, or skips.
+- Candidate searches require explicit action, query only the visible effective source set, use bounded concurrency/timeouts, and never add candidates to the ordinary library automatically.
+- Manual review reads persisted state without starting extension searches.
+- Standard Yomori builds are telemetry-free and local-first. Network use belongs to visible user-selected extensions, configured trackers, or other explicit external actions.
+- Development signing is public and test-only. It must never be used for production.
+- Public release automation and inherited Mihon website/update release hooks remain disabled.
 
 ## Matching defaults
 
-Initial defaults, subject to testing with real imported lists:
+Initial merged defaults, subject to focused evidence:
 
-- Automatic acceptance: score at least 88%.
+- Automatic acceptance: at least 88%.
 - Review range: 65% through 87.99%.
 - Unresolved: below 65%.
-- Required lead over the second candidate: 10 percentage points.
+- Required lead over runner-up: 10 percentage points.
 - Minimum title similarity for automatic acceptance: 85%.
+- Equivalent issue identity and membership in the visible effective source set are mandatory safety gates.
 
-The basic score combines normalized series-title similarity, issue-number equivalence, volume/year agreement, external identifiers, source preference, and confirmed user history. The complete score breakdown is retained for the manual-review interface.
+Exact scoring details and matcher changes require source, tests, and documentation updates. Branch-only changes are not merged defaults.
 
 ## Source preference hierarchy
 
-From highest to lowest priority:
+Highest to lowest:
 
 1. Entry-specific confirmed match or source override.
 2. Series-specific confirmed mapping or source preference.
 3. Reading-list source order.
-4. Global source preference.
+4. Explicitly assigned user-configured category defaults, where implemented.
+5. Global source preference, where implemented.
 
-Only user-selected installed extensions may be queried for a reading list.
+Never silently bypass an unavailable higher-priority confirmed or overridden source with a lower-priority source.
 
-## Resolution states
+## Reading and availability invariants
 
-Persisted states:
+- Persisted CBL order is authoritative for reading-list navigation.
+- Ordinary manga-scoped reader behavior remains separate unless explicitly changed and tested.
+- Unresolved, rejected, skipped, removed, unavailable, or rematch-required entries stop visibly and offer explicit Review, Skip, or Stop behavior.
+- Chapter read state is shared; reading-list position and completion are list-specific.
+- Cached content, mappings, database rows, or an already-open reader do not prove the exact extension is installed and enabled.
+- Before materializing or continuing source-backed content, current package-manager and extension-enabled state must be verified.
+- Failure preserves imported metadata, mappings, decisions, and unaffected progress.
 
-- `UNSEARCHED`
-- `SEARCHING`
-- `AUTO_MATCHED`
-- `USER_CONFIRMED`
-- `AMBIGUOUS`
-- `UNRESOLVED`
-- `SOURCE_UNAVAILABLE`
-- `CHAPTER_REMOVED`
-- `NEEDS_REMATCH`
+## Implementation sequence
 
-## Initial implementation sequence
+1. Repository governance and independent identity — complete on `main`.
+2. Safe CBL model/parser and fixtures — complete on `main`.
+3. SQLDelight persistence and migrations through merged migration 16 — complete on `main`.
+4. Normalization, scoring, source selection, candidate persistence/search, and manual review — complete on `main`.
+5. Cross-series navigation and list-specific progress — implemented only on draft PR #15; blocked and unmerged.
+6. Repair/rematching tools and later approved source-setting/category work — planned or branch-specific; verify before describing as implemented.
 
-1. Repository governance and CI adaptation. **Complete.**
-2. Independent application identity and temporary Yomori branding. **Complete.**
-3. CBL domain model and parser with fixtures and unit tests. **Complete.**
-4. Reading-list persistence and migrations. **Complete.**
-5. Title and issue normalization. **Complete.**
-6. Confidence scoring and ambiguity rules. **Complete.**
-7. Import and source-selection flow. **Complete.**
-8. Candidate persistence, rejection history, and protected manual overrides. **Complete.**
-9. Candidate search orchestration. **Complete.**
-10. Manual-review UI. **Complete.**
-11. Cross-series reader navigation and progress.
-12. Repair and rematching tools.
+## FLOSS and publication status
 
-## Compatibility invariants
+Primary open-source publication target: F-Droid. Accrescent requirements are used as a security-hardening overlay. Detailed evidence belongs in `docs/RELEASE_READINESS.md`.
 
-- Keep extension-facing APIs binary compatible, particularly the `eu.kanade.tachiyomi.source` contracts.
-- Do not rename those API packages as part of product rebranding.
-- Keep extension signature verification and trust handling.
-- Track upstream source-API versions and extension-loader changes.
+Current state is blocked by, at minimum:
+
+- no protected production signing or documented continuity/recovery process;
+- no accepted F-Droid recipe, metadata, screenshots, or source-built artifact;
+- incomplete dependency, native/prebuilt binary, asset, font, translation, and licence/provenance inventory;
+- unresolved Firebase/Crashlytics/telemetry-module exclusion evidence for the F-Droid path;
+- updater, executable-extension installation, Shizuku/package-management, broad permission, cleartext-network and exported-component review;
+- no unsigned same-package non-debuggable F-Droid production variant;
+- no independent repeated build and byte-for-byte comparison;
+- incomplete privacy, security, support, attribution, changelog, store metadata, accessibility, localization, backup/restore, and representative-device release evidence;
+- unresolved PR #15 disabled-extension blocker.
+
+A local or branch build does not prove reproducibility, F-Droid acceptance, store compliance, production signing, or release readiness.
 
 ## Release blockers
 
-Before the first public APK release:
+Before any public APK, tag, release, announcement, or store submission:
 
-- Finalize original Yomori visual branding beyond the temporary launcher mark.
-- Remove or replace inherited Mihon-specific update, support, and download links.
-- Establish protected Yomori production signing and document key custody.
-- Validate extension loading against representative compatible extensions.
-- Add required attribution and modified-file notices.
+- resolve all required blockers in `docs/RELEASE_READINESS.md`;
+- resolve and retest the disabled-extension availability defect;
+- finish original Yomori branding and licensed release assets;
+- remove or replace inherited Mihon update, support, download, website, signing, and publication identities;
+- complete dependency/binary/asset licence and source-completeness audits;
+- establish protected production signing, certificate continuity, recovery, deterministic artifacts, checksums, and matching source tags;
+- establish and independently verify the intended F-Droid build path and anti-feature declarations;
+- complete representative extension, backup/restore, migration, accessibility, localization, screen-size, Android-version, permission, networking, and physical-device QA;
+- prepare public privacy, security, support, attribution, changelog, donation, and store-metadata routes;
+- obtain explicit final release approval.
 
 ## Upstream baseline
 
 Fork baseline at project creation:
 
-- Upstream commit: `b4635c41a8dd5e30edf480b0c9bdc80d0fda0520`
-- Upstream release line: Mihon `0.20.1`
-- Baseline date: 2026-07-10
+- upstream commit: `b4635c41a8dd5e30edf480b0c9bdc80d0fda0520`;
+- upstream release line: Mihon `0.20.1`;
+- baseline date: 2026-07-10.
+
+Revalidate upstream state before any synchronization. Preserve Yomori identity, source neutrality, privacy, extension compatibility, CBL invariants, signing separation, disabled cloud automation, and all confirmed user-control rules.

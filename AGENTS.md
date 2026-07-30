@@ -4,7 +4,7 @@
 
 This file is the repository policy layer for Yomori. Higher-level host, application, and explicit user instructions take precedence.
 
-Do not interpret this file as standing authorization to commit, push, open or merge a pull request, delete branches, publish artifacts, alter signing, or perform a release. Those actions require explicit authorization.
+Routine reversible repository work is pre-approved when it remains in scope and validation passes. This includes focused branch work, staging, committing, normal pushes, and opening or updating pull requests. Stop for failed validation, conflicts, unexpected scope, destructive history changes, branch deletion, signing changes, publication, store submission, identity-document upload, or any action that could expose secrets. Merges, production signing, and releases remain separately controlled by the higher-level project instructions.
 
 ## Required read order
 
@@ -23,7 +23,8 @@ An open branch or pull request may contain newer work. Distinguish between:
 * planned;
 * implemented locally;
 * pushed;
-* validated by GitHub Actions;
+* validated locally;
+* validated by GitHub Actions when enabled;
 * physically device-tested;
 * merged into `main`;
 * publicly released.
@@ -52,7 +53,7 @@ Before modifying files:
 * Fetch current remote state before relying on branch comparisons.
 * Inspect `git status`, tracked changes, staged changes, and untracked files.
 * Preserve unrelated user or agent changes.
-* Inspect relevant open pull requests, review state, and GitHub Actions checks.
+* Inspect relevant open pull requests, review state, repository Actions settings, and any existing checks.
 * Read repository-specific task documents and referenced architecture decisions.
 * Confirm whether the request is planning, implementation, review, validation, or publication.
 * Keep planning and research no-code unless implementation is requested.
@@ -64,7 +65,7 @@ After an error, inspect actual repository and build state before retrying. Do no
 * Keep `main` stable and buildable.
 * Implementation belongs on a focused branch named `agent/<description>`.
 * Implementation should ultimately be reviewed through a narrow pull request.
-* Do not create or switch branches, commit, push, open a pull request, merge, rebase shared work, delete a branch, or modify remote state unless the task explicitly authorizes it.
+* Routine focused branch creation or switching, commits, normal pushes, and pull-request creation or updates may proceed autonomously when the working tree, branch target, scope, and validation are verified. Do not force-push, rewrite shared history, delete branches, change signing, publish, submit to a store, or merge outside the higher-level release and merge controls.
 * Keep changes narrow, independently reviewable, and independently revertible.
 * Avoid drive-by formatting, unrelated cleanup, generated-file churn, and unnecessary dependency changes.
 * Preserve existing user changes and unexpected files unless the task explicitly includes them.
@@ -283,7 +284,7 @@ The normal validation set includes:
 * focused tests for the changed behavior;
 * `testDebugUnitTest`;
 * `verifySqlDelightMigration` when SQLDelight schema, migrations, queries, repositories, or persistence behavior are affected;
-* the current development or preview APK assembly task defined by the repository and GitHub Actions;
+* the current development or preview APK assembly task defined by the repository;
 * `git diff --check`.
 
 The current development assembly task is `assemblePreview`. Do not substitute production `assembleRelease` unless production release work and signing are explicitly in scope.
@@ -300,7 +301,7 @@ git diff --check
 
 Run only applicable tasks, but do not omit a required migration or compatibility check merely to save time.
 
-GitHub Actions is the authoritative APK and build-validation environment. A local pass does not override a failing required check.
+GitHub Actions is currently disabled for the repository. PC-mode validation uses local Gradle wrapper checks, local development signing, certificate verification, and documented physical-device QA. Do not re-enable, trigger, monitor, or rely on GitHub Actions unless an explicit future task authorizes it. If Actions are re-enabled, a local pass does not override a failing required check.
 
 Before reporting completion:
 
@@ -355,6 +356,34 @@ Do not copy temporary PR state, build numbers, active branch names, or pending Q
 
 When code and documentation disagree, determine whether the code is incomplete, the documentation is stale, or a branch is not yet merged. Correct the appropriate layer instead of silently choosing one.
 
+## Open-source publication and store readiness
+
+The shared Google Drive document **Android App Store Release Readiness Standard**
+is a governing release-readiness input for Yomori.
+
+* Document ID: `1LBaEQairLGcE6NpY4wv6hoFFiFVOfJbWadUabgCseHg`
+* Document URL: https://docs.google.com/document/d/1LBaEQairLGcE6NpY4wv6hoFFiFVOfJbWadUabgCseHg/edit
+* Primary distribution target: F-Droid source-built publication.
+* Security hardening baseline: Accrescent technical requirements.
+* Secondary stores receive only the minimum necessary packaging, metadata, identity, or compatibility adaptations.
+
+For every applicable requirement, report `PASS`, `PARTIAL`, `BLOCKED`, or `NOT APPLICABLE`. Every pass needs repository, artifact, or verified-test evidence. Every partial or blocked item must state the exact missing work. A required blocked item prevents submission.
+
+Release-affecting changes must review and update `docs/RELEASE_READINESS.md`. In particular, preserve or establish:
+
+* complete public source and redistribution-compatible licences for code and assets;
+* a clean FOSS-compatible source build without proprietary runtime SDKs or private infrastructure;
+* an F-Droid variant without self-updating or executable-download behavior that violates the selected store policy;
+* honest anti-feature declarations for extension installation, external network services, or other applicable behavior;
+* a telemetry-free and advertising-free standard build;
+* reviewed permissions, exported components, deep links, WebViews, file sharing, and network security;
+* an Accrescent-compatible path without global cleartext, Shizuku, root or ADB access, self-updaters, debug signing, or unreviewed sensitive permissions;
+* protected production signing, certificate continuity, deterministic release assets, checksums, and matching source tags;
+* public privacy, security, support, licence, attribution, changelog, and donation routes;
+* Fastlane-compatible metadata, screenshots, icons, descriptions, and store declarations where practical.
+
+Recheck each selected store's current official policy before account creation or submission. Do not register store accounts, upload identity documents, sign production artifacts, or publish a release as part of ordinary development work.
+
 ## Development artifacts and release policy
 
 Development APKs use:
@@ -370,13 +399,16 @@ Inherited public release automation remains disabled until release readiness is 
 
 Before a public release, verify at minimum:
 
-* original Yomori visual branding;
-* removal or replacement of inherited Mihon update, support, and download endpoints;
+* every required item in `docs/RELEASE_READINESS.md` is not blocked;
+* original Yomori visual branding and licensed release assets;
+* removal or replacement of inherited Mihon update, support, download, and website endpoints;
+* a clean F-Droid-compatible source build and dependency/licence audit;
+* the Accrescent security-overlay review;
 * protected production signing and documented key custody;
-* representative compatible-extension QA;
+* representative compatible-extension and device QA;
 * attribution and modified-file notices;
-* privacy and telemetry review;
-* release notes and update behavior;
+* privacy, permission, network, and telemetry review;
+* release metadata, notes, checksums, and update behavior;
 * explicit release approval.
 
 Never publish using Mihon branding, Mihon signing identity, Mihon update endpoints, the public development certificate, or incomplete release requirements.
