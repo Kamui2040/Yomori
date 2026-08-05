@@ -5,14 +5,12 @@ This file tracks release-relevant visual, font, audio, translation, and other bu
 ## K2040 developer avatar
 
 - Name: `K2040-wolf-avatar.png`
-- Canonical location: shared Google Drive Brand Assets folder
-- Drive file ID: `1kyRwAwS6fBICvpbqCDac4vRnwxaKljxc`
-- Metadata file ID: `1bq3N6Cprn074X8GpyrzWubwPb00I0O-z`
+- Provenance record: retained privately pending public rights review; private storage locations and identifiers must not be copied into this repository
 - Intended use: future About section and cross-project developer identity
 - Current repository status: not bundled
 - Redistribution licence: **BLOCKED — explicit compatible licence not yet recorded**
 
-The user approved cross-project use, but F-Droid and public-source distribution require a clear redistribution licence entry before repository, APK, or store inclusion.
+Internal-use approval is not a public redistribution licence. Do not add the asset or its metadata to Git, an APK, or store materials until public-safe provenance and an explicit redistribution-compatible licence are recorded in repository-local documentation.
 
 ## Yomori application assets
 
