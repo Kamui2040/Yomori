@@ -24,7 +24,7 @@ An open branch or pull request may contain newer work. Distinguish between:
 * implemented locally;
 * pushed;
 * validated locally;
-* validated by GitHub Actions when enabled;
+* validated by an explicitly authorized non-PC workflow, when applicable;
 * physically device-tested;
 * merged into `main`;
 * publicly released.
@@ -53,7 +53,7 @@ Before modifying files:
 * Fetch current remote state before relying on branch comparisons.
 * Inspect `git status`, tracked changes, staged changes, and untracked files.
 * Preserve unrelated user or agent changes.
-* Inspect relevant open pull requests, review state, repository Actions settings, and any existing checks.
+* Inspect relevant open pull requests and review state. For PC workflows, do not query repository Actions settings or run, job, log, artifact, check, or status endpoints.
 * Read repository-specific task documents and referenced architecture decisions.
 * Confirm whether the request is planning, implementation, review, validation, or publication.
 * Keep planning and research no-code unless implementation is requested.
@@ -69,7 +69,7 @@ After an error, inspect actual repository and build state before retrying. Do no
 * Keep changes narrow, independently reviewable, and independently revertible.
 * Avoid drive-by formatting, unrelated cleanup, generated-file churn, and unnecessary dependency changes.
 * Preserve existing user changes and unexpected files unless the task explicitly includes them.
-* Never merge while required checks are failing.
+* Never merge while required validation or review gates are failing.
 * Never merge a draft or approval-gated pull request without explicit authorization.
 
 ## Source neutrality
@@ -301,7 +301,7 @@ git diff --check
 
 Run only applicable tasks, but do not omit a required migration or compatibility check merely to save time.
 
-GitHub Actions is currently disabled for the repository. PC-mode validation uses local Gradle wrapper checks, local development signing, certificate verification, and documented physical-device QA. Do not re-enable, trigger, monitor, or rely on GitHub Actions unless an explicit future task authorizes it. If Actions are re-enabled, a local pass does not override a failing required check.
+GitHub Actions and other cloud CI are not part of PC workflows. Do not create, enable, trigger, query, monitor, require, or rely on them for PC development. An explicitly authorized future non-PC workflow must be narrowly scoped and recorded in `PROJECT_CONTEXT.md` before use. Local validation does not replace any separately authorized release, device, or publication gate.
 
 Before reporting completion:
 
@@ -358,11 +358,8 @@ When code and documentation disagree, determine whether the code is incomplete, 
 
 ## Open-source publication and store readiness
 
-The shared Google Drive document **Android App Store Release Readiness Standard**
-is a governing release-readiness input for Yomori.
+`docs/RELEASE_READINESS.md` is Yomori's public, repository-local release-readiness baseline. It must remain self-contained and must not require access to private planning, audit, account, signing, recovery, or security records. Private records may inform work, but repository policy and public evidence must not expose private identifiers, URLs, credentials, or storage paths.
 
-* Document ID: `1LBaEQairLGcE6NpY4wv6hoFFiFVOfJbWadUabgCseHg`
-* Document URL: https://docs.google.com/document/d/1LBaEQairLGcE6NpY4wv6hoFFiFVOfJbWadUabgCseHg/edit
 * Primary distribution target: F-Droid source-built publication.
 * Security hardening baseline: Accrescent technical requirements.
 * Secondary stores receive only the minimum necessary packaging, metadata, identity, or compatibility adaptations.
