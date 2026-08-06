@@ -79,19 +79,23 @@ Implemented on draft PR #15:
 
 Device QA passed:
 
-- exact first entry
-- next and previous CBL boundaries
-- resume on the persisted second entry
-- selected-source preservation
-- ordinary page navigation
-- ordinary-reader regression isolation
+- exact first entry and cross-series next and previous boundaries
+- saved-page Resume and selected-source preservation
+- ordinary page navigation and ordinary-reader regression isolation
+- rejected-entry Review, Skip, and Stop handling
+- directional Skip and consecutive blocked entries
+- final completion and completed-list restart
+- unavailable-source recovery after the selected extension becomes available again
+- list-specific reading mode across transitions, app close, and Resume
+- collapsed overview cards and confirmed-candidate-first ordering
 
-Remaining device QA:
+Deferred follow-up:
 
-- completed-list restart
-- final-list completion
-- unresolved Review, Skip, and Stop
-- unavailable-source handling
+- issue #20 tracks an unresolved source-availability defect; it is not a current PR #15 merge blocker
+
+Remaining QA and presentation work:
+
+- candidate rows should start collapsed by default
 - final accessibility and narrow-screen observations
 
 ## Milestone 5: Repair, organization, and optional integration

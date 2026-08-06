@@ -1,9 +1,6 @@
 # Yomori Release Readiness
 
-Audit basis: shared Google Drive document **Android App Store Release Readiness Standard**.
-
-- Standard ID: `1LBaEQairLGcE6NpY4wv6hoFFiFVOfJbWadUabgCseHg`
-- Standard URL: https://docs.google.com/document/d/1LBaEQairLGcE6NpY4wv6hoFFiFVOfJbWadUabgCseHg/edit
+This repository-local checklist is Yomori's public release-readiness baseline. It must remain self-contained and must not require access to private planning, account, signing, recovery, or security records. Private records may inform work, but every public `PASS` must be supported by repository, artifact, or verified-test evidence without exposing private identifiers, URLs, credentials, or storage paths.
 - Primary target: F-Droid
 - Security overlay: Accrescent
 - Application ID: `io.github.kamui2040.yomori`
@@ -172,7 +169,7 @@ All items are currently **BLOCKED** or **NOT APPLICABLE** because Yomori has no 
 | Accrescent | BLOCKED | Onboarding closed plus all security-overlay blockers. |
 | SafeHaven | PARTIAL | Hold as experimental; recheck build, tracker, provenance, and verification policies later. |
 | Orion Store | NOT APPLICABLE | Hold unless a separate trust and brand-risk review approves it. |
-| Aptoide | NOT APPLICABLE | Excluded while the shared standard records the paid submission requirement. |
+| Aptoide | NOT APPLICABLE | Excluded from the current release plan; re-evaluate only through a fresh public-policy and cost review. |
 
 ## Smallest compliant next changes
 

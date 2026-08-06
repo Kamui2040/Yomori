@@ -24,7 +24,7 @@ Standard Yomori builds are telemetry-free. PC validation uses local repository-w
 
 ## 2026-07-24 — Target F-Droid first
 
-F-Droid is Yomori's primary open-source publication target. The project follows the shared **Android App Store Release Readiness Standard** and treats Accrescent's technical requirements as the security hardening overlay.
+F-Droid is Yomori's primary open-source publication target. `RELEASE_READINESS.md` is the repository-local public baseline, and Accrescent's technical requirements are used as the security-hardening overlay.
 
 Every release-readiness item is classified as PASS, PARTIAL, BLOCKED, or NOT APPLICABLE in `RELEASE_READINESS.md`. Store-specific work must not weaken source neutrality, extension compatibility, privacy, or the F-Droid build.
 

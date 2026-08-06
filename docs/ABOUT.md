@@ -4,26 +4,23 @@ Status: planned; not implemented in the application.
 
 ## Developer identity
 
-- Display name: K2040
-- Approved avatar: `K2040-wolf-avatar.png`
-- Shared Drive asset ID: `1kyRwAwS6fBICvpbqCDac4vRnwxaKljxc`
-- Asset URL: https://drive.google.com/file/d/1kyRwAwS6fBICvpbqCDac4vRnwxaKljxc/view
-- Metadata ID: `1bq3N6Cprn074X8GpyrzWubwPb00I0O-z`
-- Metadata URL: https://drive.google.com/file/d/1bq3N6Cprn074X8GpyrzWubwPb00I0O-z/view
+- Display name: K2040.
+- A developer avatar is under consideration for future use.
+- The avatar represents the developer, not the Yomori application icon.
+- The asset is not bundled in Git, an APK, F-Droid metadata, or store materials.
+- Public redistribution remains blocked until repository-local documentation records verified provenance and an explicit redistribution-compatible licence.
 
-The avatar represents the developer, not the Yomori application icon.
-
-The canonical image remains in the shared Google Drive **Brand Assets** folder. Do not bundle or copy it into the public repository, APK, F-Droid metadata, or store listing until `ASSET_ATTRIBUTION.md` records a redistribution-compatible licence.
+Private storage locations, identifiers, recovery records, and unpublished asset metadata must not be copied into this repository.
 
 ## Optional support
 
 Ko-fi: https://ko-fi.com/k2040
 
-The About section may expose this as an optional external link. Donations must not unlock features, suppress limits, grant content access, alter matching, or create undisclosed entitlements.
+The future About section may expose this as an optional external link. Donations must not unlock features, suppress limits, grant content access, alter matching, or create undisclosed entitlements.
 
 ## Required About content
 
-Before public release, the About section should expose stable links for:
+Before public release, the About section should expose stable public links for:
 
 - source code;
 - Apache-2.0 licence and upstream attribution;

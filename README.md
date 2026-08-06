@@ -65,7 +65,7 @@ Current readiness and blockers are tracked in [docs/RELEASE_READINESS.md](./docs
 
 Optional support is available through [Ko-fi](https://ko-fi.com/k2040). Donations do not unlock features or create entitlements.
 
-The approved K2040 developer avatar is reserved for a future About section. It is not currently bundled in the application; its release licensing and attribution are tracked in [docs/ABOUT.md](./docs/ABOUT.md) and [docs/ASSET_ATTRIBUTION.md](./docs/ASSET_ATTRIBUTION.md).
+A K2040 developer avatar is under consideration for a future About section. It is not currently bundled in the application; public-safe provenance and redistribution licensing remain unresolved and are tracked in [docs/ASSET_ATTRIBUTION.md](./docs/ASSET_ATTRIBUTION.md).
 
 ## Content disclaimer
 

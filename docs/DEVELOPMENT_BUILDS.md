@@ -1,46 +1,47 @@
 # Development APKs
 
-Yomori development APKs use the dedicated `io.github.kamui2040.yomori.debug` package and the reproducible public development certificate.
+Yomori does not publish development APKs automatically. GitHub Actions is disabled for ordinary development, pull requests, and releases. PC validation builds use the repository Gradle wrapper and remain local unless a separately authorized handoff explicitly publishes an artifact.
 
-GitHub Actions is disabled. PC mode builds, validates, signs, and verifies locally. The retained workflow is dormant manual phone-workflow infrastructure only and must not be enabled for ordinary PC development or release publication.
+The retained manual phone workflow is dormant infrastructure. Do not dispatch, monitor, or rely on it for PC development.
 
-## Package and signing
+## Package and build type
 
 - Package: `io.github.kamui2040.yomori.debug`
-- Key alias: `yomori-development`
-- Public test keystore password: `android`
-- Public test key password: `android`
-- Required certificate SHA-256: `08db929c3863a587963a3d72668622c9f464cbb3612cc2f4df29cdcb63750625`
-- Telemetry: disabled
-- Purpose: development and testing only
+- Gradle task: `assemblePreview`
+- Local output directory: `app/build/outputs/apk/preview/`
+- Telemetry: disabled in the standard preview configuration
+- Purpose: testing only
 
-The repository source of truth is `.github/scripts/create-public-dev-keystore.sh`. It contains an intentionally public test key that is valid only for the `.debug` application ID.
-
-## Local generation
-
-Use Git Bash or WSL:
-
-```sh
-.github/scripts/create-public-dev-keystore.sh "$HOME/.yomori/signing/yomori-public-development.p12"
-```
-
-Create an ignored `keystore.properties` that points to that file, then build with the repository wrapper.
-
-## Local validation
+On Windows, build the current preview artifacts with:
 
 ```powershell
-.\gradlew.bat spotlessCheck
-.\gradlew.bat testDebugUnitTest
-.\gradlew.bat verifySqlDelightMigration
 .\gradlew.bat assemblePreview
-git diff --check
 ```
 
-Verify every preview APK with the Android SDK `apksigner` and confirm the required SHA-256 certificate.
+The expected Gradle filenames are `app-preview.apk` for the universal APK and `app-<abi>-preview.apk` for ABI-specific APKs. A separately prepared handoff may use a deterministic versioned filename, but no GitHub-hosted development artifact should be assumed to exist.
 
-## Restrictions
+## Signing boundary
 
-- Never use this certificate for `io.github.kamui2040.yomori`.
-- Never describe a preview APK as a production or store release.
-- Never upload private signing keys or replace the public-development identity with a production identity.
-- Production signing, release packaging, source tags, checksums, and store submissions require the separate release-readiness process.
+The preview package and signer must be verified before installation or update. Do not assume an arbitrary local `assemblePreview` output uses the canonical public development certificate merely because it has the `.debug` package ID.
+
+The canonical shared development-update path uses the intentionally public test certificate with SHA-256 digest:
+
+```text
+08db929c3863a587963a3d72668622c9f464cbb3612cc2f4df29cdcb63750625
+```
+
+The repository retains `.github/scripts/create-public-dev-keystore.sh` for explicitly authorized tooling that needs to reproduce this test identity. Generated keystores and local signing properties must not be committed. The public development certificate and key must never be used for production, release, or store artifacts.
+
+## Installation and update safety
+
+Before any ADB installation:
+
+1. run `adb devices -l`;
+2. target only the intended authorized serial with `-s`;
+3. verify the APK hash, package ID, version, certificate, debuggable state, and requested permissions;
+4. verify that the installed package, when present, has a compatible signer and update path;
+5. preserve user data and backups.
+
+Do not automatically uninstall, clear application data, or replace a mismatched package after failure. An incompatible package or signer must stop visibly for review.
+
+The `.debug` package is intentionally separate from the production application ID. Do not assume compatibility with older development or CI artifacts; verify their exact package and certificate first. Use user-controlled backup and restore before removing any earlier installation that contains wanted data.
