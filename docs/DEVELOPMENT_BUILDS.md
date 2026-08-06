@@ -18,7 +18,7 @@ On Windows, build the current preview artifacts with:
 .\gradlew.bat assemblePreview
 ```
 
-The expected Gradle filenames are `app-preview.apk` for the universal APK and `app-<abi>-preview.apk` for ABI-specific APKs. A separately prepared handoff may use a deterministic versioned filename, but no GitHub-hosted development artifact should be assumed to exist.
+The expected Gradle filenames are `app-universal-preview.apk` for the universal APK and `app-<abi>-preview.apk` for ABI-specific APKs. A separately prepared handoff may use a deterministic versioned filename, but no GitHub-hosted development artifact should be assumed to exist.
 
 ## Signing boundary
 
