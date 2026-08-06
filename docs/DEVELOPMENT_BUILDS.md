@@ -1,32 +1,47 @@
 # Development APKs
 
-Yomori development APKs are built by GitHub Actions and can be downloaded directly on a phone.
+Yomori does not publish development APKs automatically. GitHub Actions is disabled for ordinary development, pull requests, and releases. PC validation builds use the repository Gradle wrapper and remain local unless a separately authorized handoff explicitly publishes an artifact.
 
-## Package and signing
+The retained manual phone workflow is dormant infrastructure. Do not dispatch, monitor, or rely on it for PC development.
+
+## Package and build type
 
 - Package: `io.github.kamui2040.yomori.debug`
-- Signing: dedicated public development certificate
-- Telemetry: disabled
+- Gradle task: `assemblePreview`
+- Local output directory: `app/build/outputs/apk/preview/`
+- Telemetry: disabled in the standard preview configuration
 - Purpose: testing only
 
-The public development certificate allows every Yomori development APK to update an earlier development APK. It is intentionally unsuitable for a production release because anyone can reproduce the public test key. A future production build will use a different package/signing plan and a protected key.
+On Windows, build the current preview artifacts with:
 
-## Filename format
-
-```text
-Yomori-v<version>-build<workflow-run>-<short-sha>-<abi>.apk
+```powershell
+.\gradlew.bat assemblePreview
 ```
 
-Example:
+The expected Gradle filenames are `app-preview.apk` for the universal APK and `app-<abi>-preview.apk` for ABI-specific APKs. A separately prepared handoff may use a deterministic versioned filename, but no GitHub-hosted development artifact should be assumed to exist.
+
+## Signing boundary
+
+The preview package and signer must be verified before installation or update. Do not assume an arbitrary local `assemblePreview` output uses the canonical public development certificate merely because it has the `.debug` package ID.
+
+The canonical shared development-update path uses the intentionally public test certificate with SHA-256 digest:
 
 ```text
-Yomori-v0.1.0-alpha01-build12-a1b2c3d-arm64-v8a.apk
+08db929c3863a587963a3d72668622c9f464cbb3612cc2f4df29cdcb63750625
 ```
 
-For most current Android phones, use the `arm64-v8a` APK. The `universal` APK is larger but works across supported architectures.
+The repository retains `.github/scripts/create-public-dev-keystore.sh` for explicitly authorized tooling that needs to reproduce this test identity. Generated keystores and local signing properties must not be committed. The public development certificate and key must never be used for production, release, or store artifacts.
 
-## First installation
+## Installation and update safety
 
-Earlier Yomori CI artifacts used the base package `io.github.kamui2040.yomori` and a temporary GitHub-runner signature. The new development APK uses the separate `.debug` package, so it installs beside the earlier build instead of replacing it.
+Before any ADB installation:
 
-After the first `.debug` APK is installed, later development APKs can be installed over it directly without uninstalling. Transfer any wanted data from the earlier build using backup and restore before removing that older installation.
+1. run `adb devices -l`;
+2. target only the intended authorized serial with `-s`;
+3. verify the APK hash, package ID, version, certificate, debuggable state, and requested permissions;
+4. verify that the installed package, when present, has a compatible signer and update path;
+5. preserve user data and backups.
+
+Do not automatically uninstall, clear application data, or replace a mismatched package after failure. An incompatible package or signer must stop visibly for review.
+
+The `.debug` package is intentionally separate from the production application ID. Do not assume compatibility with older development or CI artifacts; verify their exact package and certificate first. Use user-controlled backup and restore before removing any earlier installation that contains wanted data.
