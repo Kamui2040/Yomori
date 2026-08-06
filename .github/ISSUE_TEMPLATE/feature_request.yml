@@ -6,7 +6,8 @@ body:
   - type: markdown
     attributes:
       value: |
-        Yomori does not provide, bundle, or recommend content sources. Requests for specific sources are out of scope.
+        Yomori does not provide, bundle, recommend, preselect, install, or trust content sources.
+        Requests for specific sources or extension repositories are out of scope.
   - type: textarea
     id: problem
     attributes:
@@ -18,18 +19,20 @@ body:
     id: proposal
     attributes:
       label: Proposed behavior
-      description: Describe the expected workflow and user controls.
+      description: Describe the expected workflow and explicit user controls.
     validations:
       required: true
   - type: textarea
     id: compatibility
     attributes:
-      label: Compatibility and privacy impact
-      description: Note extension compatibility, network behavior, stored data, or migration concerns.
+      label: Compatibility, privacy, and store-readiness impact
+      description: Note extension compatibility, network behavior, permissions, stored data, migration, F-Droid, or Accrescent implications.
   - type: checkboxes
     id: scope
     attributes:
       label: Scope confirmation
       options:
-        - label: This request does not ask Yomori to bundle, recommend, or maintain a content source.
+        - label: This request does not ask Yomori to bundle, recommend, preselect, install, or maintain a content source.
+          required: true
+        - label: This request preserves user-controlled source scope and does not silently replace confirmed mappings.
           required: true
