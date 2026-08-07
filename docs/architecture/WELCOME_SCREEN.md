@@ -1,76 +1,144 @@
-# Yomori welcome screen
+# Unified Welcome and About Composition
+
+Status: approved design direction; welcome implementation in progress; unified in-app About presentation pending.
 
 ## Purpose
 
-Yomori uses the shared cross-project welcome-screen composition as the first page of its mandatory first-launch flow. The composition is shared; Yomori copy, colors, trust statements, legal content, and actions remain project-specific.
+Yomori follows the shared cross-project welcome-screen composition while keeping Yomori-specific wording, colors, trust statements, legal details, and optional actions. The shared guide defines information order, grouping, dismissal behavior, and accessibility expectations; it does not prescribe another project's copy or color tokens.
 
-The welcome page precedes the existing theme, storage, permission, and guide setup pages. Continuing from the welcome page does not mark onboarding complete. The existing `onboarding_complete` preference is written only when the complete onboarding flow finishes.
+The same composition should also inform Yomori's later in-app About surface so first-launch and About remain visually and structurally consistent.
 
 ## Information order
 
 Top to bottom:
 
-1. K2040 developer avatar.
-2. Yomori app name.
-3. Short Yomori description.
-4. Compact trust statement.
-5. Collapsed version/build details.
-6. Collapsed licence, source, privacy, and usage details.
-7. Optional K2040 Ko-fi support action.
-8. Short thank-you message.
-9. Sticky Exit and Continue actions.
+1. Developer avatar.
+2. App name.
+3. Short description.
+4. Trust statement.
+5. Version, collapsed by default.
+6. Legal, sources, privacy, and attribution details.
+7. Optional support action.
+8. Short thank-you text.
+9. Actions.
 
-The welcome page is scrollable between the identity header and sticky actions so large text and narrow screens remain usable.
+Essential information appears before expandable detail. The middle content may scroll; the final actions remain visible when practical.
 
-## Yomori-specific trust statement
+## Yomori adaptation
 
-The welcome page communicates these stable product properties without implying that source-backed reading is offline:
+### Developer avatar
 
-- local-first;
-- no account required for core use;
-- no Yomori ads, analytics, tracking, or telemetry;
-- content sources remain explicitly user-selected;
-- compatible extensions are separate user-installed software;
-- Yomori does not provide, recommend, preselect, install, or trust content sources.
+Use the approved K2040 personal avatar, not the Yomori application icon. The avatar is the shared personal identity element across projects.
 
-## Visual rules
+The exact master and intended Yomori runtime derivative are recorded in `../ASSET_ATTRIBUTION.md`. The master is licensed by K2040 under Creative Commons Attribution 4.0 International (CC BY 4.0). Yomori bundles the already-validated 512 × 512 lossless WebP derivative at `app/src/main/res/drawable-nodpi/k2040_wolf_avatar.webp`, preserving the recorded derivative SHA-256 and attribution.
 
-- Use the active Yomori `MaterialTheme` color scheme rather than copying another project's accent palette.
-- Use rounded grouped surfaces, generous vertical spacing, high-contrast text, and minimum Material touch targets.
-- Version and legal details start collapsed.
-- Middle content scrolls; Exit and Continue remain visible at the bottom.
-- The developer avatar is identity artwork, not the Yomori application icon.
+Do not substitute a different avatar or silently regenerate/re-encode the approved derivative. A different export is a new derivative and needs its own identity and QA record.
 
-## Mandatory behavior
+### App name
 
-Before onboarding is completed:
+Display `Yomori` prominently using the active Yomori theme's primary/accent treatment.
 
-- system Back must not dismiss the onboarding flow;
-- the welcome page exposes only Exit and Continue as primary dismissal/progression actions;
-- Exit closes the app task without setting onboarding complete;
-- Continue advances to the existing setup flow;
-- relaunch after Exit shows the welcome page again;
-- external legal/support links do not mark onboarding complete.
+### Short description
 
-## Avatar publication gate
+Keep this to one or two concise lines. The current Yomori copy is:
 
-The final screen must use the approved K2040 wolf avatar. The repository currently records that asset as not bundled because an explicit redistribution-compatible licence has not yet been established in `docs/ASSET_ATTRIBUTION.md`.
+> Source-agnostic comic reading for imported CBL reading orders.
 
-Until that public asset gate is resolved, implementation branches may keep a clearly identified developer-avatar placeholder for layout and accessibility validation, but the welcome screen must not be treated as release-ready or visually accepted. Do not extract, regenerate, substitute, or publish a competing avatar solely to bypass the licence gate.
+Localization may adapt sentence structure while preserving that meaning.
 
-## Validation requirements
+### Trust statement
 
-Before merge, verify:
+Present the most important Yomori trust properties at a glance:
 
-- Kotlin formatting and compilation;
-- unit/regression tests and preview assembly;
-- exact development signing identity for produced APKs;
-- first launch shows the welcome page before setup;
-- Continue reaches the existing onboarding pages without changing their behavior;
-- Back cannot bypass incomplete onboarding;
-- Exit closes the task and does not persist completion;
-- version and legal sections expand/collapse independently;
-- support and public-repository links are optional external actions;
-- portrait, landscape, narrow-screen, dark/light theme, large-text, and screen-reader behavior;
-- sticky actions remain reachable while middle content scrolls;
-- the approved avatar replaces the placeholder only after repository-local rights/licence evidence is complete.
+- Local-first · No account · No ads or telemetry.
+- Sources and extensions remain user-controlled.
+
+Do not claim that Yomori is fully offline: reading through user-selected extensions may use the network.
+
+### Version
+
+Show the application version in a collapsed row by default. Expansion may include build/version identifiers useful for support. Do not expose private environment paths, signing secrets, device identifiers, or internal workflow records.
+
+### Legal, sources, privacy, and attribution
+
+A dedicated details section exposes public-safe information for:
+
+- Apache-2.0 licence;
+- Mihon/Tachiyomi derivation and non-affiliation;
+- Yomori source code;
+- privacy statement;
+- security reporting;
+- support scope;
+- third-party-source / extension responsibility;
+- `K2040 — K2040 wolf avatar — CC BY 4.0` and the CC BY 4.0 licence.
+
+Opening this section must not contact an extension or content source.
+
+### Optional support
+
+Ko-fi may be shown as a clearly secondary optional action using the public support route already documented for Yomori. Donations must not unlock features, suppress limits, change matching, alter source access, remove advertising, or create hidden entitlements.
+
+### Thank you
+
+Use a short project-specific line:
+
+> Thanks for testing and helping shape Yomori.
+
+### Actions
+
+For the mandatory first-launch acknowledgement, provide only explicit **Exit** and **Continue** actions. Back, outside-tap dismissal, and a close icon must not bypass the acknowledgement.
+
+Continue persists only the dedicated Yomori acknowledgement state. Any still-required upstream setup/onboarding continues separately. Exit closes the app task without completing either state.
+
+For a non-mandatory About presentation, normal Back/Close dismissal is allowed and the screen must not behave like an acknowledgement gate.
+
+The acknowledgement is a Yomori product/legal-information gate, not consent for tracking, analytics, source installation, extension trust, or external accounts.
+
+## Theme and color
+
+Do not copy colors from another project's guide. Use Yomori's current Material theme tokens and maintain sufficient contrast in light/dark themes. Project accent colors may evolve independently without changing this composition contract.
+
+Avoid hard-coded decorative colors when semantic Material theme colors can express the same hierarchy.
+
+## Layout and scaling
+
+- Preserve generous vertical spacing and rounded grouping containers.
+- Keep the title and essential trust information above optional detail.
+- Support narrow phones, tablets, landscape, large font sizes, and display scaling without clipped controls.
+- Allow the middle content to scroll when needed.
+- Keep mandatory actions reachable and visible without relying on gestures that are unavailable to accessibility services.
+- Minimum touch target: 48 dp.
+- Do not encode meaning by color alone.
+
+## Accessibility
+
+Every interactive element requires an appropriate accessible label. Reading order must match the visual top-to-bottom information order. Expanded/collapsed state must be understandable to accessibility services. Decorative graphics must not create duplicate screen-reader content.
+
+The design must remain usable with TalkBack, keyboard/switch navigation where supported, large text, high contrast, and dark theme.
+
+## State and persistence
+
+The mandatory welcome/acknowledgement is shown until the user explicitly continues. It uses its own local `yomori_welcome_complete` state rather than overloading the inherited `onboarding_complete` state.
+
+A version change must not automatically reset acknowledgement unless a later migration has an explicitly documented reason to require renewed acknowledgement. The About surface remains available independently after acknowledgement.
+
+Do not make first-launch completion depend on an account, cloud service, network request, extension, tracker, analytics SDK, or remote configuration.
+
+The existing Mihon onboarding state remains separate: the Yomori acknowledgement completes first, then any still-required setup/onboarding flow may continue. Existing users who previously completed upstream onboarding still receive the Yomori acknowledgement once.
+
+## Implementation boundary
+
+Implementation should reuse existing Yomori/Mihon Compose primitives where practical and must not alter extension-facing compatibility APIs. It must not introduce telemetry, account requirements, source recommendation, source selection, extension installation, or extension trust.
+
+Before the welcome implementation is merge-ready:
+
+- bundle and byte-verify the recorded lossless WebP derivative;
+- recheck the current F-Droid asset/inclusion rules against the exact bundled asset set;
+- pass focused state tests for the independent acknowledgement/setup boundary;
+- verify Back cannot bypass the mandatory variant;
+- verify external intents and inherited update/donation surfaces cannot cover or bypass the mandatory acknowledgement;
+- verify legal/support links and external intents are explicit and safe;
+- perform large-font, narrow-screen, dark-theme, TalkBack, and physical-device QA;
+- review `../RELEASE_READINESS.md` and `../ASSET_ATTRIBUTION.md` against the exact bundled assets.
+
+The unified in-app About presentation remains a follow-up until it is separately implemented and validated with normal dismissal behavior.
