@@ -30,9 +30,9 @@ Essential information appears before expandable detail. The middle content may s
 
 Use the approved K2040 personal avatar, not the Yomori application icon. The avatar is the shared personal identity element across projects.
 
-The selected redistribution licence is Creative Commons Attribution 4.0 International (CC BY 4.0), with attribution to K2040. This preserves required attribution while allowing redistribution, commercial use, and adaptation without NonCommercial or NoDerivatives restrictions.
+The exact master and intended Yomori runtime derivative are recorded in `../ASSET_ATTRIBUTION.md`. The master is licensed by K2040 under Creative Commons Attribution 4.0 International (CC BY 4.0). Yomori should bundle the already-validated 512 × 512 lossless WebP derivative at `app/src/main/res/drawable-nodpi/k2040_wolf_avatar.webp`, preserving the recorded derivative SHA-256 and attribution.
 
-Do not bundle a substitute avatar merely to unblock implementation. The approved avatar binary must not enter Git, an APK, F-Droid metadata, or store materials until `../ASSET_ATTRIBUTION.md` records the exact approved asset's public-safe provenance and stable repository identity alongside the CC BY 4.0 attribution.
+Do not substitute a different avatar or silently regenerate/re-encode the approved derivative. A different export is a new derivative and needs its own identity and QA record.
 
 ### App name
 
@@ -70,7 +70,7 @@ A dedicated details row/surface should expose public-safe information for:
 - security reporting;
 - support scope;
 - third-party-source / extension responsibility;
-- applicable asset and dependency attribution, including the K2040 avatar's CC BY 4.0 attribution when bundled;
+- applicable asset and dependency attribution, including `K2040 — K2040 wolf avatar — CC BY 4.0`;
 - release notes or changelog when a public release exists.
 
 Opening this section must not contact an extension or content source.
@@ -123,13 +123,15 @@ A version change must not automatically reset acknowledgement unless a later mig
 
 Do not make first-launch completion depend on an account, cloud service, network request, extension, tracker, analytics SDK, or remote configuration.
 
+The existing Mihon onboarding state remains separate: the Yomori acknowledgement should complete first, then any still-required setup/onboarding flow may continue. Existing users who previously completed upstream onboarding still receive the Yomori acknowledgement once because it uses its own local completion preference.
+
 ## Implementation boundary
 
 Implementation should reuse existing Yomori/Mihon Compose primitives where practical and must not alter extension-facing compatibility APIs. It must not introduce telemetry, account requirements, source recommendation, source selection, extension installation, or extension trust.
 
 Before implementation is considered release-ready:
 
-- record the exact approved avatar binary's public-safe provenance and repository identity while retaining the CC BY 4.0 attribution;
+- bundle and byte-verify the recorded lossless WebP derivative;
 - recheck the current F-Droid asset/inclusion rules against the exact bundled asset set;
 - add focused state/persistence tests for mandatory acknowledgement;
 - verify Back/outside-tap/close cannot bypass the mandatory variant;
