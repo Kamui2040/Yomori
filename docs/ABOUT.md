@@ -7,13 +7,14 @@ Yomori follows the shared cross-project welcome/About composition documented in 
 ## Developer identity
 
 - Display name: K2040.
-- The approved K2040 personal avatar is the intended identity element for the welcome and About surfaces.
+- The approved K2040 personal avatar is the identity element for the welcome and About surfaces.
 - The avatar represents the developer, not the Yomori application icon.
-- Redistribution licence: Creative Commons Attribution 4.0 International (CC BY 4.0), with attribution to K2040.
-- The asset is not currently bundled in Git, an APK, F-Droid metadata, or store materials.
-- Before public bundling, record the exact approved asset's public-safe provenance and stable repository asset identity in `ASSET_ATTRIBUTION.md`.
+- Owner / licensor: K2040.
+- Redistribution licence: Creative Commons Attribution 4.0 International (CC BY 4.0).
+- Required attribution: `K2040 — K2040 wolf avatar — CC BY 4.0`.
+- Canonical master and the exact approved 512 × 512 lossless WebP runtime derivative are identified by checksum in `ASSET_ATTRIBUTION.md`.
 
-Do not substitute a different avatar merely to unblock implementation. Private storage locations, identifiers, recovery records, and unpublished asset metadata must not be copied into this repository.
+Yomori should bundle only that recorded runtime derivative unless a later reviewed change intentionally creates and documents a new derivative. Private storage locations, identifiers, recovery records, and unpublished asset metadata must not be copied into this repository.
 
 ## Yomori-specific content direction
 
@@ -29,7 +30,7 @@ The welcome/About composition should present, in order:
 8. a short thank-you line;
 9. context-appropriate actions.
 
-The first-launch acknowledgement uses explicit Exit and Continue actions and cannot be bypassed through Back, outside-tap dismissal, or a close icon. The normal in-app About surface remains dismissible through standard navigation.
+The first-launch acknowledgement uses explicit Exit and Continue actions and cannot be bypassed through Back, outside-tap dismissal, or a close icon. After Continue, any still-required setup/onboarding flow may proceed. The normal in-app About surface remains dismissible through standard navigation.
 
 ## Optional support
 
@@ -47,7 +48,7 @@ Before public release, the About/legal details should expose stable public route
 - security reporting;
 - support scope;
 - third-party-source and extension responsibility;
-- applicable asset/dependency attribution, including the K2040 avatar's CC BY 4.0 attribution when bundled;
+- applicable asset/dependency attribution, including the K2040 avatar's CC BY 4.0 attribution;
 - changelog or release notes when a public release exists;
 - optional Ko-fi support;
 - Yomori's non-affiliation with Mihon and third-party content providers.
