@@ -7,14 +7,14 @@
 - [`UPSTREAM.md`](./UPSTREAM.md) — upstream synchronization and protected Yomori constraints.
 - [`DEVELOPMENT_BUILDS.md`](./DEVELOPMENT_BUILDS.md) — local preview builds, development-signing boundaries, and installation safety.
 - [`RELEASE_READINESS.md`](./RELEASE_READINESS.md) — F-Droid-first publication status, Accrescent overlay, store matrix, and blockers.
-- [`ABOUT.md`](./ABOUT.md) — planned Yomori welcome/About content, developer identity, and optional support link.
-- [`ASSET_ATTRIBUTION.md`](./ASSET_ATTRIBUTION.md) — release asset provenance and licence status.
+- [`ABOUT.md`](./ABOUT.md) — approved welcome/About composition, developer identity, and optional support link.
+- [`ASSET_ATTRIBUTION.md`](./ASSET_ATTRIBUTION.md) — release asset provenance, exact K2040 avatar identities, and licence status.
 
 ## Architecture
 
-The [`architecture/`](./architecture/) directory contains durable product, parser, matching, persistence, network, extension-compatibility, reader, repair, and welcome-screen decisions.
+The [`architecture/`](./architecture/) directory contains durable product, parser, matching, persistence, network, extension-compatibility, reader, repair, and welcome/About decisions.
 
-- [`architecture/WELCOME_SCREEN.md`](./architecture/WELCOME_SCREEN.md) — Yomori adaptation of the shared cross-project welcome/About composition.
+- [`architecture/WELCOME_SCREEN.md`](./architecture/WELCOME_SCREEN.md) — shared-composition Yomori welcome/About contract, mandatory acknowledgement behavior, theme independence, and accessibility requirements.
 
 Repository-wide public documents also include:
 
