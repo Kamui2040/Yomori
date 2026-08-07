@@ -30,7 +30,9 @@ Essential information appears before expandable detail. The middle content may s
 
 Use the approved K2040 personal avatar, not the Yomori application icon. The avatar is the shared personal identity element across projects.
 
-Do not bundle a substitute avatar merely to unblock implementation. Public Yomori builds remain blocked from bundling the approved avatar until `../ASSET_ATTRIBUTION.md` records verified public provenance and an explicit redistribution-compatible licence.
+The selected redistribution licence is Creative Commons Attribution 4.0 International (CC BY 4.0), with attribution to K2040. This preserves required attribution while allowing redistribution, commercial use, and adaptation without NonCommercial or NoDerivatives restrictions.
+
+Do not bundle a substitute avatar merely to unblock implementation. The approved avatar binary must not enter Git, an APK, F-Droid metadata, or store materials until `../ASSET_ATTRIBUTION.md` records the exact approved asset's public-safe provenance and stable repository identity alongside the CC BY 4.0 attribution.
 
 ### App name
 
@@ -68,7 +70,7 @@ A dedicated details row/surface should expose public-safe information for:
 - security reporting;
 - support scope;
 - third-party-source / extension responsibility;
-- applicable asset and dependency attribution;
+- applicable asset and dependency attribution, including the K2040 avatar's CC BY 4.0 attribution when bundled;
 - release notes or changelog when a public release exists.
 
 Opening this section must not contact an extension or content source.
@@ -127,7 +129,8 @@ Implementation should reuse existing Yomori/Mihon Compose primitives where pract
 
 Before implementation is considered release-ready:
 
-- resolve the developer-avatar redistribution/provenance blocker;
+- record the exact approved avatar binary's public-safe provenance and repository identity while retaining the CC BY 4.0 attribution;
+- recheck the current F-Droid asset/inclusion rules against the exact bundled asset set;
 - add focused state/persistence tests for mandatory acknowledgement;
 - verify Back/outside-tap/close cannot bypass the mandatory variant;
 - verify About remains normally dismissible;
