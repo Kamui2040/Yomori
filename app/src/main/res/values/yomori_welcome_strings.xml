@@ -4,7 +4,7 @@
     <string name="yomori_welcome_trust_local">Local-first · No account · No telemetry</string>
     <string name="yomori_welcome_trust_sources">Content sources stay user-selected</string>
     <string name="yomori_welcome_version">Version %1$s</string>
-    <string name="yomori_welcome_version_details">Build %1$d · %2$s</string>
+    <string name="yomori_welcome_version_details">Build %1$s · %2$s</string>
     <string name="yomori_welcome_expand_version">Show version details</string>
     <string name="yomori_welcome_collapse_version">Hide version details</string>
     <string name="yomori_welcome_legal_title">Licence, sources &amp; usage</string>
