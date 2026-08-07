@@ -1,9 +1,13 @@
 package eu.kanade.tachiyomi.ui.more
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.domain.base.BasePreferences
@@ -22,6 +26,7 @@ class OnboardingScreen : Screen() {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
+        val context = LocalContext.current
 
         val basePreferences = remember { Injekt.get<BasePreferences>() }
         val shownOnboardingFlow by basePreferences.shownOnboardingFlow.collectAsState()
@@ -34,11 +39,14 @@ class OnboardingScreen : Screen() {
         val restoreSettingKey = stringResource(SettingsDataScreen.restorePreferenceKeyString)
 
         BackHandler(enabled = !shownOnboardingFlow) {
-            // Prevent exiting if onboarding hasn't been completed
+            // Prevent exiting if onboarding hasn't been completed.
         }
 
         OnboardingScreen(
             onComplete = finishOnboarding,
+            onExit = {
+                context.findActivity()?.finishAndRemoveTask()
+            },
             onRestoreBackup = {
                 finishOnboarding()
                 SearchableSettings.highlightKey = restoreSettingKey
@@ -46,4 +54,10 @@ class OnboardingScreen : Screen() {
             },
         )
     }
+}
+
+private tailrec fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
 }
