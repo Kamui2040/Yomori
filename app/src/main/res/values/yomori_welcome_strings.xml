@@ -1,23 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="yomori_welcome_description">A local-first reader for Comic Book Lover lists and continuous cross-series reading.</string>
-    <string name="yomori_welcome_trust_local">Local-first · No account · No telemetry</string>
-    <string name="yomori_welcome_trust_sources">Content sources stay user-selected</string>
+    <string name="yomori_welcome_avatar_content_description">K2040 developer avatar</string>
+    <string name="yomori_welcome_description">Source-agnostic comic reading for imported CBL reading orders.</string>
+    <string name="yomori_welcome_trust_local">Local-first · No account · No ads or telemetry</string>
+    <string name="yomori_welcome_trust_sources">Sources and extensions remain user-controlled</string>
     <string name="yomori_welcome_version">Version %1$s</string>
     <string name="yomori_welcome_version_details">Build %1$s · %2$s</string>
     <string name="yomori_welcome_expand_version">Show version details</string>
     <string name="yomori_welcome_collapse_version">Hide version details</string>
-    <string name="yomori_welcome_legal_title">Licence, sources &amp; usage</string>
-    <string name="yomori_welcome_expand_legal">Show licence, source, and usage details</string>
-    <string name="yomori_welcome_collapse_legal">Hide licence, source, and usage details</string>
-    <string name="yomori_welcome_legal_sources">Yomori is independent and does not provide, recommend, preselect, install, or trust content sources. Compatible extensions are separate user-installed software.</string>
-    <string name="yomori_welcome_legal_privacy">Standard Yomori builds contain no ads, analytics, or telemetry. Network activity belongs to explicit user actions and user-selected integrations or extensions.</string>
-    <string name="yomori_welcome_legal_license">Yomori is licensed under Apache-2.0 and preserves required upstream attribution.</string>
+    <string name="yomori_welcome_legal_title">Licence, sources &amp; privacy</string>
+    <string name="yomori_welcome_expand_legal">Show licence, source, privacy, and attribution details</string>
+    <string name="yomori_welcome_collapse_legal">Hide licence, source, privacy, and attribution details</string>
+    <string name="yomori_welcome_legal_sources">Yomori is independently maintained and does not provide, recommend, preselect, install, or trust content sources. Compatible extensions are separate user-installed software.</string>
+    <string name="yomori_welcome_legal_privacy">Standard Yomori builds contain no ads, analytics, tracking, or telemetry. Source-backed reading may use the network only through explicit user actions and user-selected integrations or extensions.</string>
+    <string name="yomori_welcome_legal_license">Yomori is licensed under Apache-2.0 and preserves required Mihon/Tachiyomi upstream attribution and non-affiliation.</string>
+    <string name="yomori_welcome_avatar_attribution">K2040 — K2040 wolf avatar — CC BY 4.0</string>
     <string name="yomori_welcome_source_code">Source code</string>
-    <string name="yomori_welcome_privacy">Privacy</string>
+    <string name="yomori_welcome_project_license">Apache-2.0 project licence</string>
+    <string name="yomori_welcome_privacy">Privacy statement</string>
+    <string name="yomori_welcome_security">Security reporting</string>
+    <string name="yomori_welcome_support_scope">Support scope</string>
+    <string name="yomori_welcome_avatar_license">Avatar licence (CC BY 4.0)</string>
     <string name="yomori_welcome_support">Support K2040 on Ko-fi</string>
-    <string name="yomori_welcome_thanks">Thanks for testing Yomori and helping shape it.</string>
+    <string name="yomori_welcome_thanks">Thanks for testing and helping shape Yomori.</string>
     <string name="yomori_welcome_exit">Exit</string>
     <string name="yomori_welcome_continue">Continue</string>
-    <string name="yomori_welcome_avatar_pending">K2040 developer avatar placeholder pending redistribution licence</string>
 </resources>
