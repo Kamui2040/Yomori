@@ -21,6 +21,11 @@ class BasePreferences(
 
     val extensionInstaller: ExtensionInstallerPreference = ExtensionInstallerPreference(context, preferenceStore)
 
+    val shownYomoriWelcome: Preference<Boolean> = preferenceStore.getBoolean(
+        Preference.appStateKey("yomori_welcome_complete"),
+        false,
+    )
+
     val shownOnboardingFlow: Preference<Boolean> = preferenceStore.getBoolean(
         Preference.appStateKey("onboarding_complete"),
         false,
