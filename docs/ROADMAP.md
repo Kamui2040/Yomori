@@ -67,7 +67,7 @@ Approved follow-up:
 
 ## Milestone 4: Reading
 
-Implemented on draft PR #15:
+Merged on `main` through PR #15:
 
 - exact persisted CBL order
 - cross-series next and previous navigation
@@ -77,7 +77,7 @@ Implemented on draft PR #15:
 - two-row Reading Lists layout with direct actions
 - ordinary-reader isolation
 
-Device QA passed:
+Validated before merge:
 
 - exact first entry and cross-series next and previous boundaries
 - saved-page Resume and selected-source preservation
@@ -91,14 +91,31 @@ Device QA passed:
 
 Deferred follow-up:
 
-- issue #20 tracks an unresolved source-availability defect; it is not a current PR #15 merge blocker
+- issue #20 tracks the unresolved source-availability continuation defect; it remains required release QA but did not block PR #15 merge
 
-Remaining QA and presentation work:
+Remaining presentation work:
 
 - candidate rows should start collapsed by default
 - final accessibility and narrow-screen observations
 
-## Milestone 5: Repair, organization, and optional integration
+## Milestone 5: Welcome, About, repair, organization, and optional integration
+
+Current welcome implementation work:
+
+- shared cross-project composition with Yomori-specific wording and theme colors
+- K2040 avatar first, followed by app name, short description, trust statement, collapsed version, legal/source details, optional support, thank-you, and actions
+- mandatory first-launch Yomori acknowledgement with explicit Exit / Continue and no Back/outside-tap/close bypass
+- dedicated acknowledgement state separate from inherited setup/onboarding completion so existing users receive the Yomori acknowledgement once
+- exact approved 512 × 512 lossless K2040 WebP derivative recorded for Yomori with CC BY 4.0 attribution and checksum
+- focused state coverage for new, existing, partially completed, and fully completed first-launch states
+- local build validation, accessibility review, physical-device QA, and binary-resource verification still pending
+
+Approved About follow-up:
+
+- normal in-app About surface using the same composition and K2040 identity with standard dismissal
+- public-safe licence, source, privacy, security, support, and asset-attribution routes
+
+Other approved follow-ups:
 
 - repair and rematching only for broken, unresolved, or explicitly selected entries
 - preserve confirmed decisions, rejected candidates, skips, exceptions, and original metadata
