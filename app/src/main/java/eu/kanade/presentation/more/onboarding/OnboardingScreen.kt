@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -12,16 +13,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.material.icons.outlined.ExpandMore
-import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.RocketLaunch
 import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material.icons.outlined.VisibilityOff
@@ -44,7 +43,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource as androidStringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -60,6 +61,8 @@ import tachiyomi.presentation.core.screens.InfoScreen
 
 @Composable
 fun OnboardingScreen(
+    showWelcome: Boolean,
+    onWelcomeComplete: () -> Unit,
     onComplete: () -> Unit,
     onExit: () -> Unit,
     onRestoreBackup: () -> Unit,
@@ -76,18 +79,17 @@ fun OnboardingScreen(
         )
     }
 
-    if (currentStep == 0) {
+    if (showWelcome) {
         YomoriWelcomeScreen(
-            onContinue = { currentStep = 1 },
+            onContinue = onWelcomeComplete,
             onExit = onExit,
         )
         return
     }
 
-    val setupStepIndex = currentStep - 1
-    val isLastStep = setupStepIndex == setupSteps.lastIndex
+    val isLastStep = currentStep == setupSteps.lastIndex
 
-    BackHandler(enabled = currentStep > 0) {
+    BackHandler(enabled = currentStep != 0) {
         currentStep--
     }
 
@@ -102,7 +104,7 @@ fun OnboardingScreen(
                 MR.strings.onboarding_action_next
             },
         ),
-        canAccept = setupSteps[setupStepIndex].isComplete,
+        canAccept = setupSteps[currentStep].isComplete,
         onAcceptClick = {
             if (isLastStep) {
                 onComplete()
@@ -119,7 +121,7 @@ fun OnboardingScreen(
                 .background(MaterialTheme.colorScheme.surfaceVariant),
         ) {
             AnimatedContent(
-                targetState = setupStepIndex,
+                targetState = currentStep,
                 transitionSpec = {
                     materialSharedAxisX(
                         forward = targetState > initialState,
@@ -152,9 +154,14 @@ private fun YomoriWelcomeScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp, vertical = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(18.dp),
         ) {
-            DeveloperAvatarPlaceholder()
+            Image(
+                painter = painterResource(R.drawable.k2040_wolf_avatar),
+                contentDescription = androidStringResource(R.string.yomori_welcome_avatar_content_description),
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.size(176.dp),
+            )
 
             Text(
                 text = androidStringResource(R.string.app_name),
@@ -219,42 +226,53 @@ private fun YomoriWelcomeScreen(
                 collapseDescription = androidStringResource(R.string.yomori_welcome_collapse_legal),
                 onToggle = { legalExpanded = !legalExpanded },
             ) {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    Text(
-                        text = androidStringResource(R.string.yomori_welcome_legal_sources),
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                    Text(
-                        text = androidStringResource(R.string.yomori_welcome_legal_privacy),
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                    Text(
-                        text = androidStringResource(R.string.yomori_welcome_legal_license),
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        TextButton(
-                            onClick = { uriHandler.openUri("https://github.com/Kamui2040/Yomori") },
-                        ) {
-                            Text(androidStringResource(R.string.yomori_welcome_source_code))
-                        }
-                        TextButton(
-                            onClick = { uriHandler.openUri("https://github.com/Kamui2040/Yomori/blob/main/PRIVACY.md") },
-                        ) {
-                            Text(androidStringResource(R.string.yomori_welcome_privacy))
-                        }
-                    }
-                }
+                Text(
+                    text = androidStringResource(R.string.yomori_welcome_legal_sources),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                Text(
+                    text = androidStringResource(R.string.yomori_welcome_legal_privacy),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                Text(
+                    text = androidStringResource(R.string.yomori_welcome_legal_license),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                Text(
+                    text = androidStringResource(R.string.yomori_welcome_avatar_attribution),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                WelcomeLink(
+                    label = androidStringResource(R.string.yomori_welcome_source_code),
+                    onClick = { uriHandler.openUri(SOURCE_URL) },
+                )
+                WelcomeLink(
+                    label = androidStringResource(R.string.yomori_welcome_project_license),
+                    onClick = { uriHandler.openUri(PROJECT_LICENSE_URL) },
+                )
+                WelcomeLink(
+                    label = androidStringResource(R.string.yomori_welcome_privacy),
+                    onClick = { uriHandler.openUri(PRIVACY_URL) },
+                )
+                WelcomeLink(
+                    label = androidStringResource(R.string.yomori_welcome_security),
+                    onClick = { uriHandler.openUri(SECURITY_URL) },
+                )
+                WelcomeLink(
+                    label = androidStringResource(R.string.yomori_welcome_support_scope),
+                    onClick = { uriHandler.openUri(SUPPORT_URL) },
+                )
+                WelcomeLink(
+                    label = androidStringResource(R.string.yomori_welcome_avatar_license),
+                    onClick = { uriHandler.openUri(AVATAR_LICENSE_URL) },
+                )
             }
 
             OutlinedButton(
-                modifier = Modifier.fillMaxWidth(),
-                onClick = { uriHandler.openUri("https://ko-fi.com/k2040") },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 48.dp),
+                onClick = { uriHandler.openUri(KOFI_URL) },
             ) {
                 Text(androidStringResource(R.string.yomori_welcome_support))
             }
@@ -276,38 +294,21 @@ private fun YomoriWelcomeScreen(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             OutlinedButton(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .heightIn(min = 48.dp),
                 onClick = onExit,
             ) {
                 Text(androidStringResource(R.string.yomori_welcome_exit))
             }
             Button(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .heightIn(min = 48.dp),
                 onClick = onContinue,
             ) {
                 Text(androidStringResource(R.string.yomori_welcome_continue))
             }
-        }
-    }
-}
-
-@Composable
-private fun DeveloperAvatarPlaceholder() {
-    Surface(
-        shape = CircleShape,
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-    ) {
-        Box(
-            modifier = Modifier.size(136.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.Person,
-                contentDescription = androidStringResource(R.string.yomori_welcome_avatar_pending),
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(72.dp),
-            )
         }
     }
 }
@@ -373,6 +374,7 @@ private fun WelcomeExpandableSection(
             AnimatedVisibility(visible = expanded) {
                 Column(
                     modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 18.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     content()
                 }
@@ -380,3 +382,26 @@ private fun WelcomeExpandableSection(
         }
     }
 }
+
+@Composable
+private fun WelcomeLink(
+    label: String,
+    onClick: () -> Unit,
+) {
+    TextButton(
+        modifier = Modifier
+            .fillMaxWidth()
+            .heightIn(min = 48.dp),
+        onClick = onClick,
+    ) {
+        Text(label)
+    }
+}
+
+private const val SOURCE_URL = "https://github.com/Kamui2040/Yomori"
+private const val PROJECT_LICENSE_URL = "https://github.com/Kamui2040/Yomori/blob/main/LICENSE"
+private const val PRIVACY_URL = "https://github.com/Kamui2040/Yomori/blob/main/PRIVACY.md"
+private const val SECURITY_URL = "https://github.com/Kamui2040/Yomori/blob/main/SECURITY.md"
+private const val SUPPORT_URL = "https://github.com/Kamui2040/Yomori/blob/main/SUPPORT.md"
+private const val AVATAR_LICENSE_URL = "https://creativecommons.org/licenses/by/4.0/"
+private const val KOFI_URL = "https://ko-fi.com/k2040"
