@@ -1,6 +1,6 @@
 # Roadmap
 
-This roadmap separates merged foundations from approved follow-up work. `PROJECT_CONTEXT.md` is the canonical merged-state record.
+This roadmap separates merged foundations, current branch work, and approved follow-ups. `PROJECT_CONTEXT.md` is the canonical status and decision ledger.
 
 ## Milestone 0: Repository foundation
 
@@ -67,7 +67,7 @@ Approved follow-up:
 
 ## Milestone 4: Reading
 
-Merged through PR #15:
+Merged on `main` through PR #15:
 
 - exact persisted CBL order
 - cross-series next and previous navigation
@@ -76,10 +76,8 @@ Merged through PR #15:
 - explicit Review, Skip, or Stop handling
 - two-row Reading Lists layout with direct actions
 - ordinary-reader isolation
-- list-specific reading mode
-- collapsed overview cards and confirmed-candidate-first ordering
 
-Device QA passed for the merged implementation:
+Validated before merge:
 
 - exact first entry and cross-series next and previous boundaries
 - saved-page Resume and selected-source preservation
@@ -93,14 +91,25 @@ Device QA passed for the merged implementation:
 
 Deferred follow-up:
 
-- issue #20 tracks an unresolved source-availability continuation defect; it did not block PR #15 but remains required representative source-availability QA before public release
+- issue #20 tracks the unresolved source-availability continuation defect; it remains required release QA but did not block PR #15 merge
 
 Remaining presentation work:
 
 - candidate rows should start collapsed by default
 - final accessibility and narrow-screen observations
 
-## Milestone 5: Repair, organization, and optional integration
+## Milestone 5: Welcome, About, repair, organization, and optional integration
+
+Current approved welcome/About work:
+
+- shared cross-project composition with Yomori-specific wording and theme colors
+- K2040 avatar first, followed by app name, short description, trust statement, collapsed version, legal/source details, optional support, thank-you, and actions
+- mandatory first-launch Yomori acknowledgement with explicit Exit / Continue and no Back/outside-tap/close bypass
+- normal in-app About surface using the same composition with standard dismissal
+- exact approved 512 × 512 lossless K2040 WebP derivative recorded for Yomori with CC BY 4.0 attribution and checksum
+- implementation, local build validation, accessibility review, and physical-device QA still pending
+
+Other approved follow-ups:
 
 - repair and rematching only for broken, unresolved, or explicitly selected entries
 - preserve confirmed decisions, rejected candidates, skips, exceptions, and original metadata
@@ -114,20 +123,9 @@ Remaining presentation work:
 
 Reading-list categories and normal-library categories remain separate concepts.
 
-## Milestone 6: Welcome, About, and open-source release readiness
+## Milestone 6: Open-source release readiness
 
-Approved composition:
-
-- adopt the shared cross-project welcome/About information order while keeping Yomori-specific wording and theme colors
-- use the approved K2040 personal avatar as the shared identity element once public redistribution rights/provenance are complete
-- show Yomori name, concise description, trust statement, collapsed version, legal/source/privacy details, optional support, thank-you text, and context-appropriate actions in that order
-- mandatory first-launch acknowledgement uses explicit Exit and Continue and cannot be bypassed through Back, outside tap, or close controls
-- non-mandatory About remains normally dismissible
-- support large text, TalkBack, narrow screens, dark theme, scrollable middle content, and at least 48 dp touch targets
-
-See `architecture/WELCOME_SCREEN.md` and `ABOUT.md`.
-
-Release-readiness baseline:
+Governing baseline:
 
 - F-Droid-compatible source, dependency, licence, build, metadata, and anti-feature state
 - Accrescent-compatible security posture
@@ -136,8 +134,6 @@ Release-readiness baseline:
 
 Required work:
 
-- resolve the K2040 avatar provenance and redistribution-licence blocker before bundling it
-- implement and validate the unified Yomori welcome/About surfaces
 - complete code, dependency, prebuilt-binary, translation, and asset licence audit
 - final Yomori visual identity and licensed store artwork
 - remove or replace inherited Mihon update, support, download, and website endpoints
