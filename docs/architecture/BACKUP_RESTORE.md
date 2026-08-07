@@ -1,5 +1,19 @@
 # Backup and Restore Expectations
 
-Reading-list backups should retain original CBL metadata, authoritative order, source preferences, series mappings, entry overrides, rejected candidates, progress, and match states.
+Status: required release behavior; complete cross-version verification remains pending.
 
-Restore must tolerate missing extensions and mark affected mappings unavailable rather than deleting them. Credentials, cookies, and extension binaries are not part of reading-list backups.
+Reading-list backups must retain:
+
+- original CBL metadata and authoritative order;
+- selected source IDs and priority, including unavailable IDs;
+- candidate snapshots and evidence needed for review;
+- confirmed series mappings and entry overrides;
+- rejected candidates and skips;
+- list-specific position and completion;
+- matcher/evidence versions and failure states.
+
+Restore must tolerate missing extensions and mark affected mappings unavailable rather than deleting or replacing them.
+
+Credentials, cookies, signing keys, and extension APKs are not reading-list backup data.
+
+Before public release, verify backup creation, restoration, migration, partial failure, missing-source behavior, and compatibility across every supported public version.

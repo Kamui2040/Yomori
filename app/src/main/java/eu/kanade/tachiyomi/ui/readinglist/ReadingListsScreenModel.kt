@@ -9,6 +9,9 @@ import eu.kanade.domain.base.BasePreferences
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.source.online.HttpSource
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
@@ -40,6 +43,9 @@ class ReadingListsScreenModel(
 
     private val _events = Channel<ReadingListsEvent>()
     val events = _events.receiveAsFlow()
+
+    private val candidateSearchJobs = mutableMapOf<Long, Job>()
+    private val deletingReadingListIds = mutableSetOf<Long>()
 
     init {
         screenModelScope.launch {
@@ -148,6 +154,7 @@ class ReadingListsScreenModel(
     }
 
     fun searchCandidates(readingListId: Long) {
+        if (readingListId in deletingReadingListIds) return
         if (readingListId in state.value.searchingReadingListIds) return
 
         mutableState.update { currentState ->
@@ -155,7 +162,8 @@ class ReadingListsScreenModel(
                 searchingReadingListIds = currentState.searchingReadingListIds + readingListId,
             )
         }
-        screenModelScope.launch {
+
+        val job = screenModelScope.launch(start = CoroutineStart.LAZY) {
             try {
                 when (val result = withIOContext { candidateSearch.search(readingListId) }) {
                     ReadingListCandidateSearchResult.ReadingListNotFound -> {
@@ -186,6 +194,7 @@ class ReadingListsScreenModel(
             } catch (_: Exception) {
                 _events.send(ReadingListsEvent.CandidateSearchFailed)
             } finally {
+                candidateSearchJobs.remove(readingListId)
                 mutableState.update { currentState ->
                     currentState.copy(
                         searchingReadingListIds =
@@ -194,6 +203,12 @@ class ReadingListsScreenModel(
                 }
             }
         }
+
+        candidateSearchJobs[readingListId] = job
+        job.start()
+    }
+    fun cancelCandidateSearch(readingListId: Long) {
+        candidateSearchJobs[readingListId]?.cancel()
     }
 
     fun requestDelete(readingList: ReadingListSummary) {
@@ -210,7 +225,13 @@ class ReadingListsScreenModel(
         screenModelScope.launch {
             try {
                 withIOContext {
-                    repository.delete(dialog.readingList.id)
+                    deletingReadingListIds += dialog.readingList.id
+                    try {
+                        candidateSearchJobs[dialog.readingList.id]?.cancelAndJoin()
+                        repository.delete(dialog.readingList.id)
+                    } finally {
+                        deletingReadingListIds -= dialog.readingList.id
+                    }
                 }
                 mutableState.update { it.copy(dialog = null) }
                 _events.send(ReadingListsEvent.Deleted(dialog.readingList.name))

@@ -29,6 +29,8 @@ import androidx.compose.material.icons.outlined.ExpandMore
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.KeyboardArrowUp
 import androidx.compose.material.icons.outlined.List
+import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
@@ -39,7 +41,6 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -75,6 +76,7 @@ import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.util.Tab
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.main.MainActivity
+import eu.kanade.tachiyomi.ui.reader.ReadingListReaderActivity
 import kotlinx.coroutines.flow.collectLatest
 import tachiyomi.domain.readinglist.model.ReadingListSummary
 import tachiyomi.presentation.core.components.material.Scaffold
@@ -105,7 +107,9 @@ data object ReadingListsTab : Tab {
         val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
         val screenModel = rememberScreenModel { ReadingListsScreenModel() }
+        val readerLaunchScreenModel = rememberScreenModel { ReadingListReaderLaunchScreenModel() }
         val state by screenModel.state.collectAsState()
+        val readerLaunchState by readerLaunchScreenModel.state.collectAsState()
         val snackbarHostState = remember { SnackbarHostState() }
         val documentLauncher = rememberLauncherForActivityResult(
             contract = ActivityResultContracts.OpenDocument(),
@@ -120,11 +124,33 @@ data object ReadingListsTab : Tab {
             state = state,
             snackbarHostState = snackbarHostState,
             onImport = launchImport,
+            isPreparingReader = readerLaunchState.isLoading,
+            onRead = readerLaunchScreenModel::start,
             onReview = { readingListId -> navigator.push(ReadingListReviewScreen(readingListId)) },
             onSearch = screenModel::searchCandidates,
+            onCancelSearch = screenModel::cancelCandidateSearch,
             onEditSources = screenModel::editSources,
             onDelete = screenModel::requestDelete,
         )
+
+        when (val dialog = readerLaunchState.dialog) {
+            is ReadingListReaderLaunchDialog.Restart -> {
+                ReadingListReaderRestartDialog(
+                    readingList = dialog.readingList,
+                    onRestart = readerLaunchScreenModel::confirmRestart,
+                    onDismiss = readerLaunchScreenModel::dismissDialog,
+                )
+            }
+            is ReadingListReaderLaunchDialog.Blocked -> {
+                ReadingListReaderBlockedDialog(
+                    entry = dialog.entry,
+                    onReview = readerLaunchScreenModel::reviewBlocked,
+                    onSkip = readerLaunchScreenModel::skipBlocked,
+                    onStop = readerLaunchScreenModel::dismissDialog,
+                )
+            }
+            null -> Unit
+        }
 
         when (val dialog = state.dialog) {
             is ReadingListsDialog.SourceSelection -> {
@@ -197,6 +223,32 @@ data object ReadingListsTab : Tab {
             }
         }
 
+        LaunchedEffect(Unit) {
+            readerLaunchScreenModel.events.collectLatest { event ->
+                when (event) {
+                    is ReadingListReaderLaunchEvent.OpenReader -> {
+                        context.startActivity(ReadingListReaderActivity.newIntent(context, event.destination))
+                    }
+                    is ReadingListReaderLaunchEvent.Review -> {
+                        navigator.push(ReadingListReviewScreen(event.readingListId))
+                    }
+                    is ReadingListReaderLaunchEvent.Completed -> {
+                        snackbarHostState.showSnackbar(
+                            context.getString(
+                                R.string.reading_list_reader_completed,
+                                event.readingListName ?: context.getString(R.string.reading_list_untitled),
+                            ),
+                        )
+                    }
+                    ReadingListReaderLaunchEvent.Failed -> {
+                        snackbarHostState.showSnackbar(
+                            context.getString(R.string.reading_list_reader_failed),
+                        )
+                    }
+                }
+            }
+        }
+
         LaunchedEffect(state.isLoading) {
             if (!state.isLoading) {
                 (context as? MainActivity)?.ready = true
@@ -210,8 +262,11 @@ private fun ReadingListsScreen(
     state: ReadingListsScreenState,
     snackbarHostState: SnackbarHostState,
     onImport: () -> Unit,
+    isPreparingReader: Boolean,
+    onRead: (ReadingListSummary) -> Unit,
     onReview: (Long) -> Unit,
     onSearch: (Long) -> Unit,
+    onCancelSearch: (Long) -> Unit,
     onEditSources: (Long) -> Unit,
     onDelete: (ReadingListSummary) -> Unit,
 ) {
@@ -265,9 +320,12 @@ private fun ReadingListsScreen(
             else -> ReadingListsContent(
                 readingLists = state.readingLists,
                 searchingReadingListIds = state.searchingReadingListIds,
+                isPreparingReader = isPreparingReader,
                 contentPadding = paddingValues,
+                onRead = onRead,
                 onReview = onReview,
                 onSearch = onSearch,
+                onCancelSearch = onCancelSearch,
                 onEditSources = onEditSources,
                 onDelete = onDelete,
             )
@@ -313,9 +371,12 @@ private fun ReadingListsEmptyScreen(
 private fun ReadingListsContent(
     readingLists: List<ReadingListSummary>,
     searchingReadingListIds: Set<Long>,
+    isPreparingReader: Boolean,
     contentPadding: PaddingValues,
+    onRead: (ReadingListSummary) -> Unit,
     onReview: (Long) -> Unit,
     onSearch: (Long) -> Unit,
+    onCancelSearch: (Long) -> Unit,
     onEditSources: (Long) -> Unit,
     onDelete: (ReadingListSummary) -> Unit,
 ) {
@@ -330,8 +391,11 @@ private fun ReadingListsContent(
             ReadingListItem(
                 readingList = readingList,
                 isSearching = readingList.id in searchingReadingListIds,
+                isPreparingReader = isPreparingReader,
+                onRead = { onRead(readingList) },
                 onReview = { onReview(readingList.id) },
                 onSearch = { onSearch(readingList.id) },
+                onCancelSearch = { onCancelSearch(readingList.id) },
                 onEditSources = { onEditSources(readingList.id) },
                 onDelete = { onDelete(readingList) },
             )
@@ -344,29 +408,55 @@ private fun ReadingListsContent(
 private fun ReadingListItem(
     readingList: ReadingListSummary,
     isSearching: Boolean,
+    isPreparingReader: Boolean,
+    onRead: () -> Unit,
     onReview: () -> Unit,
     onSearch: () -> Unit,
+    onCancelSearch: () -> Unit,
     onEditSources: () -> Unit,
     onDelete: () -> Unit,
 ) {
-    ListItem(
-        modifier = Modifier.clickable(enabled = !isSearching, onClick = onReview),
-        headlineContent = {
+    val readLabel = stringResource(
+        when {
+            readingList.completed -> R.string.reading_list_read_again
+            readingList.currentPosition != null -> R.string.reading_list_resume
+            else -> R.string.reading_list_read
+        },
+    )
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(enabled = !isSearching, onClick = onReview)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
             Text(
                 text = readingList.name ?: stringResource(R.string.reading_list_untitled),
+                style = MaterialTheme.typography.titleMedium,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
-        },
-        supportingContent = {
-            Column {
+            Text(
+                text = stringResource(
+                    R.string.reading_list_entries_and_sources,
+                    readingList.entryCount,
+                    readingList.sourceCount,
+                ),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            if (readingList.completed) {
                 Text(
-                    text = stringResource(
-                        R.string.reading_list_entries_and_sources,
-                        readingList.entryCount,
-                        readingList.sourceCount,
-                    ),
+                    text = stringResource(R.string.reading_list_completed),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+            } else {
                 readingList.currentPosition?.let { position ->
                     Text(
                         text = stringResource(
@@ -374,58 +464,81 @@ private fun ReadingListItem(
                             (position + 1).coerceAtMost(readingList.entryCount),
                             readingList.entryCount,
                         ),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
-        },
-        trailingContent = {
-            Row {
-                IconButton(
-                    onClick = onReview,
-                    enabled = !isSearching,
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.List,
-                        contentDescription = stringResource(R.string.reading_list_review),
-                    )
+        }
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            IconButton(
+                onClick = onRead,
+                enabled = !isSearching && !isPreparingReader,
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.PlayArrow,
+                    contentDescription = readLabel,
+                )
+            }
+            IconButton(
+                onClick = onReview,
+                enabled = !isSearching,
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.List,
+                    contentDescription = stringResource(R.string.reading_list_review),
+                )
+            }
+            if (isSearching) {
+                IconButton(onClick = onCancelSearch) {
+                    Box(contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(32.dp),
+                            strokeWidth = 2.dp,
+                        )
+                        Icon(
+                            imageVector = Icons.Outlined.Close,
+                            contentDescription = stringResource(R.string.reading_list_cancel_action),
+                            modifier = Modifier.size(18.dp),
+                        )
+                    }
                 }
+            } else {
                 IconButton(
                     onClick = onSearch,
                     enabled = !isSearching,
                 ) {
-                    if (isSearching) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            strokeWidth = 2.dp,
-                        )
-                    } else {
-                        Icon(
-                            imageVector = Icons.Outlined.Search,
-                            contentDescription = stringResource(R.string.reading_list_search_candidates),
-                        )
-                    }
-                }
-                IconButton(
-                    onClick = onEditSources,
-                    enabled = !isSearching,
-                ) {
                     Icon(
-                        imageVector = Icons.Outlined.Edit,
-                        contentDescription = stringResource(R.string.reading_list_edit_sources),
-                    )
-                }
-                IconButton(
-                    onClick = onDelete,
-                    enabled = !isSearching,
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Delete,
-                        contentDescription = stringResource(R.string.reading_list_delete),
+                        imageVector = Icons.Outlined.Search,
+                        contentDescription = stringResource(R.string.reading_list_search_candidates),
                     )
                 }
             }
-        },
-    )
+            IconButton(
+                onClick = onEditSources,
+                enabled = !isSearching,
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Edit,
+                    contentDescription = stringResource(R.string.reading_list_edit_sources),
+                )
+            }
+            IconButton(
+                onClick = onDelete,
+                enabled = !isSearching,
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Delete,
+                    contentDescription = stringResource(R.string.reading_list_delete),
+                )
+            }
+        }
+    }
 }
 
 @Composable

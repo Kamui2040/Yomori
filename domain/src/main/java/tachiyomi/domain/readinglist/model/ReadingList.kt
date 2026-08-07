@@ -18,6 +18,8 @@ data class ReadingList(
     val currentPosition: Int?,
     val createdAt: Long,
     val updatedAt: Long,
+    val completed: Boolean = false,
+    val readingMode: Int? = null,
 ) {
     fun toCblReadingList(): CblReadingList {
         return CblReadingList(
@@ -74,6 +76,7 @@ data class ReadingListSummary(
     val currentPosition: Int?,
     val createdAt: Long,
     val updatedAt: Long,
+    val completed: Boolean = false,
 )
 
 enum class ReadingListEntryResolutionState {

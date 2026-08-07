@@ -228,8 +228,7 @@ private fun ReviewList(
                 items = entries,
                 key = { item -> item.entry.id },
             ) { item ->
-                val expanded = expandedEntries[item.entry.id]
-                    ?: (item.entry.needsManualAttention && !item.entry.skipped)
+                val expanded = expandedEntries[item.entry.id] ?: false
                 ReviewEntryCard(
                     item = item,
                     expanded = expanded,

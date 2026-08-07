@@ -1,22 +1,13 @@
 # Reading-List Reader Navigation
 
-A Yomori reading session may cross series and source boundaries. It therefore cannot rely solely on Mihon's normal next-chapter ordering within one manga.
+Status: implemented on draft PR #15. The detailed contract is `CROSS_SERIES_READER.md`.
 
-## Session state
+A Yomori reading-list session carries explicit reading-list, entry, position, manga, chapter, and selected-source identity. It does not replace ordinary manga-scoped navigation.
 
-- Reading-list ID
-- Current entry position
-- Resolved chapter ID
-- Previous and next resolvable entries
+At the end of an entry, the reading-list reader resolves the next persisted CBL position. Moving backward across the first page resolves the previous persisted position. The destination may belong to another series or selected source.
 
-## End-of-entry behavior
+Unresolved, ambiguous, unavailable, removed, rematch-required, incomplete, or skipped entries remain in order and stop visibly with explicit Review, Skip, or Stop choices.
 
-At the final page, `Next` opens the next reading-list entry rather than the next chapter in the current manga. The destination may belong to another manga or source.
+Chapter read state remains shared. Reading-list position and completion remain list-specific.
 
-## Missing entries
-
-An unresolved or unavailable entry remains in the authoritative order. The reader offers explicit actions to resolve, skip for this session, or stop. Skipping does not delete the entry.
-
-## Progress
-
-Chapter read state remains shared with the normal library. Reading-list position, skipped state, and list completion are stored per reading list.
+Device QA status and remaining cases are recorded in `../../PROJECT_CONTEXT.md`.

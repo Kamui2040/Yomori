@@ -1,5 +1,15 @@
 # Library Integration
 
-Matching candidates remain lightweight until selected. A large CBL import must not add every remote search result to the normal library.
+Status: planned; not implemented as an automatic consequence of matching.
 
-After resolution, users may choose whether matched series are added to the library and whether Yomori creates a category for the reading list. Removing a reading list must not delete unrelated library entries or downloaded content without a separate explicit action.
+Matching candidates remain lightweight and outside the normal library. A large CBL import must not add remote search results to the library.
+
+Future integration may let the user explicitly:
+
+- add resolved series to the normal library;
+- choose or create a normal-library category;
+- apply the choice to selected series only.
+
+Reading-list categories and normal-library categories remain separate concepts.
+
+Deleting a reading list must never delete unrelated library entries, shared read state, or downloaded content without a separate explicit action.

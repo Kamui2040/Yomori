@@ -1,31 +1,44 @@
 # Reading-List Data Model
 
-This is a planning model. Exact SQLDelight table and column names will be finalized with the first persistence pull request.
+Status: implemented baseline with future repair and organization extensions.
 
 ## Reading list
 
-Stores list-level identity, source information, import time, format version, and a hash of the imported document.
+`reading_lists` stores list identity, import metadata, warnings, source mode, current position, completion, and timestamps.
 
 ## Reading-list entry
 
-Stores authoritative order and original CBL metadata alongside optional resolved source, manga, and chapter identifiers. Match state, confidence, margin, and user-confirmation status belong to the entry.
+`reading_list_entries` stores authoritative CBL order, original metadata, matching state, optional resolved identities, confidence summary, user-confirmation state, and skip state.
 
-## Series mapping
+Original CBL data remains independently available after normalization or resolution.
 
-Stores reusable, user-confirmed relationships between a normalized CBL series tuple and a remote source series.
+## Database references
 
-## Entry override
+Ordered database references preserve external series and issue evidence from each imported book.
 
-Stores an explicit source and chapter selection that overrides list and series preferences.
+## Source selection
 
-## Rejected candidate
+`reading_list_sources` stores ordered user-selected source IDs. Missing IDs remain visible as unavailable choices.
 
-Stores candidates the user rejected so unchanged evidence does not repeatedly produce the same suggestion.
+## Candidate snapshots
+
+Candidate records retain source, language, remote identity, rank, score, runner-up evidence, decision reason, conflicts, and the complete serialized score breakdown needed for review.
+
+## Series mappings, overrides, and rejections
+
+- Series mappings store list-local user-confirmed remote series identity.
+- Entry overrides constrain source and chapter selection for one entry.
+- Rejected candidates persist independently from refreshes.
+- User-confirmed mappings, rejections, overrides, and skips are protected from automatic replacement.
+
+## Progress
+
+Chapter read state remains shared with the ordinary reader. Reading-list position and completion remain list-specific.
 
 ## Invariants
 
-- Entry position is stable and follows CBL `<Book>` order.
-- Original CBL values are retained after resolution.
-- User-confirmed mappings are protected from automatic replacement.
-- Deleting a reading list does not delete unrelated library chapters or global read state.
-- Broken remote mappings remain inspectable and repairable.
+- Entry position follows original `<Book>` order.
+- A reading-list progress pointer cannot reference a missing entry.
+- Deleting a list cascades only records owned by that list.
+- Deleting a list does not delete unrelated library chapters, downloads, or shared read state.
+- Broken or unavailable mappings remain inspectable and repairable.

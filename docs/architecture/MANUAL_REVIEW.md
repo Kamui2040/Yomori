@@ -15,6 +15,7 @@ The review screen:
 - loads the authoritative reading list and persisted resolution data through repositories only;
 - displays entries in original CBL `<Book>` order;
 - filters between entries needing attention, all entries, and completed entries;
+- starts every entry card collapsed, including entries needing attention, so large lists remain scannable;
 - keeps completed and protected entries visible for context;
 - makes `AMBIGUOUS`, `UNRESOLVED`, `SOURCE_UNAVAILABLE`, `CHAPTER_REMOVED`, and `NEEDS_REMATCH` entries easy to find;
 - never hides unresolved entries or silently drops unavailable sources or candidates.
@@ -23,7 +24,7 @@ Original series, issue number, volume, year, ordered database references, warnin
 
 ## Candidate presentation
 
-Candidates use the existing deterministic persisted ordering. Equal high-scoring candidates remain visibly ambiguous; reading-list source order only stabilizes display ordering and is not presented as an automatic tie-break.
+Candidates retain the existing deterministic persisted ordering except that the exact active candidate is surfaced first after confirmation or automatic resolution. The active candidate is recognized only by the complete persisted source ID, manga URL, and chapter URL; all remaining candidates preserve their prior relative order. Equal high-scoring candidates remain visibly ambiguous, and merely changing display position does not alter scores, matching decisions, rejection state, or source priority.
 
 Each candidate presentation includes:
 
@@ -56,7 +57,8 @@ Confirmation:
 - records the entry as user-confirmed;
 - clears only the matching candidate rejection and existing skipped state as defined by the repository;
 - never modifies other entries or unrelated rejection history;
-- becomes authoritative and cannot be silently replaced by later automatic search.
+- becomes authoritative and cannot be silently replaced by later automatic search;
+- causes the exact confirmed candidate to appear first when the completed entry is viewed again.
 
 ### Reject candidate
 
@@ -65,7 +67,10 @@ Rejection:
 - calls `rejectCandidate` with the exact persisted snapshot;
 - remains stored independently from candidate refreshes;
 - keeps the candidate visible for review;
-- excludes the candidate from later automatic decisions.
+- excludes the candidate from later automatic decisions;
+- atomically invalidates the entry's active resolution only when the rejected source, manga URL, and chapter URL exactly match the currently active identity;
+- clears that exact active match's saved identity, confidence, matcher version, and user-confirmed flag while preserving original CBL metadata, skip state, other candidates, overrides, series mappings, and rejection history;
+- leaves an unrelated current match unchanged when a different candidate is rejected.
 
 ### Restore rejected candidate
 
@@ -156,6 +161,7 @@ Focused tests cover:
 
 - original CBL entry order;
 - deterministic persisted candidate order;
+- exact active candidate display priority while preserving all other candidate order;
 - orphaned rejected candidates remaining visible;
 - exact persisted candidate confirmation;
 - rejection restoration without an active candidate snapshot;
@@ -165,6 +171,6 @@ Repository and scorer tests continue to cover protected confirmed/skipped writes
 
 ## Validation and QA
 
-Before merge, run focused tests plus `spotlessCheck`, `testDebugUnitTest`, `verifySqlDelightMigration`, development assembly, and `git diff --check`. Inspect the complete diff and changed-file scope, then require authoritative GitHub Actions success.
+Before merge, run focused tests plus `spotlessCheck`, `testDebugUnitTest`, `verifySqlDelightMigration`, development assembly, certificate verification, and `git diff --check`. Inspect the complete diff and changed-file scope. GitHub Actions remains disabled; current PC validation is local and must be followed by representative physical-device QA.
 
-Device QA should use a development APK and representative imported lists covering ambiguous candidates, low confidence, no candidates, missing extensions, rejected-candidate restoration, entry confirmation, explicit series confirmation, app restart, later candidate refresh, and the supported issue-number distinctions.
+Device QA should use a development APK and representative imported lists covering collapsed attention entries, confirmed-candidate display priority, ambiguous candidates, low confidence, no candidates, missing extensions, rejected-candidate restoration, entry confirmation, explicit series confirmation, app restart, later candidate refresh, and the supported issue-number distinctions.

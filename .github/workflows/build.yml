@@ -151,7 +151,7 @@ jobs:
           for apk in "${apks[@]}"; do
             filename="$(basename "$apk")"
             case "$filename" in
-              app-preview.apk)
+              app-universal-preview.apk)
                 abi="universal"
                 ;;
               app-*-preview.apk)

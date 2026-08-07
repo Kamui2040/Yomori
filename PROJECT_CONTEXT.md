@@ -8,9 +8,9 @@ GitHub Actions is disabled for the repository as of 2026-07-24. PC development u
 
 The production application ID is `io.github.kamui2040.yomori`; development-device artifacts use `io.github.kamui2040.yomori.debug`. The Yomori version line is `0.1.0-alpha01`. Extension-facing Mihon/Tachiyomi namespaces remain unchanged where compatibility requires them.
 
-Merged `main` implements safe CBL parsing, transactional persistence, normalization and scoring, visible source selection, bounded candidate search, protected automatic resolution, persisted rejection/override/mapping state, and manual review.
+Merged `main` implements safe CBL parsing, transactional persistence, normalization and scoring, visible source selection, bounded candidate search, protected automatic resolution, persisted rejection/override/mapping state, manual review, cross-series reading-list navigation, and list-specific reading progress and reading mode.
 
-Draft PR #15 (`agent/cross-series-reader-navigation`) implements cross-series navigation and list-specific reading progress. It is open, draft, unmerged, and not release-ready. Its current head is `e496094ba7560095bc9c06c1e8b75be0a58ce8fc`; PR #17 is incorporated only into that branch. Physical-device QA still proves a blocker: an already matched entry can remain readable after its exact extension is disabled in Android settings, including after force-stop and cold restart. Do not merge PR #15 or describe the disabled-source requirement as passed until that behavior is corrected and retested. Do not clear confirmed mappings or cached rows merely to conceal the defect.
+Cross-series navigation and list-specific reading progress are part of `main` through PR #15. The implementation/build-validated state was `03c2366b3dd6543e8bf17cb519c4184d0429029b`; subsequent PR-head changes were documentation-only status synchronization and did not alter application code, migrations, build logic, or signing configuration. Validation covered Gradle clean, Spotless, debug unit tests, SQLDelight migration verification through migrations 17 and 18, preview assembly, exact five-APK inventory, canonical public development-certificate verification, and `git diff --check`. PR #17 was incorporated into PR #15 before merge. The deferred source-availability defect is tracked in issue #20. It remains unresolved and must not be described as fixed or passed, but it was classified as not a PR #15 merge blocker. Do not clear confirmed mappings or cached rows merely to conceal it.
 
 No public production release, production signing identity, store submission, accepted F-Droid build, or reproducibility result exists.
 
@@ -86,7 +86,7 @@ Never silently bypass an unavailable higher-priority confirmed or overridden sou
 2. Safe CBL model/parser and fixtures — complete on `main`.
 3. SQLDelight persistence and migrations through merged migration 16 — complete on `main`.
 4. Normalization, scoring, source selection, candidate persistence/search, and manual review — complete on `main`.
-5. Cross-series navigation and list-specific progress — implemented only on draft PR #15; blocked and unmerged.
+5. Cross-series navigation and list-specific progress — complete on `main` through PR #15; implementation locally validated before merge.
 6. Repair/rematching tools and later approved source-setting/category work — planned or branch-specific; verify before describing as implemented.
 
 ## FLOSS and publication status
@@ -103,7 +103,7 @@ Current state is blocked by, at minimum:
 - no unsigned same-package non-debuggable F-Droid production variant;
 - no independent repeated build and byte-for-byte comparison;
 - incomplete privacy, security, support, attribution, changelog, store metadata, accessibility, localization, backup/restore, and representative-device release evidence;
-- unresolved PR #15 disabled-extension blocker.
+- incomplete representative source-availability release QA; deferred defect tracking is in issue #20.
 
 A local or branch build does not prove reproducibility, F-Droid acceptance, store compliance, production signing, or release readiness.
 
@@ -112,7 +112,7 @@ A local or branch build does not prove reproducibility, F-Droid acceptance, stor
 Before any public APK, tag, release, announcement, or store submission:
 
 - resolve all required blockers in `docs/RELEASE_READINESS.md`;
-- resolve and retest the disabled-extension availability defect;
+- review issue #20 and complete the required representative source-availability QA before public release;
 - finish original Yomori branding and licensed release assets;
 - remove or replace inherited Mihon update, support, download, website, signing, and publication identities;
 - complete dependency/binary/asset licence and source-completeness audits;

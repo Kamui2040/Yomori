@@ -9,6 +9,7 @@ CREATE TABLE reading_lists(
     extra_elements TEXT NOT NULL,
     warnings TEXT NOT NULL,
     current_position INTEGER,
+    completed INTEGER AS Boolean NOT NULL DEFAULT 0,
     created_at INTEGER NOT NULL,
     updated_at INTEGER NOT NULL
 );
@@ -477,6 +478,20 @@ VALUES (
     :chapterUrl,
     :rejectedAt
 );
+
+invalidateRejectedCurrentResolution:
+UPDATE reading_list_entries
+SET resolution_state = 'UNRESOLVED',
+    matched_source_id = NULL,
+    matched_manga_url = NULL,
+    matched_chapter_url = NULL,
+    confidence = NULL,
+    matcher_version = NULL,
+    user_confirmed = 0
+WHERE _id = :entryId
+  AND matched_source_id = :sourceId
+  AND matched_manga_url = :mangaUrl
+  AND matched_chapter_url = :chapterUrl;
 
 deleteCandidateRejection:
 DELETE FROM reading_list_candidate_rejections
