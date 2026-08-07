@@ -29,7 +29,15 @@ class OnboardingScreen : Screen() {
         val context = LocalContext.current
 
         val basePreferences = remember { Injekt.get<BasePreferences>() }
+        val shownYomoriWelcome by basePreferences.shownYomoriWelcome.collectAsState()
         val shownOnboardingFlow by basePreferences.shownOnboardingFlow.collectAsState()
+
+        val finishWelcome: () -> Unit = {
+            basePreferences.shownYomoriWelcome.set(true)
+            if (shownOnboardingFlow) {
+                navigator.pop()
+            }
+        }
 
         val finishOnboarding: () -> Unit = {
             basePreferences.shownOnboardingFlow.set(true)
@@ -38,11 +46,13 @@ class OnboardingScreen : Screen() {
 
         val restoreSettingKey = stringResource(SettingsDataScreen.restorePreferenceKeyString)
 
-        BackHandler(enabled = !shownOnboardingFlow) {
-            // Prevent exiting if onboarding hasn't been completed.
+        BackHandler(enabled = !shownYomoriWelcome || !shownOnboardingFlow) {
+            // Mandatory welcome and incomplete onboarding cannot be bypassed with Back.
         }
 
         OnboardingScreen(
+            showWelcome = !shownYomoriWelcome,
+            onWelcomeComplete = finishWelcome,
             onComplete = finishOnboarding,
             onExit = {
                 context.findActivity()?.finishAndRemoveTask()
