@@ -10,7 +10,7 @@ The production application ID is `io.github.kamui2040.yomori`; development-devic
 
 Merged `main` implements safe CBL parsing, transactional persistence, normalization and scoring, visible source selection, bounded candidate search, protected automatic resolution, persisted rejection/override/mapping state, and manual review.
 
-Draft PR #15 (`agent/cross-series-reader-navigation`) implements cross-series navigation and list-specific reading progress. It is open, draft, unmerged, and not release-ready. Its implementation before governance synchronization was validated at `e496094ba7560095bc9c06c1e8b75be0a58ce8fc`; PR #17 is incorporated only into that branch. The deferred source-availability defect is tracked in issue #20. It remains unresolved and must not be described as fixed or passed, but the maintainer has classified it as not a current PR #15 merge blocker. Do not clear confirmed mappings or cached rows merely to conceal it.
+Draft PR #15 (`agent/cross-series-reader-navigation`) implements cross-series navigation and list-specific reading progress. It is open, draft, unmerged, and not release-ready. The synchronized implementation has passed fresh local Windows validation; PR #17 is incorporated only into that branch. Validation covered Gradle clean, Spotless, debug unit tests, SQLDelight migration verification through migrations 17 and 18, preview assembly, exact five-APK inventory, canonical public development-certificate verification, and `git diff --check`. The deferred source-availability defect is tracked in issue #20. It remains unresolved and must not be described as fixed or passed, but the maintainer has classified it as not a current PR #15 merge blocker. Do not clear confirmed mappings or cached rows merely to conceal it.
 
 No public production release, production signing identity, store submission, accepted F-Droid build, or reproducibility result exists.
 
@@ -86,7 +86,7 @@ Never silently bypass an unavailable higher-priority confirmed or overridden sou
 2. Safe CBL model/parser and fixtures — complete on `main`.
 3. SQLDelight persistence and migrations through merged migration 16 — complete on `main`.
 4. Normalization, scoring, source selection, candidate persistence/search, and manual review — complete on `main`.
-5. Cross-series navigation and list-specific progress — implemented only on draft PR #15; unmerged and pending synchronized validation.
+5. Cross-series navigation and list-specific progress — implemented only on draft PR #15; synchronized implementation locally validated and unmerged.
 6. Repair/rematching tools and later approved source-setting/category work — planned or branch-specific; verify before describing as implemented.
 
 ## FLOSS and publication status
