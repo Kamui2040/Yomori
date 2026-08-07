@@ -9,8 +9,9 @@ Yomori follows the shared cross-project welcome/About composition documented in 
 - Display name: K2040.
 - The approved K2040 personal avatar is the intended identity element for the welcome and About surfaces.
 - The avatar represents the developer, not the Yomori application icon.
+- Redistribution licence: Creative Commons Attribution 4.0 International (CC BY 4.0), with attribution to K2040.
 - The asset is not currently bundled in Git, an APK, F-Droid metadata, or store materials.
-- Public redistribution remains blocked until repository-local documentation records verified provenance and an explicit redistribution-compatible licence.
+- Before public bundling, record the exact approved asset's public-safe provenance and stable repository asset identity in `ASSET_ATTRIBUTION.md`.
 
 Do not substitute a different avatar merely to unblock implementation. Private storage locations, identifiers, recovery records, and unpublished asset metadata must not be copied into this repository.
 
@@ -46,7 +47,7 @@ Before public release, the About/legal details should expose stable public route
 - security reporting;
 - support scope;
 - third-party-source and extension responsibility;
-- applicable asset/dependency attribution;
+- applicable asset/dependency attribution, including the K2040 avatar's CC BY 4.0 attribution when bundled;
 - changelog or release notes when a public release exists;
 - optional Ko-fi support;
 - Yomori's non-affiliation with Mihon and third-party content providers.
