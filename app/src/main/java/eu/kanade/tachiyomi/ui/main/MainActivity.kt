@@ -299,7 +299,11 @@ class MainActivity : BaseActivity() {
                 componentActivity.addOnNewIntentListener(consumer)
                 awaitClose { componentActivity.removeOnNewIntentListener(consumer) }
             }
-                .collectLatest { handleIntentAction(it, navigator) }
+                .collectLatest {
+                    if (preferences.shownYomoriWelcome.get()) {
+                        handleIntentAction(it, navigator)
+                    }
+                }
         }
     }
 
@@ -307,6 +311,10 @@ class MainActivity : BaseActivity() {
     private fun CheckForUpdates() {
         val context = LocalContext.current
         val navigator = LocalNavigator.currentOrThrow
+
+        if (!preferences.shownYomoriWelcome.get()) {
+            return
+        }
 
         // App updates
         LaunchedEffect(Unit) {
@@ -343,7 +351,11 @@ class MainActivity : BaseActivity() {
         val navigator = LocalNavigator.currentOrThrow
 
         LaunchedEffect(Unit) {
-            if (!preferences.shownOnboardingFlow.get() && navigator.lastItem !is OnboardingScreen) {
+            val shouldShowFirstLaunchFlow = shouldShowYomoriFirstLaunchFlow(
+                yomoriWelcomeComplete = preferences.shownYomoriWelcome.get(),
+                onboardingComplete = preferences.shownOnboardingFlow.get(),
+            )
+            if (shouldShowFirstLaunchFlow && navigator.lastItem !is OnboardingScreen) {
                 navigator.push(OnboardingScreen())
             }
         }
@@ -352,6 +364,10 @@ class MainActivity : BaseActivity() {
     @Composable
     private fun ShowDonationCampaign() {
         val navigator = LocalNavigator.currentOrThrow
+
+        if (!preferences.shownYomoriWelcome.get()) {
+            return
+        }
 
         var showCampaign by remember { mutableStateOf(false) }
         if (showCampaign) {
